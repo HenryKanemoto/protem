@@ -29,9 +29,8 @@
               }
             ],
             "styles": [
-              "node_modules/@fontsource-variable/geist/index.css",
-              "node_modules/@fontsource-variable/geist-mono/index.css",
-              "node_modules/@fontsource-variable/bricolage-grotesque/opsz.css",
+              "node_modules/@fontsource-variable/atkinson-hyperlegible-next/index.css",
+              "node_modules/@fontsource-variable/atkinson-hyperlegible-mono/index.css",
               "src/styles.css"
             ],
             "allowedCommonJsDependencies": [

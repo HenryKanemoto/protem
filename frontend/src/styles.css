@@ -9,10 +9,12 @@
    ========================================================================== */
 
 @theme {
-  /* Fontes hospedadas no próprio app (@fontsource-variable, ligadas no angular.json) */
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque Variable", "Geist Variable", ui-sans-serif, sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, monospace;
+  /* Fontes hospedadas no próprio app (@fontsource-variable, ligadas no angular.json).
+     Atkinson Hyperlegible (Braille Institute): feita para leitura fácil, com letras que não
+     se confundem (I/l/1, O/0). Uma família só para títulos e textos; a Mono para códigos. */
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, SFMono-Regular, monospace;
 
   --color-*: initial;
   --color-white: #ffffff;
@@ -80,14 +82,15 @@
 
   body {
     @apply bg-bg font-sans text-text antialiased;
-    font-size: 0.9375rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.6;
   }
 
   h1,
   h2,
   h3 {
-    @apply font-display tracking-tight text-text-heading;
+    @apply font-display text-text-heading;
+    letter-spacing: -0.01em;
   }
 
   :focus-visible {
@@ -181,7 +184,7 @@
     @apply flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-border;
   }
   .card-title {
-    @apply font-display text-base font-semibold text-text-heading;
+    @apply font-display text-[1.0625rem] font-semibold text-text-heading;
   }
   /* Título de seção dentro da página (fora de cartão) */
   .section-title {
@@ -193,7 +196,7 @@
 
   /* ---------- Cabeçalho de página ---------- */
   .page {
-    @apply flex flex-col gap-6;
+    @apply flex flex-col gap-8;
   }
   .page-header {
     @apply flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between;
@@ -201,11 +204,15 @@
   .page-eyebrow {
     @apply font-mono text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-text-muted;
   }
+  /* Título de tela com a assinatura da marca: um traço dourado curto embaixo, como o
+     ponteiro do relógio do logo. É só acento (não é texto), então o 1,8:1 do dourado não importa. */
   .page-title {
-    @apply font-display text-[1.75rem] sm:text-[2rem] leading-tight font-semibold tracking-tight text-text-heading;
+    @apply font-display text-[1.875rem] sm:text-[2.25rem] leading-[1.15] font-semibold text-text-heading pb-3;
+    letter-spacing: -0.015em;
+    background: linear-gradient(var(--color-brand-gold), var(--color-brand-gold)) left bottom / 2rem 3px no-repeat;
   }
   .page-subtitle {
-    @apply mt-1 text-sm text-text-muted max-w-2xl;
+    @apply mt-3 text-[0.9375rem] leading-relaxed text-text-muted max-w-2xl;
   }
   .back-link {
     @apply inline-flex items-center gap-1 text-sm font-medium text-primary-hover hover:text-primary-strong transition-colors;
