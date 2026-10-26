@@ -1,13 +1,14 @@
 <div class="page">
-  <header class="page-header">
+  <header class="page-hero">
     <div>
       <h1 class="page-title">Olá, {{ primeiroNome() }}</h1>
       <p class="page-subtitle first-letter:uppercase">{{ dataHoje() }}</p>
+      <a routerLink="/painel/leitor" class="btn btn-primary mt-5">
+        <mat-icon class="icon-sm" svgIcon="qr_code_scanner" />
+        Ler QR code
+      </a>
     </div>
-    <a routerLink="/painel/leitor" class="btn btn-primary self-start sm:self-auto">
-      <mat-icon class="icon-sm" svgIcon="qr_code_scanner" />
-      Ler QR code
-    </a>
+    <span class="hidden shrink-0 sm:block" aria-hidden="true"><app-brand-logo variante="icone" [tamanho]="96" /></span>
   </header>
 
   @if (mensagemSucesso()) {

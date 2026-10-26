@@ -4,13 +4,14 @@ import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
 import {formatDateShort, parseDate} from '../lib/date-utils';
 import {StatusBadge} from '../components/status-badge/status-badge';
+import {BrandLogo} from '../components/brand-logo/brand-logo';
 import {plural} from '../lib/categoria-utils';
 
 
 @Component({
   selector: 'app-r1-painel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule, StatusBadge],
+  imports: [RouterLink, MatIconModule, StatusBadge, BrandLogo],
   templateUrl: './R1Painel.html',
 })
 export class R1Painel {

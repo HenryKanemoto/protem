@@ -3,12 +3,13 @@ import {RouterLink} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
 import {ItemThumb} from '../components/item-thumb/item-thumb';
+import {BrandLogo} from '../components/brand-logo/brand-logo';
 import {iconeCategoria, plural} from '../lib/categoria-utils';
 
 @Component({
   selector: 'app-s1-catalogo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule, ItemThumb],
+  imports: [RouterLink, MatIconModule, ItemThumb, BrandLogo],
   templateUrl: './S1Catalogo.html',
 })
 export class S1Catalogo {

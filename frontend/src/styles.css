@@ -211,6 +211,11 @@
     letter-spacing: -0.015em;
     background: linear-gradient(var(--color-brand-gold), var(--color-brand-gold)) left bottom / 2rem 3px no-repeat;
   }
+  /* Topo de boas-vindas (Painel e Catálogo): fundo brand-soft com o ícone da marca.
+     O quadrado do ícone tem a mesma cor do fundo, então só o P azul e o relógio aparecem. */
+  .page-hero {
+    @apply flex flex-col gap-5 rounded-card bg-brand-soft px-6 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8;
+  }
   .page-subtitle {
     @apply mt-3 text-[0.9375rem] leading-relaxed text-text-muted max-w-2xl;
   }

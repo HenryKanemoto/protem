@@ -19,11 +19,14 @@
     }
   }
 
-  <header class="page-header">
+  <header class="page-hero">
     <div>
       <h1 class="page-title">Catálogo</h1>
-      <p class="page-subtitle">{{ plural(store.itensCatalogo().length, 'item disponível', 'itens disponíveis') }}</p>
+      <p class="page-subtitle">
+        {{ plural(store.itensCatalogo().length, 'item disponível', 'itens disponíveis') }}. Escolha um item para ver o prazo e pedir emprestado.
+      </p>
     </div>
+    <span class="hidden shrink-0 sm:block" aria-hidden="true"><app-brand-logo variante="icone" [tamanho]="96" /></span>
   </header>
 
   <!-- Busca e categorias sempre visíveis: são o jeito de navegar pelo catálogo -->
