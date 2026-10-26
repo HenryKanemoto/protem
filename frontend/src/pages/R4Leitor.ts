@@ -47,10 +47,16 @@ export class R4Leitor {
       atrasado: 'atrasado: abre a devolução',
       disponivel: 'disponível: mostra um aviso',
     };
+    const efeitos: Partial<Record<StatusItem, string>> = {
+      reservado: 'retirada',
+      emprestado: 'devolução',
+      atrasado: 'devolução com atraso',
+      disponivel: 'aviso',
+    };
     return ordem
       .map((status) => this.store.itens().find((i) => i.status === status))
       .filter((i) => !!i)
-      .map((i) => ({ codigo: i.codigoQr, rotulo: `${i.nome} (${rotulos[i.status]})` }));
+      .map((i) => ({ codigo: i.codigoQr, rotulo: `${i.nome} (${rotulos[i.status]})`, efeito: efeitos[i.status] }));
   });
 
   constructor() {
