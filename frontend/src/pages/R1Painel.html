@@ -20,104 +20,52 @@
     </div>
   }
 
-  <!-- Três contadores -->
+  <!-- Três contadores. Os detalhes de cada um estão nas listas abaixo, sempre abertas. -->
   <div class="grid grid-cols-3 gap-3 lg:gap-4">
-    <a routerLink="/painel/solicitacoes" class="stat transition-colors hover:border-primary">
-      <span class="stat-label">Pedidos</span>
+    <a routerLink="/painel/solicitacoes" class="stat group transition-colors hover:border-primary">
+      <span class="stat-label flex items-center justify-between gap-2">
+        Pedidos
+        <mat-icon class="icon-sm text-primary-hover transition-transform group-hover:translate-x-0.5" svgIcon="arrow_forward" />
+      </span>
       <span class="stat-value">{{ store.solicitacoesPendentesCount() }}</span>
+      <span class="hidden text-sm text-text-muted sm:block">para analisar</span>
     </a>
-
-    <button
-      type="button"
-      (click)="alternarFiltro('ativos')"
-      class="stat text-left transition-colors hover:border-primary"
-      [class.!border-primary]="filtroAtivo() === 'ativos'"
-      [attr.aria-pressed]="filtroAtivo() === 'ativos'"
-    >
+    <div class="stat">
       <span class="stat-label">Emprestados</span>
       <span class="stat-value">{{ totalEmprestimosAtivos() }}</span>
-    </button>
-
-    <button
-      type="button"
-      (click)="alternarFiltro('atrasados')"
-      class="stat text-left transition-colors hover:border-danger"
-      [class.!border-danger]="filtroAtivo() === 'atrasados'"
-      [attr.aria-pressed]="filtroAtivo() === 'atrasados'"
-    >
+      <span class="hidden text-sm text-text-muted sm:block">com alunos e professores</span>
+    </div>
+    <div class="stat">
       <span class="stat-label">Atrasados</span>
       <span class="stat-value" [class.text-danger]="totalAtrasados() > 0">{{ totalAtrasados() }}</span>
-    </button>
+      <span class="hidden text-sm text-text-muted sm:block">passaram do prazo</span>
+    </div>
   </div>
-
-  <!-- Lista completa de empréstimos ativos (quando o contador é clicado) -->
-  @if (filtroAtivo() === 'ativos') {
-    <section class="card" aria-labelledby="titulo-ativos">
-      <div class="card-header">
-        <h2 id="titulo-ativos" class="card-title">
-          Emprestados <span class="font-sans text-sm font-normal text-text-muted">{{ totalEmprestimosAtivos() }}</span>
-        </h2>
-        <button type="button" (click)="filtroAtivo.set('todos')" class="btn btn-ghost btn-sm">Fechar</button>
-      </div>
-      @if (listaEmprestimosAtivos().length > 0) {
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Pessoa</th>
-                <th>Item</th>
-                <th>Devolver até</th>
-                <th>Situação</th>
-                <th class="text-right"><span class="sr-only">Ação</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (emp of listaEmprestimosAtivos(); track emp.id) {
-                @let it = getItem(emp.itemId);
-                @let user = getUsuario(emp.usuarioId);
-                <tr>
-                  <td>{{ user?.nome }}</td>
-                  <td>{{ it?.nome }}</td>
-                  <td class="tabular-nums">{{ formatarData(emp.devolucaoPrevista) }}</td>
-                  <td><app-status-badge [status]="emp.diasAtraso > 0 ? 'atrasado' : 'emprestado'" /></td>
-                  <td class="text-right">
-                    <a [routerLink]="['/painel/devolucao', emp.itemId]" class="btn btn-ghost btn-sm">Devolução</a>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      } @else {
-        <p class="px-6 py-10 text-center text-sm text-text-muted">Nenhum item emprestado agora.</p>
-      }
-    </section>
-  }
 
   <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
     <!-- Retiradas aprovadas para hoje (RN04) -->
     <section class="card" aria-labelledby="titulo-retiradas">
       <div class="card-header">
-        <h2 id="titulo-retiradas" class="card-title" title="Pedidos aprovados expiram no fim do dia se não forem retirados.">
-          Retiradas de hoje <span class="font-sans text-sm font-normal text-text-muted">{{ listaAprovadosHoje().length }}</span>
-        </h2>
-        @if (listaAprovadosHoje().length > limite) {
-          <a routerLink="/painel/solicitacoes" class="btn btn-ghost btn-sm">Ver todos</a>
-        }
+        <div>
+          <h2 id="titulo-retiradas" class="card-title">
+            Retiradas de hoje <span class="font-sans text-sm font-normal text-text-muted">{{ listaAprovadosHoje().length }}</span>
+          </h2>
+          <p class="text-sm text-text-muted">Se não forem retiradas até o fim do dia, os pedidos expiram.</p>
+        </div>
       </div>
       @if (listaAprovadosHoje().length > 0) {
         <ul class="divide-y divide-border">
-          @for (solic of listaAprovadosHoje().slice(0, limite); track solic.id) {
+          @for (solic of listaAprovadosHoje(); track solic.id) {
             @let it = getItem(solic.itemId);
             @let user = getUsuario(solic.solicitanteId);
-            <li class="flex items-center gap-4 px-5 py-3 sm:px-6">
+            <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
               <div class="min-w-0 flex-1">
-                <p class="truncate font-medium">{{ it?.nome }}</p>
-                <p class="truncate text-sm text-text-muted">
+                <p class="font-medium sm:truncate">{{ it?.nome }}</p>
+                <p class="text-sm text-text-muted sm:truncate">
                   {{ user?.nome }} · aprovado às {{ formatarHora(solic.avaliadoEm || solic.criadoEm) }}
                 </p>
               </div>
-              <a [routerLink]="['/painel/retirada', solic.itemId]" class="btn btn-ghost btn-sm shrink-0">Retirada</a>
+              <a [routerLink]="['/painel/retirada', solic.itemId]" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">Registrar retirada</a>
             </li>
           }
         </ul>
@@ -130,29 +78,34 @@
     </section>
 
     <!-- Atrasados (RN06) -->
-    <section class="card" [class.!border-danger]="filtroAtivo() === 'atrasados'" aria-labelledby="titulo-atrasados">
+    <section class="card" aria-labelledby="titulo-atrasados">
       <div class="card-header">
-        <h2 id="titulo-atrasados" class="card-title" title="Devoluções que passaram do prazo.">
-          Atrasados <span class="font-sans text-sm font-normal text-text-muted">{{ listaAtrasados().length }}</span>
-        </h2>
-        @if (listaAtrasados().length > limite) {
-          <button type="button" (click)="filtroAtivo.set('ativos')" class="btn btn-ghost btn-sm">Ver todos</button>
-        }
+        <div>
+          <h2 id="titulo-atrasados" class="card-title">
+            Atrasados <span class="font-sans text-sm font-normal text-text-muted">{{ listaAtrasados().length }}</span>
+          </h2>
+          <p class="text-sm text-text-muted">Devoluções que passaram do prazo, do maior atraso para o menor.</p>
+        </div>
       </div>
       @if (listaAtrasados().length > 0) {
         <ul class="divide-y divide-border">
-          @for (emp of listaAtrasados().slice(0, limite); track emp.id) {
+          @for (emp of verTodosAtrasados() ? listaAtrasados() : listaAtrasados().slice(0, limite); track emp.id) {
             @let it = getItem(emp.itemId);
             @let user = getUsuario(emp.usuarioId);
-            <li class="flex items-center gap-4 px-5 py-3 sm:px-6">
+            <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
               <div class="min-w-0 flex-1">
-                <p class="truncate font-medium">{{ it?.nome }}</p>
-                <p class="truncate text-sm text-text-muted">{{ user?.nome }} · {{ plural(emp.diasAtraso, 'dia') }} de atraso</p>
+                <p class="font-medium sm:truncate">{{ it?.nome }}</p>
+                <p class="text-sm text-text-muted sm:truncate">{{ user?.nome }} · {{ plural(emp.diasAtraso, 'dia') }} de atraso</p>
               </div>
-              <a [routerLink]="['/painel/devolucao', emp.itemId]" class="btn btn-ghost btn-sm shrink-0">Devolução</a>
+              <a [routerLink]="['/painel/devolucao', emp.itemId]" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">Registrar devolução</a>
             </li>
           }
         </ul>
+        @if (listaAtrasados().length > limite) {
+          <button type="button" (click)="verTodosAtrasados.set(!verTodosAtrasados())" class="btn btn-ghost btn-sm m-3">
+            {{ verTodosAtrasados() ? 'Mostrar menos' : 'Ver todos os ' + listaAtrasados().length }}
+          </button>
+        }
       } @else {
         <div class="empty py-10">
           <mat-icon class="icon-lg" svgIcon="task_alt" />
@@ -161,4 +114,42 @@
       }
     </section>
   </div>
+
+  <!-- Emprestados no prazo: sempre visíveis, da devolução mais próxima para a mais distante -->
+  <section class="card" aria-labelledby="titulo-no-prazo">
+    <div class="card-header">
+      <div>
+        <h2 id="titulo-no-prazo" class="card-title">
+          Emprestados no prazo <span class="font-sans text-sm font-normal text-text-muted">{{ listaNoPrazo().length }}</span>
+        </h2>
+        <p class="text-sm text-text-muted">Quem está com cada item e quando devolve.</p>
+      </div>
+    </div>
+    @if (listaNoPrazo().length > 0) {
+      <ul class="divide-y divide-border">
+        @for (emp of verTodosNoPrazo() ? listaNoPrazo() : listaNoPrazo().slice(0, limite); track emp.id) {
+          @let it = getItem(emp.itemId);
+          @let user = getUsuario(emp.usuarioId);
+          <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
+            <div class="min-w-0 flex-1">
+              <p class="font-medium sm:truncate">{{ it?.nome }}</p>
+              <p class="text-sm text-text-muted sm:truncate">{{ user?.nome }} · {{ prazo(emp.devolucaoPrevista) }}</p>
+            </div>
+            <app-status-badge status="emprestado" class="hidden shrink-0 sm:inline-flex" />
+            <a [routerLink]="['/painel/devolucao', emp.itemId]" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">Registrar devolução</a>
+          </li>
+        }
+      </ul>
+      @if (listaNoPrazo().length > limite) {
+        <button type="button" (click)="verTodosNoPrazo.set(!verTodosNoPrazo())" class="btn btn-ghost btn-sm m-3">
+          {{ verTodosNoPrazo() ? 'Mostrar menos' : 'Ver todos os ' + listaNoPrazo().length }}
+        </button>
+      }
+    } @else {
+      <div class="empty py-10">
+        <mat-icon class="icon-lg" svgIcon="inventory_2" />
+        <p class="empty-text">Nenhum item emprestado no momento.</p>
+      </div>
+    }
+  </section>
 </div>
