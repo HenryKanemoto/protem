@@ -194,3 +194,22 @@ Adiado por decisão da equipe. Fica registrado como ideia:
 - [ ] **Nomes do seed:** "Gustavo Machado" é igual ao nome de um autor do repositório, e "Enzo Capiel" lembra "Enzo Capitani". Se forem pessoas reais, trocar por nomes fictícios, porque o `CLAUDE.md` pede só dados fictícios. Isso aguarda a decisão da equipe.
 - [ ] **Tentativas de código:** não há limite de tentativas erradas na retirada. Com 31 caracteres em 6 posições há cerca de 887 milhões de combinações, e quem digita é o responsável. Avaliar se vale bloquear depois de algumas tentativas.
 - [ ] O código fica no navegador (como pedidos e empréstimos) também no modo api.
+
+---
+
+# Rodada 3: revisão de usabilidade e identidade (branch `feat/revisao-usabilidade`)
+
+Princípio pedido pela equipe: nada importante depende de "descobrir" um clique. Nenhuma funcionalidade nova; regras de negócio e back-end sem mudanças.
+
+| Tela | Antes | Agora |
+|---|---|---|
+| Painel do responsável | Emprestados só apareciam ao clicar no contador, sem aviso | Três listas sempre abertas: retiradas de hoje, atrasados (maior atraso primeiro) e emprestados no prazo ("devolve amanhã"). Topo de boas-vindas com a marca |
+| Meus empréstimos | Abria em "Pendentes"; o item com a pessoa e o prazo ficavam na aba "Com você" | Sem abas: Com você, Pedidos e Histórico na mesma página. Prazo como "Vence amanhã" ou "Faltam N dias" |
+| Catálogo | Categorias atrás do botão "Filtros" | Categorias sempre visíveis; topo explica o que fazer |
+| Solicitações, Leitor, Retirada, Devolução, Meus códigos | Explicações importantes só em tooltip (somem no celular) | Texto curto visível |
+| Leitor / demonstração | Códigos de teste só como sugestão do campo; botão da demo mostrava só a data | Códigos de teste listados; botão diz "Demonstração" |
+| Todas | Geist + Bricolage, 15 px | Atkinson Hyperlegible Next e Mono (fontes de leitura fácil), 16 px, mais respiro, traço dourado sob o título |
+
+**Verificação:** 89 testes, lint e build (modos local e api) passam. Fluxo completo da demonstração nas 3 políticas (78 verificações), leitor, varredura de 36 rotas × 2 tamanhos (sem rolagem horizontal, botão sem nome ou erro) e 0 de 2.426 textos abaixo do AA, tudo no build de produção com domínios externos bloqueados. Capturas em `rodada-3/`.
+
+**Fora desta rodada:** telas fora do fluxo principal (Categorias, Manutenção, Configurações, formulários) só receberam os ajustes globais de fonte e espaçamento; Itens e Histórico do responsável mantêm os filtros atrás de "Filtros"; nomes do seed e Insumos seguem pendentes.
