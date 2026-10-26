@@ -16,13 +16,6 @@ export class S1Catalogo {
 
   readonly termoBusca = signal('');
   readonly categoriaSelecionada = signal<string>('todas');
-  readonly filtrosAbertos = signal(false);
-
-  /** Nome da categoria filtrada, mostrado no botão Filtros (null quando são todas). */
-  readonly categoriaAtual = computed(() => {
-    const id = this.categoriaSelecionada();
-    return id === 'todas' ? null : (this.store.categorias().find((c) => c.id === id)?.nome ?? null);
-  });
 
   readonly usuario = computed(() => this.store.usuarioLogado());
 

@@ -26,9 +26,9 @@
     </div>
   </header>
 
-  <!-- Busca sempre visível; categorias atrás do botão Filtros -->
-  <div class="flex gap-2">
-    <div class="input-group flex-1 sm:max-w-sm">
+  <!-- Busca e categorias sempre visíveis: são o jeito de navegar pelo catálogo -->
+  <div class="flex flex-col gap-3">
+    <div class="input-group w-full sm:max-w-sm">
       <mat-icon class="icon-sm" svgIcon="search" />
       <input
         type="search"
@@ -39,38 +39,25 @@
         aria-label="Buscar no catálogo"
       />
     </div>
-    <button
-      type="button"
-      (click)="filtrosAbertos.set(!filtrosAbertos())"
-      class="btn btn-secondary shrink-0"
-      [attr.aria-expanded]="filtrosAbertos()"
-      aria-controls="filtros-catalogo"
-    >
-      <mat-icon class="icon-sm" svgIcon="tune" />
-      {{ categoriaAtual() ? categoriaAtual() : 'Filtros' }}
-    </button>
+    <div class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrar por categoria">
+      @for (opcao of filtros(); track opcao.id) {
+        <button
+          type="button"
+          (click)="categoriaSelecionada.set(opcao.id)"
+          class="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors"
+          [class]="
+            categoriaSelecionada() === opcao.id
+              ? 'border-primary bg-brand-soft text-primary-strong'
+              : 'border-border bg-surface text-text-muted hover:border-primary hover:text-text'
+          "
+          [attr.aria-pressed]="categoriaSelecionada() === opcao.id"
+        >
+          {{ opcao.nome }}
+          <span class="font-mono text-xs">{{ opcao.total }}</span>
+        </button>
+      }
+    </div>
   </div>
-
-  @if (filtrosAbertos()) {
-  <div id="filtros-catalogo" class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrar por categoria">
-    @for (opcao of filtros(); track opcao.id) {
-      <button
-        type="button"
-        (click)="categoriaSelecionada.set(opcao.id)"
-        class="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors"
-        [class]="
-          categoriaSelecionada() === opcao.id
-            ? 'border-primary bg-brand-soft text-primary-strong'
-            : 'border-border bg-surface text-text-muted hover:border-primary hover:text-text'
-        "
-        [attr.aria-pressed]="categoriaSelecionada() === opcao.id"
-      >
-        {{ opcao.nome }}
-        <span class="font-mono text-xs">{{ opcao.total }}</span>
-      </button>
-    }
-  </div>
-  }
 
   @if (itensFiltrados().length > 0) {
     <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
