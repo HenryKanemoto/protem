@@ -42,14 +42,17 @@
 
         <!-- Avaria (RN07) -->
         <div class="flex flex-col gap-4 border-t border-border p-5 sm:p-6">
-          <label class="flex cursor-pointer items-center gap-3" title="O item vai para a manutenção, sai do catálogo e uma ocorrência é registrada.">
+          <label class="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
               [checked]="comDefeito()"
               (change)="comDefeito.set($any($event.target).checked)"
-              class="size-5 shrink-0 cursor-pointer accent-primary"
+              class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary"
             />
-            <span class="font-medium">Voltou com avaria</span>
+            <span>
+              <span class="block font-medium">Voltou com avaria</span>
+              <span class="block text-sm text-text-muted">O item vai para a manutenção, sai do catálogo e uma ocorrência é registrada.</span>
+            </span>
           </label>
 
           @if (comDefeito()) {

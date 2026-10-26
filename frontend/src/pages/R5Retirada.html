@@ -10,7 +10,7 @@
 
       <header>
         <h1 class="page-title">Confirmar retirada</h1>
-        <p class="page-subtitle" title="O prazo de devolução começa a contar na confirmação (RN05).">Peça o código de retirada e confirme.</p>
+        <p class="page-subtitle">Peça o código de retirada e confirme. O prazo de devolução começa a contar agora.</p>
       </header>
 
       <section class="card flex items-center gap-4 p-5 sm:p-6">
@@ -28,7 +28,8 @@
       <!-- Código de retirada: só quem pediu tem; o responsável digita o que a pessoa mostrar -->
       <form (submit)="executarConfirmacaoRetirada($event)" class="flex flex-col gap-5">
         <div class="field">
-          <label for="codigoRetirada" class="label" title="A pessoa vê o código no app, em Meus empréstimos.">Código de retirada</label>
+          <label for="codigoRetirada" class="label">Código de retirada</label>
+          <p id="dica-codigo" class="hint">A pessoa vê o código no app, em Meus empréstimos.</p>
           <input
             id="codigoRetirada"
             type="text"
@@ -40,7 +41,7 @@
             autocomplete="off"
             autocapitalize="characters"
             spellcheck="false"
-            [attr.aria-describedby]="erro() ? 'erro-codigo' : null"
+            [attr.aria-describedby]="erro() ? 'dica-codigo erro-codigo' : 'dica-codigo'"
             [attr.aria-invalid]="!!erro()"
             required
           />
