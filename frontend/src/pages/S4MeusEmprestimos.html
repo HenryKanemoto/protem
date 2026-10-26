@@ -12,7 +12,7 @@
   <header class="page-header">
     <div>
       <h1 class="page-title">Meus empréstimos</h1>
-      <p class="page-subtitle">Pedidos, itens com você e histórico.</p>
+      <p class="page-subtitle">O que está com você, seus pedidos e o histórico.</p>
     </div>
     <a routerLink="/catalogo" class="btn btn-primary self-start sm:self-auto">
       <mat-icon class="icon-sm" svgIcon="add" />
@@ -20,129 +20,115 @@
     </a>
   </header>
 
-  <div class="tabs" role="tablist">
-    @for (aba of abas(); track aba.id) {
-      <button
-        type="button"
-        role="tab"
-        (click)="mudarAba(aba.id)"
-        class="tab"
-        [class.tab-active]="abaAtiva() === aba.id"
-        [attr.aria-selected]="abaAtiva() === aba.id"
-      >
-        {{ aba.rotulo }}
-        <span class="font-mono text-xs" [class.text-text-muted]="abaAtiva() !== aba.id">{{ aba.total }}</span>
-      </button>
-    }
-  </div>
-
-  <!-- PENDENTES: aprovados aguardando retirada + em análise -->
-  @if (abaAtiva() === 'pendentes') {
-    <ul class="flex flex-col gap-3">
-      @for (solic of pedidosAprovados(); track solic.id) {
-        @let item = getItem(solic.itemId);
-        <li class="card flex flex-col gap-4 border-primary p-4 sm:flex-row sm:items-center sm:p-5">
-          @if (item) {
-            <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control bg-brand-soft" />
-          }
-          <div class="min-w-0 flex-1">
-            <p class="flex flex-wrap items-center gap-2 font-semibold">
-              {{ item?.nome }}
-              <span class="rounded-full bg-reservado-bg px-2.5 py-0.5 text-xs font-medium text-reservado">Retire hoje</span>
-            </p>
-            <p class="mt-0.5 text-sm text-text-muted" title="Retire no setor de materiais antes do fim do dia, senão o pedido expira.">
-              Aprovado às {{ formatarHora(solic.avaliadoEm || solic.criadoEm) }} · mostre o código ao responsável
-            </p>
-          </div>
-          <div class="shrink-0 sm:text-right">
-            <p class="text-xs text-text-muted">Código de retirada</p>
-            <p class="font-mono text-2xl font-semibold tracking-[0.2em] text-text-heading">{{ solic.codigoRetirada }}</p>
-            <a routerLink="/codigos" class="text-sm font-medium text-primary-hover hover:underline">Meus códigos</a>
-          </div>
-        </li>
-      }
-
-      @for (solic of pedidosAguardandoAnalise(); track solic.id) {
-        @let item = getItem(solic.itemId);
-        @let podeLembrar = store.podeEnviarLembrete(solic);
-        <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
-          @if (item) {
-            <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
-          }
-          <div class="min-w-0 flex-1">
-            <p class="font-semibold">{{ item?.nome }}</p>
-            <p class="mt-0.5 text-sm text-text-muted">
-              Em análise · {{ getTempoDecorrido(solic.criadoEm) }} · até {{ formatarData(solic.devolucaoDesejada) }}
-            </p>
-          </div>
-          <div class="shrink-0">
-            @if (solic.lembreteEnviadoEm) {
-              <span class="text-sm text-text-muted">Lembrete enviado</span>
-            } @else if (podeLembrar) {
-              <!-- RN10: liberado após 2 h sem análise, uma única vez -->
-              <button type="button" (click)="lembrarResponsavel(solic.id)" class="btn btn-ghost btn-sm">Enviar lembrete</button>
-            } @else {
-              <span class="text-xs text-text-muted" title="Disponível 2 horas depois do pedido">
-                Lembrete liberado em {{ getHorasRestantesParaLembrete(solic.criadoEm) }}
-              </span>
+  <!-- COM VOCÊ: itens retirados e ainda não devolvidos (o mais importante: o prazo) -->
+  <section id="com-voce" class="flex scroll-mt-24 flex-col gap-3" aria-labelledby="titulo-com-voce">
+    <h2 id="titulo-com-voce" class="section-title">
+      Com você <span class="font-sans text-sm font-normal text-text-muted">{{ totalAtivos() }}</span>
+    </h2>
+    @if (listaEmprestimosAtivos().length > 0) {
+      <ul class="flex flex-col gap-3">
+        @for (emp of listaEmprestimosAtivos(); track emp.id) {
+          @let item = getItem(emp.itemId);
+          @let estaAtrasado = emp.diasAtraso > 0;
+          <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5" [class.border-danger]="estaAtrasado">
+            @if (item) {
+              <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
             }
-          </div>
-        </li>
-      } @empty {
-        @if (pedidosAprovados().length === 0) {
-          <li class="card empty">
-            <mat-icon class="icon-xl" svgIcon="inbox" />
-            <p class="empty-title">Nenhum pedido pendente</p>
-            <p class="empty-text">Você não tem pedidos em análise nem retiradas marcadas para hoje.</p>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ item?.nome }}</p>
+              <p class="mt-0.5 text-sm text-text-muted">Retirado em {{ formatarData(emp.retiradoEm) }}</p>
+            </div>
+            <div class="shrink-0 sm:text-right">
+              <p class="text-sm text-text-muted">Devolver até</p>
+              <p class="font-display text-lg font-semibold" [class.text-danger]="estaAtrasado">
+                {{ formatarData(emp.devolucaoPrevista) }}
+              </p>
+              @if (estaAtrasado) {
+                <p class="mt-1 inline-flex rounded-full bg-atrasado-bg px-2.5 py-0.5 text-xs font-medium text-atrasado">
+                  Atrasado há {{ plural(emp.diasAtraso, 'dia') }}
+                </p>
+              } @else {
+                <p class="text-sm text-text-muted">{{ getDiasRestantes(emp.devolucaoPrevista) }}</p>
+              }
+            </div>
           </li>
         }
-      }
-    </ul>
-  }
+      </ul>
+    } @else {
+      <p class="card px-5 py-4 text-text-muted">Você não está com nenhum item agora.</p>
+    }
+  </section>
 
-  <!-- ATIVOS: itens retirados e ainda não devolvidos -->
-  @if (abaAtiva() === 'ativos') {
-    <ul class="flex flex-col gap-3">
-      @for (emp of listaEmprestimosAtivos(); track emp.id) {
-        @let item = getItem(emp.itemId);
-        @let estaAtrasado = emp.diasAtraso > 0;
-        <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5" [class.border-danger]="estaAtrasado">
-          @if (item) {
-            <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
-          }
-          <div class="min-w-0 flex-1">
-            <p class="font-semibold">{{ item?.nome }}</p>
-            <p class="mt-0.5 text-sm text-text-muted">Retirado em {{ formatarData(emp.retiradoEm) }}</p>
-          </div>
-          <div class="shrink-0 sm:text-right">
-            <p class="text-xs text-text-muted">Devolver até</p>
-            <p class="font-display text-lg font-semibold" [class.text-danger]="estaAtrasado">
-              {{ formatarData(emp.devolucaoPrevista) }}
-            </p>
-            @if (estaAtrasado) {
-              <p class="mt-1 inline-flex rounded-full bg-atrasado-bg px-2.5 py-0.5 text-xs font-medium text-atrasado">
-                Atrasado há {{ plural(emp.diasAtraso, 'dia') }}
-              </p>
-            } @else {
-              <p class="text-xs text-text-muted">{{ getDiasRestantes(emp.devolucaoPrevista) }}</p>
+  <!-- PEDIDOS: aprovados aguardando retirada (com o código) e em análise -->
+  <section id="pedidos" class="flex scroll-mt-24 flex-col gap-3" aria-labelledby="titulo-pedidos">
+    <h2 id="titulo-pedidos" class="section-title">
+      Pedidos <span class="font-sans text-sm font-normal text-text-muted">{{ totalPendentes() }}</span>
+    </h2>
+    @if (totalPendentes() > 0) {
+      <ul class="flex flex-col gap-3">
+        @for (solic of pedidosAprovados(); track solic.id) {
+          @let item = getItem(solic.itemId);
+          <li class="card flex flex-col gap-4 border-primary p-4 sm:flex-row sm:items-center sm:p-5">
+            @if (item) {
+              <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control bg-brand-soft" />
             }
-          </div>
-        </li>
-      } @empty {
-        <li class="card empty">
-          <mat-icon class="icon-xl" svgIcon="check_circle_outline" />
-          <p class="empty-title">Nenhum empréstimo ativo</p>
-          <p class="empty-text">Você não está com nenhum material ou equipamento agora.</p>
-        </li>
-      }
-    </ul>
-  }
+            <div class="min-w-0 flex-1">
+              <p class="flex flex-wrap items-center gap-2 font-semibold">
+                {{ item?.nome }}
+                <span class="rounded-full bg-reservado-bg px-2.5 py-0.5 text-xs font-medium text-reservado">Retire hoje</span>
+              </p>
+              <p class="mt-0.5 text-sm text-text-muted">
+                Aprovado às {{ formatarHora(solic.avaliadoEm || solic.criadoEm) }}. Retire no setor de materiais até o fim do dia,
+                senão o pedido expira. Mostre o código ao responsável.
+              </p>
+            </div>
+            <div class="shrink-0 sm:text-right">
+              <p class="text-sm text-text-muted">Código de retirada</p>
+              <p class="font-mono text-2xl font-semibold tracking-[0.2em] text-text-heading">{{ solic.codigoRetirada }}</p>
+              <a routerLink="/codigos" class="text-sm font-medium text-primary-hover hover:underline">Meus códigos</a>
+            </div>
+          </li>
+        }
+
+        @for (solic of pedidosAguardandoAnalise(); track solic.id) {
+          @let item = getItem(solic.itemId);
+          @let podeLembrar = store.podeEnviarLembrete(solic);
+          <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+            @if (item) {
+              <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
+            }
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ item?.nome }}</p>
+              <p class="mt-0.5 text-sm text-text-muted">
+                Em análise · {{ getTempoDecorrido(solic.criadoEm) }} · devolução pretendida {{ formatarData(solic.devolucaoDesejada) }}
+              </p>
+            </div>
+            <div class="shrink-0 sm:text-right">
+              @if (solic.lembreteEnviadoEm) {
+                <span class="text-sm text-text-muted">Lembrete enviado</span>
+              } @else if (podeLembrar) {
+                <!-- RN10: liberado após 2 h sem análise, uma única vez -->
+                <button type="button" (click)="lembrarResponsavel(solic.id)" class="btn btn-ghost btn-sm -ml-3 sm:ml-0">Enviar lembrete</button>
+              } @else {
+                <span class="text-sm text-text-muted">Você poderá lembrar o responsável em {{ getHorasRestantesParaLembrete(solic.criadoEm) }}</span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="card px-5 py-4 text-text-muted">Nenhum pedido em análise nem retirada marcada para hoje.</p>
+    }
+  </section>
 
   <!-- HISTÓRICO: devolvidos, recusados e expirados -->
-  @if (abaAtiva() === 'historico') {
+  <section id="historico" class="flex scroll-mt-24 flex-col gap-3" aria-labelledby="titulo-historico">
+    <h2 id="titulo-historico" class="section-title">
+      Histórico <span class="font-sans text-sm font-normal text-text-muted">{{ listaHistorico().length }}</span>
+    </h2>
     @if (listaHistorico().length > 0) {
       <ul class="card divide-y divide-border">
-        @for (hist of listaHistorico(); track hist.id) {
+        @for (hist of verTodoHistorico() ? listaHistorico() : listaHistorico().slice(0, limiteHistorico); track hist.id) {
           @let sit = situacoes[hist.situacaoFinal];
           <li class="flex flex-col gap-2 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
             <div class="min-w-0 flex-1">
@@ -157,12 +143,13 @@
           </li>
         }
       </ul>
+      @if (listaHistorico().length > limiteHistorico) {
+        <button type="button" (click)="verTodoHistorico.set(!verTodoHistorico())" class="btn btn-ghost btn-sm -ml-3 self-start">
+          {{ verTodoHistorico() ? 'Mostrar menos' : 'Ver todo o histórico (' + listaHistorico().length + ')' }}
+        </button>
+      }
     } @else {
-      <div class="card empty">
-        <mat-icon class="icon-xl" svgIcon="history" />
-        <p class="empty-title">Histórico vazio</p>
-        <p class="empty-text">Aqui aparecem empréstimos devolvidos e pedidos recusados ou expirados.</p>
-      </div>
+      <p class="card px-5 py-4 text-text-muted">Empréstimos devolvidos e pedidos recusados ou expirados aparecem aqui.</p>
     }
-  }
+  </section>
 </div>

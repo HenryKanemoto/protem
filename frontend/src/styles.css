@@ -183,6 +183,10 @@
   .card-title {
     @apply font-display text-base font-semibold text-text-heading;
   }
+  /* Título de seção dentro da página (fora de cartão) */
+  .section-title {
+    @apply font-display text-xl font-semibold text-text-heading;
+  }
   .divider {
     @apply border-t border-border;
   }

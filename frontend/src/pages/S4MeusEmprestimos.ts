@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, afterNextRender, computed, inject, signal} from '@angular/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
@@ -11,7 +11,8 @@ import {
   parseDate,
 } from '../lib/date-utils';
 
-type AbaEmprestimos = 'pendentes' | 'ativos' | 'historico';
+/** Seções da página. Os links antigos com ?aba= rolam até a seção certa. */
+const SECAO_POR_ABA: Record<string, string> = {ativos: 'com-voce', pendentes: 'pedidos', historico: 'historico'};
 
 interface ItemHistorico {
   tipo: 'emprestimo' | 'solicitacao';
@@ -35,8 +36,10 @@ export class S4MeusEmprestimos {
   private readonly router = inject(Router);
   readonly store = inject(ProtemStore);
 
-  readonly abaAtiva = signal<AbaEmprestimos>('pendentes');
   readonly mensagemSucesso = signal<string | null>(null);
+  /** O histórico mostra os mais recentes; o botão diz quantos existem. */
+  readonly verTodoHistorico = signal(false);
+  readonly limiteHistorico = 5;
 
   readonly plural = plural;
 
@@ -48,13 +51,11 @@ export class S4MeusEmprestimos {
   };
 
   constructor() {
-    // Ler aba da query string (?aba=pendentes | ativos | historico)
-    this.route.queryParamMap.subscribe((params) => {
-      const aba = params.get('aba');
-      if (aba === 'ativos' || aba === 'historico' || aba === 'pendentes') {
-        this.abaAtiva.set(aba);
-      }
-    });
+    // Links antigos com ?aba=pendentes | ativos | historico: rola até a seção correspondente
+    const secao = SECAO_POR_ABA[this.route.snapshot.queryParamMap.get('aba') ?? ''];
+    if (secao) {
+      afterNextRender(() => document.getElementById(secao)?.scrollIntoView({block: 'start'}));
+    }
 
     // Ler mensagem de sucesso enviada via navigation state
     const nav = this.router.getCurrentNavigation();
@@ -66,15 +67,6 @@ export class S4MeusEmprestimos {
   }
 
   readonly usuario = computed(() => this.store.usuarioLogado());
-
-  mudarAba(aba: AbaEmprestimos) {
-    this.abaAtiva.set(aba);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { aba },
-      queryParamsHandling: 'merge',
-    });
-  }
 
   // 1. Pedidos Aprovados (Aguardando retirada hoje - RN04)
   readonly pedidosAprovados = computed(() => {
@@ -108,12 +100,6 @@ export class S4MeusEmprestimos {
   });
 
   readonly totalAtivos = computed(() => this.listaEmprestimosAtivos().length);
-
-  readonly abas = computed<{id: AbaEmprestimos; rotulo: string; total: number}[]>(() => [
-    {id: 'pendentes', rotulo: 'Pendentes', total: this.totalPendentes()},
-    {id: 'ativos', rotulo: 'Com você', total: this.totalAtivos()},
-    {id: 'historico', rotulo: 'Histórico', total: this.listaHistorico().length},
-  ]);
 
   // 4. Histórico Encerrado
   readonly listaHistorico = computed<ItemHistorico[]>(() => {
@@ -206,19 +192,16 @@ export class S4MeusEmprestimos {
     return `${Math.ceil(rest)} h`;
   }
 
+  /** Dias de calendário até a devolução, em texto: "Vence hoje", "Vence amanhã", "Faltam 3 dias". */
   getDiasRestantes(devolucaoPrevista: string): string {
     const agora = this.store.agora();
-    const devDate = parseDate(devolucaoPrevista);
-    const diffMs = devDate.getTime() - agora.getTime();
-    const diffDias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()).getTime();
+    const diffDias = Math.round((parseDate(devolucaoPrevista).getTime() - hoje) / (1000 * 60 * 60 * 24));
 
-    if (diffDias < 0) {
-      return `Venceu há ${Math.abs(diffDias)} dia(s)`;
-    }
-    if (diffDias === 0) {
-      return 'Vence hoje!';
-    }
-    return `${diffDias} dia(s) restante(s)`;
+    if (diffDias < 0) return `Venceu há ${plural(-diffDias, 'dia')}`;
+    if (diffDias === 0) return 'Vence hoje';
+    if (diffDias === 1) return 'Vence amanhã';
+    return `Faltam ${plural(diffDias, 'dia')}`;
   }
 
   lembrarResponsavel(solicitacaoId: string) {
