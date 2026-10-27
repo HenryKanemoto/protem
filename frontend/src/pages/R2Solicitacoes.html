@@ -2,7 +2,7 @@
   <header class="page-header">
     <div>
       <h1 class="page-title">Solicitações</h1>
-      <p class="page-subtitle" title="Todo pedido precisa da sua aprovação. Depois de aprovado, a retirada é no mesmo dia.">Aprove ou recuse os pedidos.</p>
+      <p class="page-subtitle">Todo pedido precisa da sua aprovação. Ao aprovar, o item fica reservado e a retirada é no mesmo dia.</p>
     </div>
   </header>
 
@@ -44,7 +44,7 @@
 
             <div class="flex gap-2">
               <button type="button" (click)="abrirModalRecusa(s)" class="btn btn-ghost btn-sm flex-1 md:flex-none">Recusar</button>
-              <button type="button" (click)="aprovarPedido(s.id)" class="btn btn-primary btn-sm flex-1 md:flex-none" title="O item fica reservado para retirada hoje">
+              <button type="button" (click)="aprovarPedido(s.id)" class="btn btn-primary btn-sm flex-1 md:flex-none">
                 Aprovar
               </button>
             </div>
@@ -63,9 +63,12 @@
   <!-- Aprovados aguardando retirada (RN04) -->
   <section class="card" aria-labelledby="titulo-aprovados">
     <div class="card-header">
-      <h2 id="titulo-aprovados" class="card-title" title="Se não forem retirados até o fim do dia, os pedidos expiram.">
-        Aguardando retirada <span class="font-sans text-sm font-normal text-text-muted">{{ pedidosAprovadosHoje().length }}</span>
-      </h2>
+      <div>
+        <h2 id="titulo-aprovados" class="card-title">
+          Aguardando retirada <span class="font-sans text-sm font-normal text-text-muted">{{ pedidosAprovadosHoje().length }}</span>
+        </h2>
+        <p class="text-sm text-text-muted">Se não forem retirados até o fim do dia, os pedidos expiram.</p>
+      </div>
     </div>
 
     @if (pedidosAprovadosHoje().length > 0) {

@@ -1,6 +1,7 @@
 <div class="page mx-auto max-w-xl">
   <header>
-    <h1 class="page-title" title="Itens reservados vão para a retirada; emprestados ou atrasados, para a devolução.">Leitor de QR code</h1>
+    <h1 class="page-title">Leitor de QR code</h1>
+    <p class="page-subtitle">Item reservado abre a retirada; emprestado ou atrasado abre a devolução.</p>
   </header>
 
   @if (mensagemAviso()) {
@@ -51,7 +52,15 @@
       />
       <button type="submit" class="btn btn-primary shrink-0">Buscar</button>
     </div>
-    <!-- Atalhos de teste: um código de cada situação, sugeridos pelo próprio campo -->
+    <!-- Atalhos de teste: um código de cada situação, visíveis e também sugeridos pelo campo -->
+    @if (itensExemplo().length > 0) {
+      <p class="hint">
+        Para testar:
+        @for (amostra of itensExemplo(); track amostra.codigo; let ultimo = $last) {
+          <span class="font-mono text-text">{{ amostra.codigo }}</span> ({{ amostra.efeito }}){{ ultimo ? '.' : ' · ' }}
+        }
+      </p>
+    }
     <datalist id="codigos-teste">
       @for (amostra of itensExemplo(); track amostra.codigo) {
         <option [value]="amostra.codigo">{{ amostra.rotulo }}</option>

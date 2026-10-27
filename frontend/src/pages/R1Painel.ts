@@ -4,22 +4,24 @@ import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
 import {formatDateShort, parseDate} from '../lib/date-utils';
 import {StatusBadge} from '../components/status-badge/status-badge';
+import {BrandLogo} from '../components/brand-logo/brand-logo';
 import {plural} from '../lib/categoria-utils';
 
-type FiltroListaPainel = 'todos' | 'atrasados' | 'ativos' | 'aprovados';
 
 @Component({
   selector: 'app-r1-painel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule, StatusBadge],
+  imports: [RouterLink, MatIconModule, StatusBadge, BrandLogo],
   templateUrl: './R1Painel.html',
 })
 export class R1Painel {
   readonly store = inject(ProtemStore);
   private readonly router = inject(Router);
 
-  readonly filtroAtivo = signal<FiltroListaPainel>('todos');
   readonly mensagemSucesso = signal<string | null>(null);
+  /** "Ver todos" de cada lista: o botão já diz quantos itens existem, nada fica escondido sem aviso. */
+  readonly verTodosNoPrazo = signal(false);
+  readonly verTodosAtrasados = signal(false);
 
   readonly plural = plural;
   /** Quantas linhas cada lista mostra antes do "Ver todos". */
@@ -48,25 +50,25 @@ export class R1Painel {
     return this.store.emprestimos().filter((e) => !e.devolvidoEm && e.diasAtraso > 0).length;
   });
 
-  readonly listaAtrasados = computed(() => {
-    return this.store.emprestimos().filter((e) => !e.devolvidoEm && e.diasAtraso > 0);
-  });
+  /** Atrasados, do maior atraso para o menor. */
+  readonly listaAtrasados = computed(() =>
+    this.store
+      .emprestimos()
+      .filter((e) => !e.devolvidoEm && e.diasAtraso > 0)
+      .sort((a, b) => b.diasAtraso - a.diasAtraso),
+  );
+
+  /** Emprestados ainda no prazo, da devolução mais próxima para a mais distante. */
+  readonly listaNoPrazo = computed(() =>
+    this.store
+      .emprestimos()
+      .filter((e) => !e.devolvidoEm && e.diasAtraso === 0)
+      .sort((a, b) => a.devolucaoPrevista.localeCompare(b.devolucaoPrevista)),
+  );
 
   readonly listaAprovadosHoje = computed(() => {
     return this.store.solicitacoes().filter((s) => s.status === 'aprovada');
   });
-
-  readonly listaEmprestimosAtivos = computed(() => {
-    return this.store.emprestimos().filter((e) => !e.devolvidoEm);
-  });
-
-  alternarFiltro(tipo: 'ativos' | 'atrasados') {
-    if (this.filtroAtivo() === tipo) {
-      this.filtroAtivo.set('todos');
-    } else {
-      this.filtroAtivo.set(tipo);
-    }
-  }
 
   getItem(id: string) {
     return this.store.itens().find((i) => i.id === id);
@@ -83,5 +85,15 @@ export class R1Painel {
   formatarHora(iso: string) {
     const d = parseDate(iso);
     return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  /** Prazo de devolução legível: "devolve hoje", "devolve amanhã" ou a data (pelo relógio do sistema). */
+  prazo(devolucaoPrevista: string): string {
+    const agora = this.store.agora();
+    const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()).getTime();
+    const dias = Math.round((parseDate(devolucaoPrevista).getTime() - hoje) / 86_400_000);
+    if (dias === 0) return 'devolve hoje';
+    if (dias === 1) return 'devolve amanhã';
+    return `devolve em ${this.formatarData(devolucaoPrevista)}`;
   }
 }
