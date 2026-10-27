@@ -208,6 +208,18 @@ Pedida pela equipe antes da apresentação; prevalece sobre as regras anteriores
 - **Marca discreta:** traço dourado curto sob o título de cada tela (`.page-title`), como o ponteiro do relógio do logo; topo de boas-vindas `.page-hero` (fundo `brand-soft` com o ícone) no Painel e no Catálogo. O dourado continua só como acento.
 - **Inspiração visual:** tipografia cuidadosa, espaçamento generoso, cores contidas e hierarquia clara, com identidade própria (as cores da marca, não as de outro site).
 
+## Suspensão, auditoria e personas (outubro de 2026)
+
+Pedida pela equipe; prevalece sobre as regras anteriores onde houver diferença.
+
+- **Suspender, bloquear e reativar** ficam no detalhe do usuário, só para o responsável, com diálogo de confirmação e **motivo obrigatório**. Suspensão manual tem prazo em dias (1 a 90) e termina sozinha; bloqueio manual fica até reativar. O campo `restricaoManual` marca o que foi feito à mão: devoluções e a política de atraso não desfazem.
+- Conta bloqueada ou suspensa não pede itens e vê o motivo no catálogo, no perfil e ao tentar pedir.
+- **Recusa de pedido** exige motivo, guardado em `motivoRecusa`.
+- **Auditoria** (`auditoria` no estado, mais recente primeiro): toda regra que muda conta, pedido ou empréstimo grava um evento com data, autor (ausente = sistema), afetado, item e motivo. Nova regra que mude estado deve gravar o seu evento.
+- **Histórico** (menu Gestão) mostra o caminho de cada pedido; **Relatórios** tem as abas Visão geral e Auditoria. Os filtros dessas telas ficam sempre visíveis.
+- **Seed:** 3 perfis do login sem histórico + 10 personas (`PERSONAS_DEMO` em `demo-data.ts`) com datas relativas ao relógio. Dados pessoais sempre inventados: e-mail `@example.com`, CPF com dígito verificador inválido, telefone `(96) 90000-0XXX`. A auditoria do seed é montada a partir dos registros (`auditoriaDoSeed`).
+- **Chave do navegador:** `protem:v2`. Ao mudar a forma do estado ou o seed, suba a versão.
+
 ## Vocabulário e convenções
 
 - Interface sempre em português do Brasil.

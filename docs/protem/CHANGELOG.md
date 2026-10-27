@@ -213,3 +213,29 @@ Princípio pedido pela equipe: nada importante depende de "descobrir" um clique.
 **Verificação:** 89 testes, lint e build (modos local e api) passam. Fluxo completo da demonstração nas 3 políticas (78 verificações), leitor, varredura de 36 rotas × 2 tamanhos (sem rolagem horizontal, botão sem nome ou erro) e 0 de 2.426 textos abaixo do AA, tudo no build de produção com domínios externos bloqueados. Capturas em `rodada-3/`.
 
 **Fora desta rodada:** telas fora do fluxo principal (Categorias, Manutenção, Configurações, formulários) só receberam os ajustes globais de fonte e espaçamento; Itens e Histórico do responsável mantêm os filtros atrás de "Filtros"; nomes do seed e Insumos seguem pendentes.
+
+---
+
+# Rodada 4: suspensão, auditoria e personas (branch `feat/suspensao-auditoria-personas`)
+
+| Área | Antes | Agora |
+|---|---|---|
+| Bloqueio de conta | Botão no detalhe do usuário, sem confirmação, motivo ou registro; qualquer devolução desfazia | Suspender (com dias), bloquear e reativar no mesmo lugar, com diálogo de confirmação e motivo obrigatório. O que o responsável aplica à mão não é desfeito por devoluções; a suspensão termina sozinha na data |
+| Conta suspensa ou bloqueada | Mensagem genérica de "atraso" | Catálogo, perfil e tentativa de pedido mostram o motivo e até quando vale |
+| Usuários | Status em badge | Badge + filtros de situação sempre visíveis, com contagem; linha mostra o motivo |
+| Recusa de pedido | Motivo opcional, só ia no aviso | Motivo obrigatório, guardado no pedido |
+| Histórico | Dentro de Relatórios, com linhas inventadas quando não havia pedidos e itens sem data | Item próprio no menu Gestão: uma linha por pedido com as etapas e a situação final; filtros por período, pessoa, item e situação |
+| Relatórios | Uma página | Abas *Visão geral* e *Auditoria* (data e hora, quem fez, afetado, item, motivo; filtros por período, pessoa e tipo de evento) |
+| Auditoria | Não existia | Cada regra grava o evento: cadastro, aprovação e recusa de conta, pedido, aprovação, recusa, expiração, retirada, devolução (com e sem avaria), bloqueio, suspensão e reativação. Ações automáticas aparecem como "Sistema" |
+| Seed | Situações concentradas na aluna e no professor do login | 10 personas fictícias (CPF inválido, e-mail example.com, telefone 90000); aluno e professor do login começam limpos. Auditoria do seed montada dos próprios registros |
+| Painel de demonstração | Lista única de usuários | "Entrar como" (3 perfis) e "Personas" (com uma linha sobre cada uma) |
+| Navegador | Chave `protem:v1` | Chave `protem:v2`; dados antigos são descartados e o app começa do seed novo |
+
+**Verificação:** 107 testes (regras de conta, auditoria, histórico e coerência do seed), lint e build nos modos local e api. Fluxo completo nas 3 políticas com 133 verificações (inclui recusa sem motivo, suspensão manual pela tela, pessoa suspensa sem conseguir pedir, reativação e auditoria de cada passo) no build de produção com domínios externos bloqueados: nenhuma requisição a `/api` ou a outra origem, nenhum erro de console. Varredura de 39 rotas × 2 tamanhos sem problemas; 0 de 3.791 textos abaixo do AA. Modo api testado com uma API falsa: o seed vai para o banco e só o item alterado é enviado. Capturas em `rodada-4/`.
+
+**Decisões desta rodada:** suspensão manual com prazo em dias (termina sozinha); bloqueio manual também pede confirmação e motivo; recusa de pedido com motivo obrigatório; filtros do Histórico e da Auditoria sempre visíveis.
+
+**Pendências:**
+- [ ] Nomes dos 3 perfis do login ("Enzo Capiel", "Gustavo Machado", "Camila Cristina") seguem os mesmos; confirmar se são fictícios.
+- [ ] Recusa de **cadastro** continua com motivo opcional (só a recusa de pedido passou a exigir).
+- [ ] Auditoria, histórico e contas ficam no navegador também no modo api; o back-end só guarda os itens.

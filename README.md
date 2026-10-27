@@ -31,7 +31,7 @@ O app tem uma camada de dados com duas implementações ([frontend/src/store/fon
 
 | Modo | Onde ficam os dados | Como rodar |
 |------|---------------------|------------|
-| **`local`** (padrão) | Tudo no navegador (`localStorage`, chave `protem:v1`). Nenhuma requisição de rede. | `npm start` ou `npm run dev` |
+| **`local`** (padrão) | Tudo no navegador (`localStorage`, chave `protem:v2`). Nenhuma requisição de rede. | `npm start` ou `npm run dev` |
 | **`api`** | Itens do acervo no MySQL, via back-end; o resto no navegador. | `npm run dev:api` (veja abaixo) |
 
 - Nos dois modos, as regras de negócio rodam no navegador, em funções puras ([frontend/src/store/regras](frontend/src/store/regras)), cobertas por testes.
@@ -112,15 +112,15 @@ Na tela de login, o bloco **"Acesso rápido de demonstração"** entra com um cl
 
 | Perfil | Conta | O que faz |
 |--------|-------|-----------|
-| Aluno | camila@escola.edu.br | Vê o catálogo, pede itens, acompanha os empréstimos |
-| Professor | gustavo@escola.edu.br | Igual ao aluno |
-| Responsável | enzo@escola.edu.br | Painel de gestão: aprova pedidos e contas, registra retiradas e devoluções, cadastra itens |
+| Aluno | camila@example.com | Vê o catálogo, pede itens, acompanha os empréstimos. Começa sem histórico |
+| Professor | gustavo@example.com | Igual ao aluno. Começa sem histórico |
+| Responsável | enzo@example.com | Painel de gestão: aprova pedidos e contas, suspende ou bloqueia contas, registra retiradas e devoluções, cadastra itens, vê histórico, relatórios e auditoria |
 
 ### Ciclo de um empréstimo
 
 1. **Aluno** → *Catálogo* → escolhe um item → *Pedir emprestado* → escolhe a data de devolução (limitada pelo prazo da categoria).
 2. **Responsável** → *Solicitações* → *Aprovar*. O item fica **reservado** e precisa ser retirado no mesmo dia. Quem pediu recebe um **código de retirada** (em *Meus empréstimos* e *Meus códigos*); o responsável não vê esse código.
-3. **Responsável** → *Leitor de QR code*. Escanear o QR do item leva à confirmação da retirada, que só é registrada com o código que a pessoa mostrar no app. O código vale uma vez, até o fim do dia. No pedido aprovado do seed (Gustavo), o código é `K7PM4X`.
+3. **Responsável** → *Leitor de QR code*. Escanear o QR do item leva à confirmação da retirada, que só é registrada com o código que a pessoa mostrar no app. O código vale uma vez, até o fim do dia. No pedido aprovado do seed (persona Igor), o código é `K7PM4X`.
 4. Na devolução, o mesmo leitor leva à tela *Registrar devolução*. Ali dá para marcar **"Voltou com avaria"**, e o item vai para *Manutenção*.
 
 ### Painel de demonstração (relógio)
@@ -128,11 +128,33 @@ Na tela de login, o bloco **"Acesso rápido de demonstração"** entra com um cl
 O botão escuro no canto inferior direito abre o **modo demonstração**:
 
 - **+1 hora / +1 dia / +3 dias:** avança o relógio do sistema e dispara as rotinas automáticas, como pedidos aprovados que expiram, atrasos, bloqueios e lembretes.
-- **Entrar como:** troca de usuário sem fazer login.
+- **Entrar como:** troca de usuário sem fazer login. Em cima ficam os 3 perfis do login; embaixo, as **10 personas**, cada uma com uma linha dizendo o que ela mostra.
 - **Reiniciar dados de demonstração:** volta tudo ao estado inicial (no modo api, inclusive os itens no banco).
 - Os dados ficam salvos **neste navegador**: outro navegador ou outro computador começa do zero.
 
-Os dados de demonstração já trazem uma situação de cada tipo: pedido pendente e aprovado, empréstimo ativo e atrasado, item em manutenção, contas pendente (Diego), bloqueada (Bruno) e suspensa (Elisa), e histórico. São todos fictícios.
+Os dados de demonstração usam datas relativas ao relógio, então nunca ficam velhos. Além dos 3 perfis do login (sem histórico), há 10 alunos fictícios com comportamentos diferentes:
+
+| Persona | O que mostra |
+|---|---|
+| Ana Beatriz Moura | Pontual e exemplar; empréstimo que vence amanhã |
+| Bruno Teixeira Lima | Atrasos recorrentes; está com um notebook atrasado e a conta bloqueada |
+| Carla Nogueira Prado | Devolveu a parafusadeira com avaria (item em manutenção) |
+| Davi Ramos Quintela | Pedido recusado com motivo |
+| Elisa Rocha Fontes | Suspensa pela política rígida depois de devolver com atraso |
+| Fábio Mendes Arruda | Pedidos aprovados que expiraram porque ele não retirou |
+| Gabriela Sato Ribeiro | Muitos pedidos; no limite de kits de eletrônica, com um pedido que já libera o lembrete |
+| Helena Duarte Campos | Suspensa pelo responsável, com motivo |
+| Igor Pacheco Leal | Retira hoje com o código `K7PM4X` |
+| Diego Alves Barreto | Acabou de se cadastrar; aguarda aprovação |
+
+Todos os dados pessoais são inventados: e-mails em `example.com` (domínio reservado), CPFs com dígito verificador errado de propósito e telefones `(96) 90000-0XXX`.
+
+### Contas, histórico, relatórios e auditoria (responsável)
+
+- **Suspender, bloquear e reativar:** em *Usuários* › pessoa. Cada ação pede confirmação e motivo. A suspensão tem número de dias e termina sozinha; o bloqueio fica até alguém reativar. Bloqueios e suspensões feitos à mão não são desfeitos por devoluções. A pessoa vê o motivo no catálogo, no perfil e ao tentar pedir.
+- **Usuários:** filtros de situação sempre visíveis (ativas, bloqueadas, suspensas, pendentes).
+- **Histórico:** o caminho de cada pedido (pedido, aprovação ou recusa com motivo, retirada, devolução), com filtros por período, pessoa, item e situação.
+- **Relatórios:** aba *Visão geral* (mais emprestados, atrasos, avarias) e aba *Auditoria*: data e hora, quem fez, quem foi afetado, item e motivo de cada ação, com filtros por período, pessoa e tipo de evento. Ações automáticas aparecem como feitas pelo "Sistema".
 
 ### Regras de negócio
 
@@ -185,7 +207,7 @@ frontend/src/
 │   ├── fonte-de-dados/  FonteLocal (só navegador) e FonteApi (itens no back-end)
 │   ├── regras/          regras de negócio em funções puras, por assunto, com testes
 │   ├── demo-data.ts     dados iniciais de demonstração
-│   └── persistencia.ts  leitura e gravação no localStorage (chave protem:v1)
+│   └── persistencia.ts  leitura e gravação no localStorage (chave protem:v2)
 ├── services/       chamadas HTTP do modo api (itens-api.service.ts)
 ├── lib/            utilitários de data, texto, imagem e categoria
 └── styles.css      sistema visual: cores, fontes e classes (.btn, .card, .input, .table...)
