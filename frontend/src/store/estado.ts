@@ -2,6 +2,7 @@ import {
   Categoria,
   Configuracao,
   Emprestimo,
+  EventoAuditoria,
   Item,
   Notificacao,
   Ocorrencia,
@@ -21,6 +22,8 @@ export interface ProtemState {
   emprestimos: Emprestimo[];
   ocorrencias: Ocorrencia[];
   notificacoes: Notificacao[];
+  /** Mais recente primeiro. */
+  auditoria: EventoAuditoria[];
 }
 
 /** Resultado de uma regra de negócio: o novo estado e o que deve voltar para a tela. */
@@ -49,6 +52,23 @@ export function novaNotificacao(
     lida: false,
     criadoEm,
     destino,
+  };
+}
+
+/** Evento de auditoria. Sem autorId, o evento aparece como feito pelo sistema. */
+export function novoEvento(
+  tipo: EventoAuditoria['tipo'],
+  em: string,
+  afetadoId: string,
+  extra: Partial<Pick<EventoAuditoria, 'autorId' | 'itemId' | 'motivo' | 'detalhe'>> = {},
+): EventoAuditoria {
+  return {
+    id: 'aud-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+    tipo,
+    em,
+    afetadoId,
+    // Só os campos preenchidos, para o estado salvo não acumular "undefined"
+    ...Object.fromEntries(Object.entries(extra).filter(([, valor]) => valor)),
   };
 }
 

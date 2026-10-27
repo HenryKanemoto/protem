@@ -2,6 +2,9 @@ import {ChangeDetectionStrategy, Component, computed, inject, input, signal} fro
 import {Router} from '@angular/router';
 import {ProtemStore} from '../../store/protem.store';
 import {formatDateTime} from '../../lib/date-utils';
+import {rotuloPerfil} from '../../lib/texto-utils';
+import {PERFIS_DEMO, PERSONAS_DEMO} from '../../store/demo-data';
+import {Usuario} from '../../types/models';
 import {MatIconModule} from '@angular/material/icon';
 
 @Component({
@@ -20,6 +23,29 @@ export class RelogioFlutuante {
   readonly aberto = signal(false);
 
   readonly dataFormatada = computed(() => formatDateTime(this.store.agora()));
+
+  /** Aluno, professor e responsável do login: começam sem histórico. */
+  readonly perfis = computed(() => this.buscar(PERFIS_DEMO).map((u) => ({usuario: u, rotulo: rotuloPerfil(u.perfil)})));
+
+  /** As 10 personas do seed, com o que cada uma mostra. */
+  readonly personas = computed(() => {
+    const usuarios = this.store.usuarios();
+    return PERSONAS_DEMO.flatMap(({id, resumo}) => {
+      const usuario = usuarios.find((u) => u.id === id);
+      return usuario ? [{usuario, resumo}] : [];
+    });
+  });
+
+  /** Contas criadas durante a demonstração (cadastro novo), para também dar para entrar com um clique. */
+  readonly outras = computed(() => {
+    const conhecidas = new Set([...PERFIS_DEMO, ...PERSONAS_DEMO.map((p) => p.id)]);
+    return this.store.usuarios().filter((u) => !conhecidas.has(u.id));
+  });
+
+  private buscar(ids: string[]): Usuario[] {
+    const usuarios = this.store.usuarios();
+    return ids.flatMap((id) => usuarios.filter((u) => u.id === id));
+  }
 
   readonly passos = [
     {rotulo: '+1 hora', acao: () => this.store.avancarRelogio(1)},

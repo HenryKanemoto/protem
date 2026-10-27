@@ -18,6 +18,13 @@ const STATUS: Record<string, {label: string; tom: Tom}> = {
   bloqueada: {label: 'Bloqueada', tom: 'atrasado'},
   suspensa: {label: 'Suspensa', tom: 'manutencao'},
   recusada: {label: 'Recusada', tom: 'neutro'},
+  // Situação final de um pedido no histórico (lib/historico.ts); "pendente", "emprestado" e "atrasado" vêm de cima
+  aguardando_retirada: {label: 'Aguardando retirada', tom: 'reservado'},
+  recusado: {label: 'Recusado', tom: 'neutro'},
+  expirado: {label: 'Expirado', tom: 'neutro'},
+  devolvido: {label: 'Devolvido', tom: 'disponivel'},
+  devolvido_atraso: {label: 'Devolvido com atraso', tom: 'atrasado'},
+  devolvido_avaria: {label: 'Devolvido com avaria', tom: 'manutencao'},
 };
 
 const CLASSES: Record<Tom, string> = {

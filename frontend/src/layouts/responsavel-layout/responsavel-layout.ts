@@ -84,8 +84,9 @@ export class ResponsavelLayout {
           badge: () => this.store.contasPendentesCount(),
           tambemEm: ['/painel/contas'],
         },
-        // O histórico de movimentações abre a partir de Relatórios
-        {rotulo: 'Relatórios', rota: '/painel/relatorios', icone: 'insights', tambemEm: ['/painel/historico']},
+        // Histórico: o caminho de cada pedido. Relatórios: visão da instituição e auditoria
+        {rotulo: 'Histórico', rota: '/painel/historico', icone: 'history'},
+        {rotulo: 'Relatórios', rota: '/painel/relatorios', icone: 'insights'},
         {rotulo: 'Configurações', rota: '/painel/configuracoes', icone: 'tune'},
       ],
     },

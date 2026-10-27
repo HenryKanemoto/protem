@@ -73,7 +73,7 @@
           [class.input-invalid]="erros().email"
           [value]="email()"
           (input)="email.set($any($event.target).value); limparErro('email')"
-          placeholder="lucas.oliveira@escola.edu.br"
+          placeholder="lucas.oliveira@example.com"
           autocomplete="email"
           [attr.aria-invalid]="!!erros().email"
           aria-describedby="email-erro"

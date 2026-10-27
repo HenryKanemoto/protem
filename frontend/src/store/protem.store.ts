@@ -44,6 +44,7 @@ export class ProtemStore {
   readonly emprestimos = computed(() => this.state().emprestimos);
   readonly ocorrencias = computed(() => this.state().ocorrencias);
   readonly notificacoes = computed(() => this.state().notificacoes);
+  readonly auditoria = computed(() => this.state().auditoria);
 
   readonly usuarioLogado = computed(() => {
     const id = this.state().usuarioLogadoId;
@@ -188,20 +189,25 @@ export class ProtemStore {
     return this.executar((s) => contas.cadastrarUsuario(s, dados));
   }
 
+  // Ações do responsável: quem está logado fica registrado na auditoria
   aprovarUsuario(usuarioId: string) {
-    this.atualizar((s) => contas.aprovarUsuario(s, usuarioId));
+    this.atualizar((s) => contas.aprovarUsuario(s, usuarioId, s.usuarioLogadoId ?? undefined));
   }
 
   recusarUsuario(usuarioId: string, motivo?: string) {
-    this.atualizar((s) => contas.recusarUsuario(s, usuarioId, motivo));
+    this.atualizar((s) => contas.recusarUsuario(s, usuarioId, motivo, s.usuarioLogadoId ?? undefined));
   }
 
-  bloquearUsuario(usuarioId: string) {
-    this.atualizar((s) => contas.bloquearUsuario(s, usuarioId));
+  bloquearUsuario(usuarioId: string, motivo: string) {
+    return this.executar((s) => contas.bloquearUsuario(s, usuarioId, s.usuarioLogadoId ?? '', motivo));
   }
 
-  desbloquearUsuario(usuarioId: string) {
-    this.atualizar((s) => contas.desbloquearUsuario(s, usuarioId));
+  suspenderUsuario(usuarioId: string, motivo: string, dias: number) {
+    return this.executar((s) => contas.suspenderUsuario(s, usuarioId, s.usuarioLogadoId ?? '', motivo, dias));
+  }
+
+  reativarUsuario(usuarioId: string, motivo: string) {
+    return this.executar((s) => contas.reativarUsuario(s, usuarioId, s.usuarioLogadoId ?? '', motivo));
   }
 
   // ==========================================
@@ -216,7 +222,7 @@ export class ProtemStore {
     return this.executar((s) => solicitacoes.aprovarPedido(s, solicitacaoId, responsavelId));
   }
 
-  recusarPedido(solicitacaoId: string, responsavelId: string, motivo?: string) {
+  recusarPedido(solicitacaoId: string, responsavelId: string, motivo: string) {
     return this.executar((s) => solicitacoes.recusarPedido(s, solicitacaoId, responsavelId, motivo));
   }
 
@@ -252,8 +258,10 @@ export class ProtemStore {
     return this.executar((s) => emprestimos.registrarRetirada(s, itemId, responsavelId, codigoRetirada));
   }
 
-  registrarDevolucao(emprestimoId: string, _responsavelId: string, comDefeito: boolean, descricaoDefeito?: string) {
-    return this.executar((s) => emprestimos.registrarDevolucao(s, emprestimoId, comDefeito, descricaoDefeito));
+  registrarDevolucao(emprestimoId: string, responsavelId: string, comDefeito: boolean, descricaoDefeito?: string) {
+    return this.executar((s) =>
+      emprestimos.registrarDevolucao(s, emprestimoId, comDefeito, descricaoDefeito, responsavelId),
+    );
   }
 
   // ==========================================

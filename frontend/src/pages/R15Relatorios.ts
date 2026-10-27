@@ -1,11 +1,13 @@
 import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
-import {Router, RouterLink} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
-import {parseDate} from '../lib/date-utils';
+import {formatDateTime, parseDate} from '../lib/date-utils';
 import {plural} from '../lib/categoria-utils';
+import {GRUPOS_EVENTO, GrupoEvento, TIPOS_EVENTO} from '../lib/auditoria-utils';
+import {PERIODOS, Periodo, inicioDoPeriodo} from '../lib/periodo';
 
-type PeriodoOpcao = '7d' | '30d' | '90d' | 'tudo';
+type Aba = 'geral' | 'auditoria';
 
 interface ItemRanking {
   id: string;
@@ -24,31 +26,77 @@ interface ItemRanking {
 export class R15Relatorios {
   readonly store = inject(ProtemStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-  readonly periodoSelecionado = signal<PeriodoOpcao>('30d');
+  /** Aba aberta; fica na URL (?aba=auditoria) para o link do Histórico abrir direto nela. */
+  readonly aba = signal<Aba>(this.route.snapshot.queryParamMap.get('aba') === 'auditoria' ? 'auditoria' : 'geral');
+  readonly periodoSelecionado = signal<Periodo>('30d');
 
   readonly plural = plural;
+  readonly periodos = PERIODOS;
+  readonly tiposEvento = TIPOS_EVENTO;
 
-  readonly periodos: {valor: PeriodoOpcao; rotulo: string}[] = [
-    {valor: '7d', rotulo: '7 dias'},
-    {valor: '30d', rotulo: '30 dias'},
-    {valor: '90d', rotulo: '90 dias'},
-    {valor: 'tudo', rotulo: 'Tudo'},
-  ];
+  abrirAba(aba: Aba) {
+    this.aba.set(aba);
+    this.router.navigate([], {queryParams: {aba: aba === 'geral' ? null : aba}, replaceUrl: true});
+  }
 
   private getFiltroDataMs(): number {
-    const agora = this.store.agora().getTime();
-    switch (this.periodoSelecionado()) {
-      case '7d':
-        return agora - 7 * 24 * 60 * 60 * 1000;
-      case '30d':
-        return agora - 30 * 24 * 60 * 60 * 1000;
-      case '90d':
-        return agora - 90 * 24 * 60 * 60 * 1000;
-      case 'tudo':
-      default:
-        return 0;
-    }
+    return inicioDoPeriodo(this.periodoSelecionado(), this.store.agora());
+  }
+
+  // ==========================================
+  // AUDITORIA: quem fez o quê, com quem e por quê
+  // ==========================================
+
+  readonly grupoEvento = signal<GrupoEvento | 'todos'>('todos');
+  readonly pessoaAuditoria = signal('');
+  readonly buscaAuditoria = signal('');
+  readonly limiteAuditoria = signal(30);
+
+  /** Eventos no período, pessoa (quem fez ou quem foi afetado) e busca, antes do filtro de tipo. */
+  private readonly eventosNoPeriodo = computed(() => {
+    const desde = this.getFiltroDataMs();
+    const pessoa = this.pessoaAuditoria();
+    const termo = this.buscaAuditoria().trim().toLocaleLowerCase('pt-BR');
+    return this.store.auditoria().filter((e) => {
+      if (parseDate(e.em).getTime() < desde) return false;
+      if (pessoa && e.afetadoId !== pessoa && e.autorId !== pessoa) return false;
+      if (!termo) return true;
+      const texto = `${this.nomePessoa(e.autorId)} ${this.nomePessoa(e.afetadoId)} ${this.getItem(e.itemId)?.nome ?? ''} ${e.motivo ?? ''} ${TIPOS_EVENTO[e.tipo].rotulo}`;
+      return texto.toLocaleLowerCase('pt-BR').includes(termo);
+    });
+  });
+
+  readonly gruposEvento = computed(() => {
+    const eventos = this.eventosNoPeriodo();
+    return [
+      {valor: 'todos' as const, rotulo: 'Todos', total: eventos.length},
+      ...GRUPOS_EVENTO.map((g) => ({...g, total: eventos.filter((e) => TIPOS_EVENTO[e.tipo].grupo === g.valor).length})),
+    ];
+  });
+
+  readonly eventosFiltrados = computed(() => {
+    const grupo = this.grupoEvento();
+    return this.eventosNoPeriodo()
+      .filter((e) => grupo === 'todos' || TIPOS_EVENTO[e.tipo].grupo === grupo)
+      .sort((a, b) => b.em.localeCompare(a.em));
+  });
+
+  readonly eventosVisiveis = computed(() => this.eventosFiltrados().slice(0, this.limiteAuditoria()));
+
+  readonly pessoasAuditoria = computed(() =>
+    [...this.store.usuarios()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+  );
+
+  /** Sem autor, a ação foi automática (rotina do relógio ou política de atraso). */
+  nomePessoa(id?: string): string {
+    if (!id) return 'Sistema';
+    return this.getUsuario(id)?.nome ?? 'Pessoa removida';
+  }
+
+  formatarDataHora(iso: string) {
+    return formatDateTime(iso);
   }
 
   // Empréstimos filtrados pelo período selecionado

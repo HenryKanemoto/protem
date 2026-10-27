@@ -3,17 +3,26 @@
     @if (u.status === 'bloqueada') {
       <div role="status" class="alert alert-danger">
         <mat-icon class="icon-sm" svgIcon="lock" />
-        <p>
-          <strong class="font-semibold">Conta bloqueada por atraso.</strong>
-          Você pode ver o catálogo, mas novos pedidos ficam suspensos até a devolução do item atrasado.
-        </p>
+        @if (u.restricaoManual) {
+          <p>
+            <strong class="font-semibold">Conta bloqueada pelo responsável.</strong>
+            Motivo: {{ u.restricaoManual.motivo }}. Você pode ver o catálogo, mas só volta a pedir itens quando o
+            responsável pelo acervo reativar a conta.
+          </p>
+        } @else {
+          <p>
+            <strong class="font-semibold">Conta bloqueada por atraso.</strong>
+            Você pode ver o catálogo, mas novos pedidos ficam suspensos até a devolução do item atrasado.
+          </p>
+        }
       </div>
     } @else if (u.status === 'suspensa') {
       <div role="status" class="alert alert-warn">
-        <mat-icon class="icon-sm" svgIcon="hourglass_empty" />
+        <mat-icon class="icon-sm" svgIcon="pause_circle" />
         <p>
-          <strong class="font-semibold">Conta suspensa temporariamente.</strong>
-          Pela política de empréstimos, você não pode pedir itens até o fim do prazo da suspensão.
+          <strong class="font-semibold">Conta suspensa até {{ formatarData(u.suspensoAte) }}.</strong>
+          Motivo: {{ u.restricaoManual ? u.restricaoManual.motivo : 'devolução com atraso' }}. Você pode ver o catálogo,
+          mas não pode pedir itens até essa data.
         </p>
       </div>
     }
@@ -47,12 +56,8 @@
         <button
           type="button"
           (click)="categoriaSelecionada.set(opcao.id)"
-          class="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors"
-          [class]="
-            categoriaSelecionada() === opcao.id
-              ? 'border-primary bg-brand-soft text-primary-strong'
-              : 'border-border bg-surface text-text-muted hover:border-primary hover:text-text'
-          "
+          class="chip shrink-0"
+          [class.chip-active]="categoriaSelecionada() === opcao.id"
           [attr.aria-pressed]="categoriaSelecionada() === opcao.id"
         >
           {{ opcao.nome }}

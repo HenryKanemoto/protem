@@ -11,7 +11,7 @@ export function usuario(id: string, mudanca: Partial<Usuario> = {}): Usuario {
   return {
     id,
     nome: id,
-    email: `${id}@escola.edu.br`,
+    email: `${id}@example.com`,
     matricula: id.toUpperCase(),
     senha: '123456',
     perfil: 'aluno',
@@ -50,6 +50,7 @@ export function estadoDeTeste(mudanca: Partial<ProtemState> = {}): ProtemState {
     emprestimos: [],
     ocorrencias: [],
     notificacoes: [],
+    auditoria: [],
     ...mudanca,
   };
 }

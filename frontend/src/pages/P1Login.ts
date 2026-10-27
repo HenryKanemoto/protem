@@ -42,13 +42,13 @@ export class P1Login {
 
   preencherEEntrar(perfil: 'aluno' | 'professor' | 'responsavel') {
     if (perfil === 'aluno') {
-      this.identificador.set('camila@escola.edu.br');
+      this.identificador.set('camila@example.com');
       this.senha.set('123456');
     } else if (perfil === 'professor') {
-      this.identificador.set('gustavo@escola.edu.br');
+      this.identificador.set('gustavo@example.com');
       this.senha.set('123456');
     } else {
-      this.identificador.set('enzo@escola.edu.br');
+      this.identificador.set('enzo@example.com');
       this.senha.set('123456');
     }
     this.mensagemErro.set(null);

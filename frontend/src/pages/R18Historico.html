@@ -1,108 +1,116 @@
 <div class="page">
-  <a routerLink="/painel/relatorios" class="back-link">
-    <mat-icon class="icon-sm" svgIcon="arrow_back" />
-    Relatórios
-  </a>
-
   <header class="page-header">
     <div>
-      <h1 class="page-title" title="Montado a partir dos registros que o sistema guarda. Alterações antigas de cadastro que não foram registradas não podem ser reconstruídas.">
-        Histórico
-      </h1>
-      <p class="page-subtitle">Pedidos, retiradas, devoluções e manutenção.</p>
+      <h1 class="page-title">Histórico</h1>
+      <p class="page-subtitle">
+        O caminho de cada pedido: pedido, aprovação, retirada e devolução. Quem fez cada ação fica em
+        <a routerLink="/painel/relatorios" [queryParams]="{aba: 'auditoria'}" class="font-medium text-primary-hover hover:underline">Relatórios › Auditoria</a>.
+      </p>
     </div>
   </header>
 
-  <div class="grid grid-cols-3 gap-3 lg:gap-4">
-    <div class="stat">
-      <span class="stat-label">Solicitações</span>
-      <span class="stat-value">{{ contar('solicitacao') }}</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Empréstimos</span>
-      <span class="stat-value">{{ contarEmprestimosDevolucoes() }}</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Ocorrências</span>
-      <span class="stat-value">{{ store.ocorrencias().length }}</span>
-    </div>
-  </div>
-
-  <!-- Busca sempre visível; tipo e datas atrás do botão Filtros -->
-  <div class="flex gap-2">
-    <div class="input-group flex-1 sm:max-w-sm">
-      <mat-icon class="icon-sm" svgIcon="search" />
-      <input type="search" class="input" [value]="busca()" (input)="busca.set($any($event.target).value)" placeholder="Pessoa, item ou patrimônio" aria-label="Buscar movimentação" />
-    </div>
-    <button
-      type="button"
-      (click)="filtrosAbertos.set(!filtrosAbertos())"
-      class="btn btn-secondary shrink-0"
-      [attr.aria-expanded]="filtrosAbertos()"
-      aria-controls="filtros-historico"
-    >
-      <mat-icon class="icon-sm" svgIcon="tune" />
-      Filtros{{ filtrosAtivos() ? ' (' + filtrosAtivos() + ')' : '' }}
-    </button>
-  </div>
-
-  @if (filtrosAbertos()) {
-  <section id="filtros-historico" class="card card-pad" aria-label="Filtros">
-    <div class="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+  <!-- Filtros sempre visíveis: período, pessoa e busca; situação em chips com a quantidade -->
+  <section class="flex flex-col gap-3" aria-label="Filtros do histórico">
+    <div class="grid gap-3 sm:grid-cols-[auto_1fr_1fr] sm:items-end">
       <div class="field">
-        <label for="filtro-tipo" class="label">Tipo</label>
-        <select id="filtro-tipo" class="select" [value]="tipo()" (change)="tipo.set($any($event.target).value)">
-          <option value="todos">Todos</option>
-          <option value="solicitacao">Solicitações</option>
-          <option value="emprestimo">Retiradas</option>
-          <option value="devolucao">Devoluções</option>
-          <option value="manutencao">Manutenção</option>
-          <option value="cadastro">Itens cadastrados</option>
+        <span id="rotulo-periodo-hist" class="label">Período</span>
+        <div class="flex gap-1 self-start rounded-full border border-border bg-surface p-1" role="group" aria-labelledby="rotulo-periodo-hist">
+          @for (p of periodos; track p.valor) {
+            <button
+              type="button"
+              (click)="periodo.set(p.valor)"
+              class="h-8 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors"
+              [class]="periodo() === p.valor ? 'bg-brand-soft text-primary-strong' : 'text-text-muted hover:text-text'"
+              [attr.aria-pressed]="periodo() === p.valor"
+            >
+              {{ p.rotulo }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="field">
+        <label for="hist-pessoa" class="label">Pessoa</label>
+        <select id="hist-pessoa" class="select" [value]="pessoaId()" (change)="pessoaId.set($any($event.target).value)">
+          <option value="">Todas as pessoas</option>
+          @for (p of pessoas(); track p.id) {
+            <option [value]="p.id">{{ p.nome }}</option>
+          }
         </select>
       </div>
       <div class="field">
-        <label for="filtro-inicio" class="label">De</label>
-        <input id="filtro-inicio" type="date" class="input" [value]="dataInicio()" (change)="dataInicio.set($any($event.target).value)" />
+        <label for="hist-busca" class="label">Item ou patrimônio</label>
+        <div class="input-group">
+          <mat-icon class="icon-sm" svgIcon="search" />
+          <input id="hist-busca" type="search" class="input" [value]="busca()" (input)="busca.set($any($event.target).value)" placeholder="Buscar" />
+        </div>
       </div>
-      <div class="field">
-        <label for="filtro-fim" class="label">Até</label>
-        <input id="filtro-fim" type="date" class="input" [value]="dataFim()" (change)="dataFim.set($any($event.target).value)" />
-      </div>
-      <button type="button" (click)="limparFiltros()" class="btn btn-ghost">Limpar</button>
+    </div>
+
+    <div class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Situação">
+      @for (g of grupos(); track g.valor) {
+        <button type="button" (click)="grupo.set(g.valor)" class="chip shrink-0" [class.chip-active]="grupo() === g.valor" [attr.aria-pressed]="grupo() === g.valor">
+          {{ g.rotulo }}
+          <span class="font-mono text-xs">{{ g.total }}</span>
+        </button>
+      }
     </div>
   </section>
-  }
 
-  <section class="card overflow-hidden" aria-labelledby="titulo-movimentacoes">
+  <section class="card overflow-hidden" aria-labelledby="titulo-pedidos-hist">
     <div class="card-header">
-      <h2 id="titulo-movimentacoes" class="card-title">Movimentações</h2>
-      <span class="text-sm text-text-muted">{{ registrosFiltrados().length }} registros</span>
+      <h2 id="titulo-pedidos-hist" class="card-title">Pedidos</h2>
+      <span class="flex items-center gap-3 text-sm text-text-muted">
+        {{ filtradas().length }} {{ filtradas().length === 1 ? 'registro' : 'registros' }}
+        @if (filtrosAtivos()) {
+          <button type="button" (click)="limparFiltros()" class="font-medium text-primary-hover hover:underline">Limpar filtros</button>
+        }
+      </span>
     </div>
-    @if (registrosFiltrados().length > 0) {
+    @if (visiveis().length > 0) {
       <ul class="divide-y divide-border">
-        @for (r of registrosFiltrados(); track r.id) {
-          <li class="flex items-start gap-4 px-5 py-3.5 sm:px-6">
-            <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-bg text-text-muted">
-              <mat-icon class="icon-sm" [svgIcon]="icone(r.tipo)" />
-            </span>
-            <div class="min-w-0 flex-1">
-              <p class="flex flex-wrap items-baseline justify-between gap-x-3">
-                <span class="font-medium">{{ r.titulo }}</span>
-                <span class="text-sm text-text-muted">{{ formatarData(r.data) }}</span>
-              </p>
-              <p class="mt-0.5 text-sm text-text-muted">{{ r.pessoa }} · {{ r.item }}</p>
-              <p class="mt-0.5 text-sm text-text-muted">{{ r.detalhe }} · {{ r.status }}</p>
+        @for (l of visiveis(); track l.id) {
+          <!-- Abaixo de lg: pessoa e situação na primeira linha, etapas embaixo; em lg, três colunas -->
+          <li class="flex flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-start lg:gap-6">
+            <div class="flex items-start justify-between gap-3 lg:w-60 lg:shrink-0">
+              <div class="min-w-0">
+                <a [routerLink]="['/painel/usuarios', l.pessoaId]" class="font-medium hover:underline">{{ l.pessoa }}</a>
+                <p class="mt-0.5 text-sm">
+                  <a [routerLink]="['/painel/itens', l.itemId]" class="hover:underline">{{ l.item }}</a>
+                  <span class="font-mono text-xs text-text-muted"> {{ l.patrimonio }}</span>
+                </p>
+              </div>
+              <span class="shrink-0 lg:hidden"><app-status-badge [status]="l.situacao" /></span>
             </div>
+            <ol class="flex min-w-0 flex-1 flex-col gap-1 text-sm" aria-label="Etapas">
+              @for (e of l.etapas; track $index) {
+                <li class="flex gap-2">
+                  <span class="w-20 shrink-0 tabular-nums text-text-muted">{{ formatarData(e.data) }}</span>
+                  <span>
+                    <span class="font-medium">{{ e.rotulo }}</span>
+                    @if (e.observacao) {
+                      <span class="text-text-muted"> · {{ e.observacao }}</span>
+                    }
+                  </span>
+                </li>
+              }
+            </ol>
+            <div class="hidden shrink-0 lg:block"><app-status-badge [status]="l.situacao" /></div>
           </li>
         }
       </ul>
+      @if (filtradas().length > visiveis().length) {
+        <div class="border-t border-border px-5 py-3 sm:px-6">
+          <button type="button" (click)="limite.set(limite() + 20)" class="btn btn-ghost btn-sm">
+            Mostrar mais ({{ filtradas().length - visiveis().length }})
+          </button>
+        </div>
+      }
     } @else {
       <div class="empty">
         <mat-icon class="icon-xl" svgIcon="manage_search" />
-        <p class="empty-title">Nenhuma movimentação encontrada</p>
-        <p class="empty-text">Tente mudar os filtros.</p>
+        <p class="empty-title">Nenhum pedido encontrado</p>
+        <p class="empty-text">Tente outro período ou limpe os filtros.</p>
       </div>
     }
   </section>
-
 </div>

@@ -1,6 +1,6 @@
 import {addDays, differenceInHours, formatDateShort, parseDate} from '../../lib/date-utils';
 import {Item, Solicitacao, StatusItem, Usuario} from '../../types/models';
-import {ProtemState, ResultadoAcao, Transicao, novaNotificacao, responsaveis} from '../estado';
+import {ProtemState, ResultadoAcao, Transicao, novaNotificacao, novoEvento, responsaveis} from '../estado';
 import {codigosEmUso, gerarCodigoRetirada} from './codigos';
 
 export interface PermissaoSolicitacao {
@@ -15,12 +15,18 @@ function mudarStatusItem(s: ProtemState, itemId: string, status: StatusItem): It
 }
 
 /** Motivo pelo qual a conta não pode solicitar, ou null se pode. */
-function bloqueioDaConta(usuario: Usuario): string | null {
+export function bloqueioDaConta(usuario: Usuario): string | null {
   if (usuario.status === 'pendente') return 'Sua conta ainda está aguardando aprovação.';
-  if (usuario.status === 'bloqueada') return 'Sua conta está bloqueada devido a pendência de item em atraso.';
+  const motivo = usuario.restricaoManual ? ` Motivo: ${usuario.restricaoManual.motivo}` : '';
+  if (usuario.status === 'bloqueada') {
+    return usuario.restricaoManual
+      ? `Sua conta foi bloqueada pelo responsável.${motivo}`
+      : 'Sua conta está bloqueada porque há um item em atraso. Ela volta ao normal quando o item for devolvido.';
+  }
   if (usuario.status === 'suspensa') {
     const ate = usuario.suspensoAte ? ` até ${formatDateShort(usuario.suspensoAte)}` : '';
-    return `Sua conta está suspensa${ate}. Não é possível solicitar empréstimos.`;
+    const porque = usuario.restricaoManual ? motivo : ' Motivo: devolução com atraso.';
+    return `Sua conta está suspensa${ate} e não pode pedir itens.${porque}`;
   }
   return null;
 }
@@ -94,8 +100,7 @@ export function solicitarEmprestimo(
   if (!usuario) return falha('Usuário não encontrado.');
 
   if (usuario.status === 'pendente') return falha('Sua conta ainda está pendente de aprovação.');
-  if (usuario.status === 'bloqueada') return falha('Sua conta está bloqueada devido a pendências de devolução.');
-  if (usuario.status === 'suspensa') return falha(bloqueioDaConta(usuario)!);
+  if (usuario.status === 'bloqueada' || usuario.status === 'suspensa') return falha(bloqueioDaConta(usuario)!);
 
   const item = s.itens.find((i) => i.id === itemId);
   if (!item) return falha('Item não encontrado.');
@@ -148,6 +153,10 @@ export function solicitarEmprestimo(
       itens: mudarStatusItem(s, itemId, 'solicitado'),
       solicitacoes: [novaSolicitacao, ...s.solicitacoes],
       notificacoes: [...novasNotifs, ...s.notificacoes],
+      auditoria: [
+        novoEvento('pedido_criado', s.agora, solicitanteId, {autorId: solicitanteId, itemId}),
+        ...s.auditoria,
+      ],
     },
     resultado: {
       sucesso: true,
@@ -187,27 +196,33 @@ export function aprovarPedido(s: ProtemState, solicitacaoId: string, responsavel
       ),
       itens: mudarStatusItem(s, solic.itemId, 'reservado'),
       notificacoes: [notif, ...s.notificacoes],
+      auditoria: [
+        novoEvento('pedido_aprovado', s.agora, solic.solicitanteId, {autorId: responsavelId, itemId: solic.itemId}),
+        ...s.auditoria,
+      ],
     },
     resultado: {sucesso: true, mensagem: 'Pedido aprovado com sucesso! Aguardando retirada hoje.'},
   };
 }
 
-/** RN09: Se o pedido for recusado, item volta a "disponivel". */
+/** RN09: Se o pedido for recusado, item volta a "disponivel". O motivo é obrigatório e fica no pedido. */
 export function recusarPedido(
   s: ProtemState,
   solicitacaoId: string,
   responsavelId: string,
-  motivo?: string,
+  motivo: string,
 ): Transicao<ResultadoAcao> {
   const solic = s.solicitacoes.find((sol) => sol.id === solicitacaoId);
   if (!solic) return {estado: s, resultado: {sucesso: false, mensagem: 'Solicitação não encontrada.'}};
+  if (solic.status !== 'pendente') return {estado: s, resultado: {sucesso: false, mensagem: 'Solicitação já foi avaliada.'}};
+  const motivoRecusa = motivo.trim();
+  if (!motivoRecusa) return {estado: s, resultado: {sucesso: false, mensagem: 'Informe o motivo da recusa.'}};
 
   const item = s.itens.find((i) => i.id === solic.itemId);
-  const motivoTexto = motivo ? ` Motivo: ${motivo}` : '';
   const notif = novaNotificacao(
     solic.solicitanteId,
     'recusa',
-    `Seu pedido para "${item?.nome || 'o item'}" não foi aprovado.${motivoTexto}`,
+    `Seu pedido para "${item?.nome || 'o item'}" não foi aprovado. Motivo: ${motivoRecusa}`,
     s.agora,
     '/meus-emprestimos',
   );
@@ -217,11 +232,19 @@ export function recusarPedido(
       ...s,
       solicitacoes: s.solicitacoes.map((sol) =>
         sol.id === solicitacaoId
-          ? {...sol, status: 'recusada' as const, avaliadoPor: responsavelId, avaliadoEm: s.agora}
+          ? {...sol, status: 'recusada' as const, avaliadoPor: responsavelId, avaliadoEm: s.agora, motivoRecusa}
           : sol,
       ),
       itens: mudarStatusItem(s, solic.itemId, 'disponivel'),
       notificacoes: [notif, ...s.notificacoes],
+      auditoria: [
+        novoEvento('pedido_recusado', s.agora, solic.solicitanteId, {
+          autorId: responsavelId,
+          itemId: solic.itemId,
+          motivo: motivoRecusa,
+        }),
+        ...s.auditoria,
+      ],
     },
     resultado: {sucesso: true, mensagem: 'Pedido recusado. O item voltou a ficar disponível no catálogo.'},
   };

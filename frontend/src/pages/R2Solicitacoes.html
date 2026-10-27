@@ -111,14 +111,23 @@
         </dl>
 
         <div class="field">
-          <label for="motivoRecusa" class="label">Motivo <span class="font-normal text-text-muted">(opcional)</span></label>
+          <label for="motivoRecusa" class="label">Motivo</label>
           <input
             id="motivoRecusa"
             type="text"
             #motivoInput
             class="input"
+            [class.input-invalid]="erroRecusa()"
+            (input)="erroRecusa.set(null)"
             placeholder="Equipamento reservado para manutenção preventiva"
+            [attr.aria-describedby]="erroRecusa() ? 'erro-recusa' : 'dica-recusa'"
+            required
           />
+          @if (erroRecusa()) {
+            <p id="erro-recusa" class="field-error" role="alert">{{ erroRecusa() }}</p>
+          } @else {
+            <p id="dica-recusa" class="hint">A pessoa recebe o motivo, e ele fica registrado na auditoria.</p>
+          }
         </div>
 
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

@@ -11,6 +11,22 @@ export interface Usuario {
   status: StatusUsuario;
   suspensoAte?: string; // ISO date string
   criadoEm: string;    // ISO date string
+  /** Presente quando o bloqueio ou a suspensão foram aplicados à mão pelo responsável. */
+  restricaoManual?: RestricaoManual;
+  // Dados pessoais (só as personas de demonstração têm; todos inventados)
+  cpf?: string;
+  telefone?: string;
+  curso?: string;
+}
+
+/**
+ * Bloqueio ou suspensão aplicados pelo responsável. O sistema não desfaz sozinho:
+ * o bloqueio fica até a reativação; a suspensão termina na data de suspensoAte.
+ */
+export interface RestricaoManual {
+  motivo: string;
+  porId: string;
+  em: string; // ISO date string
 }
 
 export interface Categoria {
@@ -58,6 +74,7 @@ export interface Solicitacao {
   avaliadoEm?: string;       // ISO date string
   lembreteEnviadoEm?: string; // ISO date string
   codigoRetirada?:string;
+  motivoRecusa?: string;
 }
 
 export interface Emprestimo {
@@ -103,6 +120,33 @@ export interface Notificacao {
   lida: boolean;
   criadoEm: string; // ISO date string
   destino: string;  // Route path e.g. /meus-emprestimos or /painel/solicitacoes
+}
+
+export type TipoEventoAuditoria =
+  | 'conta_cadastrada'
+  | 'conta_aprovada'
+  | 'conta_recusada'
+  | 'conta_bloqueada'
+  | 'conta_suspensa'
+  | 'conta_reativada'
+  | 'pedido_criado'
+  | 'pedido_aprovado'
+  | 'pedido_recusado'
+  | 'pedido_expirado'
+  | 'retirada'
+  | 'devolucao'
+  | 'devolucao_avaria';
+
+/** Registro de quem fez o quê, com quem e por quê. Gravado pelas próprias regras. */
+export interface EventoAuditoria {
+  id: string;
+  tipo: TipoEventoAuditoria;
+  em: string;         // ISO date string
+  autorId?: string;   // ausente = feito pelo sistema (rotina automática ou política de atraso)
+  afetadoId: string;  // pessoa afetada
+  itemId?: string;
+  motivo?: string;
+  detalhe?: string;
 }
 
 export type PoliticaAtraso = 'simples' | 'intermediaria' | 'rigida';

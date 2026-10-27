@@ -2,17 +2,14 @@
   <header class="page-header">
     <div>
       <h1 class="page-title">Relatórios</h1>
-      <p class="page-subtitle">
-        Empréstimos, atrasos e avarias no período ·
-        <a routerLink="/painel/historico" class="font-medium text-primary-hover hover:underline">Ver histórico</a>
-      </p>
+      <p class="page-subtitle">Visão da instituição no período: uso do acervo, atrasos, avarias e quem fez cada ação.</p>
     </div>
-    <div class="flex gap-1 self-start rounded-full border border-border bg-surface p-1 sm:self-auto" role="group" aria-label="Período">
+    <div class="flex shrink-0 gap-1 self-start rounded-full border border-border bg-surface p-1 sm:self-auto" role="group" aria-label="Período">
       @for (p of periodos; track p.valor) {
         <button
           type="button"
           (click)="periodoSelecionado.set(p.valor)"
-          class="h-8 rounded-full px-3 text-sm font-medium transition-colors"
+          class="h-8 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors"
           [class]="periodoSelecionado() === p.valor ? 'bg-brand-soft text-primary-strong' : 'text-text-muted hover:text-text'"
           [attr.aria-pressed]="periodoSelecionado() === p.valor"
         >
@@ -22,6 +19,19 @@
     </div>
   </header>
 
+  <div class="-mb-4 flex border-b border-border" role="tablist" aria-label="Relatórios">
+    <button type="button" role="tab" id="aba-geral" class="tab" [class.tab-active]="aba() === 'geral'" [attr.aria-selected]="aba() === 'geral'" aria-controls="painel-relatorio" (click)="abrirAba('geral')">
+      <mat-icon class="icon-sm" svgIcon="insights" />
+      Visão geral
+    </button>
+    <button type="button" role="tab" id="aba-auditoria" class="tab" [class.tab-active]="aba() === 'auditoria'" [attr.aria-selected]="aba() === 'auditoria'" aria-controls="painel-relatorio" (click)="abrirAba('auditoria')">
+      <mat-icon class="icon-sm" svgIcon="fact_check" />
+      Auditoria
+    </button>
+  </div>
+
+  <div id="painel-relatorio" role="tabpanel" [attr.aria-labelledby]="aba() === 'geral' ? 'aba-geral' : 'aba-auditoria'" class="flex flex-col gap-8">
+  @if (aba() === 'geral') {
   <!-- Números do período -->
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
     <div class="stat">
@@ -42,7 +52,7 @@
     </div>
   </div>
 
-  <div class="grid items-start gap-6 lg:grid-cols-2">
+  <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
     <!-- Ranking: série única, uma cor, valor rotulado no fim da barra -->
     <section class="card" aria-labelledby="titulo-ranking">
       <div class="card-header">
@@ -135,4 +145,95 @@
       <p class="px-6 py-10 text-center text-sm text-text-muted">Nenhuma avaria registrada no período.</p>
     }
   </section>
+  } @else {
+    <!-- Filtros sempre visíveis: pessoa e busca; tipo de evento em chips com a quantidade -->
+    <section class="flex flex-col gap-3" aria-label="Filtros da auditoria">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="field">
+          <label for="aud-pessoa" class="label">Pessoa (quem fez ou quem foi afetado)</label>
+          <select id="aud-pessoa" class="select" [value]="pessoaAuditoria()" (change)="pessoaAuditoria.set($any($event.target).value)">
+            <option value="">Todas as pessoas</option>
+            @for (p of pessoasAuditoria(); track p.id) {
+              <option [value]="p.id">{{ p.nome }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="aud-busca" class="label">Buscar</label>
+          <div class="input-group">
+            <mat-icon class="icon-sm" svgIcon="search" />
+            <input id="aud-busca" type="search" class="input" [value]="buscaAuditoria()" (input)="buscaAuditoria.set($any($event.target).value)" placeholder="Nome, item ou motivo" />
+          </div>
+        </div>
+      </div>
+      <div class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Tipo de evento">
+        @for (g of gruposEvento(); track g.valor) {
+          <button type="button" (click)="grupoEvento.set(g.valor)" class="chip shrink-0" [class.chip-active]="grupoEvento() === g.valor" [attr.aria-pressed]="grupoEvento() === g.valor">
+            {{ g.rotulo }}
+            <span class="font-mono text-xs">{{ g.total }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="card overflow-hidden" aria-labelledby="titulo-auditoria">
+      <div class="card-header">
+        <h2 id="titulo-auditoria" class="card-title">Eventos</h2>
+        <span class="text-sm text-text-muted">{{ eventosFiltrados().length }} {{ eventosFiltrados().length === 1 ? 'evento' : 'eventos' }}</span>
+      </div>
+      @if (eventosVisiveis().length > 0) {
+        <ul class="divide-y divide-border">
+          @for (e of eventosVisiveis(); track e.id) {
+            @let tipo = tiposEvento[e.tipo];
+            @let it = getItem(e.itemId);
+            <li class="flex items-start gap-4 px-5 py-4 sm:px-6">
+              <span class="hidden size-9 shrink-0 items-center justify-center rounded-full bg-bg text-text-muted sm:flex" aria-hidden="true">
+                <mat-icon class="icon-sm" [svgIcon]="tipo.icone" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="flex flex-wrap items-baseline justify-between gap-x-3">
+                  <span class="font-medium">{{ tipo.rotulo }}</span>
+                  <span class="text-sm tabular-nums text-text-muted">{{ formatarDataHora(e.em) }}</span>
+                </p>
+                <dl class="mt-1 grid gap-x-6 gap-y-0.5 text-sm sm:grid-cols-[auto_1fr]">
+                  <dt class="text-text-muted">Quem fez</dt>
+                  <dd>{{ nomePessoa(e.autorId) }}</dd>
+                  <dt class="text-text-muted">Afetado</dt>
+                  <dd>
+                    <a [routerLink]="['/painel/usuarios', e.afetadoId]" class="hover:underline">{{ nomePessoa(e.afetadoId) }}</a>
+                  </dd>
+                  @if (it) {
+                    <dt class="text-text-muted">Item</dt>
+                    <dd>{{ it.nome }} <span class="font-mono text-xs text-text-muted">{{ it.patrimonio }}</span></dd>
+                  }
+                  @if (e.motivo) {
+                    <dt class="text-text-muted">Motivo</dt>
+                    <dd>{{ e.motivo }}</dd>
+                  }
+                  @if (e.detalhe) {
+                    <dt class="text-text-muted">Detalhe</dt>
+                    <dd>{{ e.detalhe }}</dd>
+                  }
+                </dl>
+              </div>
+            </li>
+          }
+        </ul>
+        @if (eventosFiltrados().length > eventosVisiveis().length) {
+          <div class="border-t border-border px-5 py-3 sm:px-6">
+            <button type="button" (click)="limiteAuditoria.set(limiteAuditoria() + 30)" class="btn btn-ghost btn-sm">
+              Mostrar mais ({{ eventosFiltrados().length - eventosVisiveis().length }})
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="empty">
+          <mat-icon class="icon-xl" svgIcon="manage_search" />
+          <p class="empty-title">Nenhum evento encontrado</p>
+          <p class="empty-text">Tente outro período ou tipo de evento.</p>
+        </div>
+      }
+    </section>
+  }
+  </div>
 </div>
