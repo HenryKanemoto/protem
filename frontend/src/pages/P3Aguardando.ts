@@ -44,7 +44,7 @@ export class P3Aguardando {
     return (
       this.usuarioAtual()?.nome ||
       this.estadoNavegacao()?.nome ||
-      'Diego Alves'
+      'Diego Alves Barreto'
     );
   });
 
@@ -52,7 +52,7 @@ export class P3Aguardando {
     return (
       this.usuarioAtual()?.email ||
       this.estadoNavegacao()?.email ||
-      'diego.alves@escola.edu.br'
+      'diego.barreto@example.com'
     );
   });
 
@@ -60,7 +60,7 @@ export class P3Aguardando {
     return (
       this.usuarioAtual()?.matricula ||
       this.estadoNavegacao()?.matricula ||
-      'ALU-1004'
+      'ALU-0110'
     );
   });
 

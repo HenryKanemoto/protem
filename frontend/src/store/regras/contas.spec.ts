@@ -14,7 +14,7 @@ import {AGORA, buscar, emprestimo, estadoDeTeste, item, usuario} from './estado-
 
 describe('regras de conta', () => {
   describe('RN08: cadastro', () => {
-    const dados = {nome: 'Rafa Nunes', email: 'rafa@escola.edu.br', matricula: 'alu-9', perfil: 'aluno' as const};
+    const dados = {nome: 'Rafa Nunes', email: 'rafa@example.com', matricula: 'alu-9', perfil: 'aluno' as const};
 
     it('cria conta pendente e avisa os responsáveis', () => {
       const {estado, resultado} = cadastrarUsuario(estadoDeTeste(), dados);
@@ -27,7 +27,7 @@ describe('regras de conta', () => {
     it('recusa e-mail ou matrícula repetidos, sem diferenciar maiúsculas', () => {
       const s = cadastrarUsuario(estadoDeTeste(), dados).estado;
       expect(cadastrarUsuario(s, {...dados, matricula: 'X'}).resultado).toMatchObject({sucesso: false, campo: 'email'});
-      expect(cadastrarUsuario(s, {...dados, email: 'outro@escola.edu.br', matricula: 'ALU-9'}).resultado).toMatchObject({
+      expect(cadastrarUsuario(s, {...dados, email: 'outro@example.com', matricula: 'ALU-9'}).resultado).toMatchObject({
         sucesso: false,
         campo: 'matricula',
       });
@@ -144,12 +144,12 @@ describe('regras de conta', () => {
 
   describe('login simulado', () => {
     it('entra por e-mail ou matrícula, sem diferenciar maiúsculas', () => {
-      expect(login(estadoDeTeste(), 'ALUNA@escola.edu.br', '123456').estado.usuarioLogadoId).toBe('aluna');
+      expect(login(estadoDeTeste(), 'ALUNA@example.com', '123456').estado.usuarioLogadoId).toBe('aluna');
       expect(login(estadoDeTeste(), 'aluna', '123456').estado.usuarioLogadoId).toBe('aluna');
     });
 
     it('recusa usuário desconhecido e senha errada', () => {
-      expect(login(estadoDeTeste(), 'ninguem@escola.edu.br', '123456').resultado.sucesso).toBe(false);
+      expect(login(estadoDeTeste(), 'ninguem@example.com', '123456').resultado.sucesso).toBe(false);
       expect(login(estadoDeTeste(), 'aluna', 'errada').resultado.sucesso).toBe(false);
     });
   });
