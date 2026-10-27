@@ -1,11 +1,15 @@
 import {ProtemState} from './estado';
 import {getInitialDemoState} from './demo-data';
 
-const CHAVE = 'protem:v1';
-/** Chaves de antes da troca de nome. Só são lidas se ainda não houver dados na chave nova. */
-const CHAVES_ANTIGAS = ['nexus_app_state_v2', 'nexus_app_state_v1'];
+/** v2: entrou a auditoria e o seed passou a ter as personas. */
+const CHAVE = 'protem:v2';
+/**
+ * Chaves de versões anteriores. Não são aproveitadas (falta a auditoria e o seed mudou):
+ * o navegador começa do seed novo e elas são apagadas na primeira gravação, para liberar espaço.
+ */
+const CHAVES_ANTIGAS = ['protem:v1', 'nexus_app_state_v2', 'nexus_app_state_v1'];
 
-const LISTAS = ['usuarios', 'categorias', 'itens', 'solicitacoes', 'emprestimos', 'ocorrencias', 'notificacoes'];
+const LISTAS = ['usuarios', 'categorias', 'itens', 'solicitacoes', 'emprestimos', 'ocorrencias', 'notificacoes', 'auditoria'];
 const POLITICAS = ['simples', 'intermediaria', 'rigida'];
 
 export interface EstadoCarregado {
@@ -17,19 +21,16 @@ export interface EstadoCarregado {
 export type ResultadoGravacao = 'ok' | 'cota' | 'indisponivel';
 
 export function carregarEstado(): EstadoCarregado {
-  for (const chave of [CHAVE, ...CHAVES_ANTIGAS]) {
-    const texto = ler(chave);
-    if (texto === null) continue;
-    // Dados corrompidos na chave mais recente: volta para o seed em vez de tentar as antigas
-    const estado = validar(texto);
-    return estado ? {estado, doSeed: false} : {estado: getInitialDemoState(), doSeed: true};
-  }
-  return {estado: getInitialDemoState(), doSeed: true};
+  const texto = ler(CHAVE);
+  // Nada salvo ou dados corrompidos: começa do seed
+  const estado = texto === null ? null : validar(texto);
+  return estado ? {estado, doSeed: false} : {estado: getInitialDemoState(), doSeed: true};
 }
 
 export function salvarEstado(estado: ProtemState): ResultadoGravacao {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(estado));
+    CHAVES_ANTIGAS.forEach((chave) => localStorage.removeItem(chave));
     return 'ok';
   } catch (erro) {
     return erro instanceof DOMException && erro.name === 'QuotaExceededError' ? 'cota' : 'indisponivel';

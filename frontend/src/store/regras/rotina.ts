@@ -1,5 +1,6 @@
 import {calculateDiasAtraso, formatDateShort, isDayEnded, parseDate} from '../../lib/date-utils';
-import {ProtemState, novaNotificacao, responsaveis} from '../estado';
+import {EventoAuditoria} from '../../types/models';
+import {ProtemState, novaNotificacao, novoEvento, responsaveis} from '../estado';
 
 /**
  * Rotina automática executada ao avançar o relógio:
@@ -16,6 +17,8 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
   const itens = [...s.itens];
   let usuarios = [...s.usuarios];
   const notificacoes = [...s.notificacoes];
+  // Eventos novos, do mais antigo para o mais recente; entram no topo da auditoria no fim
+  const eventos: EventoAuditoria[] = [];
   const politica = s.configuracao.politicaAtraso;
 
   // 1. RN04: Expirar pedidos aprovados não retirados se o dia da aprovação terminou
@@ -37,6 +40,12 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
         '/meus-emprestimos',
       ),
     );
+    eventos.push(
+      novoEvento('pedido_expirado', agoraIso, solic.solicitanteId, {
+        itemId: solic.itemId,
+        motivo: 'Não foi retirado no dia da aprovação',
+      }),
+    );
     return {...solic, status: 'expirada' as const};
   });
 
@@ -56,6 +65,12 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
       const userIdx = usuarios.findIndex((u) => u.id === emp.usuarioId);
       if (userIdx >= 0 && usuarios[userIdx].status === 'ativa') {
         usuarios[userIdx] = {...usuarios[userIdx], status: 'bloqueada'};
+        eventos.push(
+          novoEvento('conta_bloqueada', agoraIso, emp.usuarioId, {
+            itemId: emp.itemId,
+            motivo: `Atraso na devolução (política ${politica === 'rigida' ? 'rígida' : 'intermediária'})`,
+          }),
+        );
       }
     }
 
@@ -123,22 +138,38 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
     }
   });
 
-  // 4. Encerrar suspensões vencidas
+  // 4. Encerrar suspensões vencidas (automáticas ou aplicadas pelo responsável)
   usuarios = usuarios.map((u) => {
     if (u.status !== 'suspensa' || !u.suspensoAte) return u;
     if (clockNow.getTime() < parseDate(u.suspensoAte).getTime()) return u;
 
+    // Com outro item em atraso, a conta passa direto para bloqueada (políticas intermediária e rígida)
+    const aindaAtrasado =
+      politica !== 'simples' && emprestimos.some((e) => e.usuarioId === u.id && !e.devolvidoEm && e.diasAtraso > 0);
     notificacoes.unshift(
       novaNotificacao(
         u.id,
         'aprovacao',
-        'Seu período de suspensão encerrou. Sua conta foi reativada.',
+        aindaAtrasado
+          ? 'Seu período de suspensão encerrou, mas a conta segue bloqueada porque há um item em atraso.'
+          : 'Seu período de suspensão encerrou. Sua conta foi reativada.',
         agoraIso,
-        '/catalogo',
+        aindaAtrasado ? '/meus-emprestimos' : '/catalogo',
       ),
     );
-    return {...u, status: 'ativa' as const, suspensoAte: undefined};
+    eventos.push(
+      aindaAtrasado
+        ? novoEvento('conta_bloqueada', agoraIso, u.id, {motivo: 'Fim da suspensão, mas com item em atraso'})
+        : novoEvento('conta_reativada', agoraIso, u.id, {motivo: 'Fim do período de suspensão'}),
+    );
+    return {
+      ...u,
+      status: aindaAtrasado ? ('bloqueada' as const) : ('ativa' as const),
+      suspensoAte: undefined,
+      restricaoManual: undefined,
+    };
   });
 
-  return {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes};
+  if (eventos.length === 0) return {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes};
+  return {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes, auditoria: [...eventos.reverse(), ...s.auditoria]};
 }

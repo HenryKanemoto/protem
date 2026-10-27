@@ -28,6 +28,21 @@
     </a>
   }
 
+  <div class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrar por situação">
+    @for (opcao of opcoesStatus(); track opcao.valor) {
+      <button
+        type="button"
+        (click)="filtroStatus.set(opcao.valor)"
+        class="chip shrink-0"
+        [class.chip-active]="filtroStatus() === opcao.valor"
+        [attr.aria-pressed]="filtroStatus() === opcao.valor"
+      >
+        {{ opcao.rotulo }}
+        <span class="font-mono text-xs">{{ opcao.total }}</span>
+      </button>
+    }
+  </div>
+
   <section class="card overflow-hidden">
     @if (usuariosFiltrados().length > 0) {
       <ul class="divide-y divide-border">
@@ -40,7 +55,15 @@
               <span class="avatar size-10 text-sm">{{ getIniciais(user.nome) }}</span>
               <span class="min-w-0 flex-1">
                 <span class="block truncate font-medium">{{ user.nome }}</span>
-                <span class="block truncate text-xs text-text-muted">{{ user.email }}</span>
+                <span class="block truncate text-xs text-text-muted">
+                  @if (user.status === 'suspensa' && user.suspensoAte) {
+                    Suspensa até {{ formatarData(user.suspensoAte) }}{{ user.restricaoManual ? ' · ' + user.restricaoManual.motivo : '' }}
+                  } @else if (user.status === 'bloqueada') {
+                    {{ user.restricaoManual ? 'Bloqueada: ' + user.restricaoManual.motivo : 'Bloqueada por atraso' }}
+                  } @else {
+                    {{ user.email }}
+                  }
+                </span>
               </span>
               <span class="hidden w-32 sm:block"><span class="tag">{{ user.matricula }}</span></span>
               <span class="hidden w-28 text-sm text-text-muted md:block">{{ rotuloPerfil(user.perfil) }}</span>

@@ -16,17 +16,20 @@
       </div>
       <div class="flex flex-col items-start gap-2 sm:items-end">
         <app-status-badge [status]="u.status" />
-        @if (u.suspensoAte) {
-          <span class="text-xs text-maint">até {{ formatarData(u.suspensoAte) }}</span>
-        }
         @if (u.perfil !== 'responsavel') {
           @if (u.status === 'ativa') {
-            <button type="button" (click)="store.bloquearUsuario(u.id)" class="btn btn-danger-ghost btn-sm">
-              <mat-icon class="icon-sm" svgIcon="lock" />
-              Bloquear conta
-            </button>
+            <div class="flex gap-2">
+              <button type="button" (click)="abrirAcao('suspender')" class="btn btn-secondary btn-sm">
+                <mat-icon class="icon-sm" svgIcon="pause_circle" />
+                Suspender
+              </button>
+              <button type="button" (click)="abrirAcao('bloquear')" class="btn btn-danger-ghost btn-sm">
+                <mat-icon class="icon-sm" svgIcon="lock" />
+                Bloquear
+              </button>
+            </div>
           } @else if (u.status === 'bloqueada' || u.status === 'suspensa') {
-            <button type="button" (click)="store.desbloquearUsuario(u.id)" class="btn btn-secondary btn-sm">
+            <button type="button" (click)="abrirAcao('reativar')" class="btn btn-secondary btn-sm">
               <mat-icon class="icon-sm" svgIcon="lock_open" />
               Reativar conta
             </button>
@@ -34,6 +37,37 @@
         }
       </div>
     </header>
+
+    @if (feedback()) {
+      <div role="status" class="alert alert-ok items-center">
+        <mat-icon class="icon-sm" svgIcon="check_circle" />
+        <p class="flex-1">{{ feedback() }}</p>
+        <button type="button" (click)="feedback.set(null)" class="btn-icon size-8" aria-label="Fechar aviso">
+          <mat-icon class="icon-sm" svgIcon="close" />
+        </button>
+      </div>
+    }
+
+    @if (situacaoDaConta(); as sit) {
+      <div class="alert" [class]="u.status === 'bloqueada' ? 'alert-danger' : 'alert-warn'">
+        <mat-icon class="icon-sm" [svgIcon]="u.status === 'bloqueada' ? 'lock' : 'pause_circle'" />
+        <p><span class="font-medium">{{ sit.texto }}</span> Motivo: {{ sit.motivo }}</p>
+      </div>
+    }
+
+    @if (u.cpf || u.telefone || u.curso) {
+      <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
+        @if (u.curso) {
+          <div><dt class="text-text-muted">Curso</dt><dd>{{ u.curso }}</dd></div>
+        }
+        @if (u.cpf) {
+          <div><dt class="text-text-muted">CPF</dt><dd class="font-mono tabular-nums">{{ u.cpf }}</dd></div>
+        }
+        @if (u.telefone) {
+          <div><dt class="text-text-muted">Telefone</dt><dd class="tabular-nums">{{ u.telefone }}</dd></div>
+        }
+      </dl>
+    }
 
     <div class="grid grid-cols-3 gap-3 sm:gap-4">
       <div class="stat">
@@ -88,6 +122,58 @@
         <p class="px-6 py-10 text-center text-sm text-text-muted">Nenhum empréstimo registrado.</p>
       }
     </section>
+
+    @if (acao(); as a) {
+      <app-modal rotulo="titulo-acao-conta" (fechar)="acao.set(null)">
+        <div>
+          <h3 id="titulo-acao-conta" class="modal-title">{{ textosAcao[a].titulo }}</h3>
+          <p class="mt-1 text-sm text-text-muted">{{ textosAcao[a].explicacao }}</p>
+        </div>
+
+        <p class="rounded-control bg-bg p-4 text-sm"><span class="text-text-muted">Conta:</span> {{ u.nome }} ({{ u.matricula }})</p>
+
+        @if (a === 'suspender') {
+          <div class="field">
+            <label for="diasSuspensao" class="label">Dias de suspensão</label>
+            <input
+              id="diasSuspensao"
+              type="number"
+              min="1"
+              [max]="maxDias"
+              class="input w-32"
+              [value]="dias()"
+              (input)="dias.set($any($event.target).valueAsNumber)"
+            />
+          </div>
+        }
+
+        <div class="field">
+          <label for="motivoAcao" class="label">Motivo</label>
+          <textarea
+            id="motivoAcao"
+            class="textarea"
+            [class.input-invalid]="erro()"
+            [value]="motivo()"
+            (input)="motivo.set($any($event.target).value); erro.set(null)"
+            [placeholder]="textosAcao[a].placeholder"
+            [attr.aria-describedby]="erro() ? 'erro-acao' : 'dica-motivo'"
+            required
+          ></textarea>
+          @if (erro()) {
+            <p id="erro-acao" class="field-error" role="alert">{{ erro() }}</p>
+          } @else {
+            <p id="dica-motivo" class="hint">A pessoa recebe o motivo em um aviso, e ele fica registrado na auditoria.</p>
+          }
+        </div>
+
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" (click)="acao.set(null)" class="btn btn-secondary">Cancelar</button>
+          <button type="button" (click)="confirmarAcao()" class="btn" [class]="a === 'reativar' ? 'btn-primary' : 'btn-danger'">
+            {{ textosAcao[a].botao }}
+          </button>
+        </div>
+      </app-modal>
+    }
   } @else {
     <div class="card empty">
       <mat-icon class="icon-xl" svgIcon="help_outline" />

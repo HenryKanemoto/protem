@@ -378,6 +378,7 @@ export function getInitialDemoState(): ProtemState {
     emprestimos,
     ocorrencias,
     notificacoes,
+    auditoria: [],
   };
 }
 

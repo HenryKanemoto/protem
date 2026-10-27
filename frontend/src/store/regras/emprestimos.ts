@@ -1,6 +1,6 @@
 import {addDays, calculateDiasAtraso, formatDateShort, parseDate} from '../../lib/date-utils';
-import {Emprestimo, Ocorrencia, StatusItem, StatusUsuario, Usuario} from '../../types/models';
-import {ProtemState, ResultadoAcao, Transicao, novaNotificacao} from '../estado';
+import {Emprestimo, EventoAuditoria, Ocorrencia, StatusItem, StatusUsuario, Usuario} from '../../types/models';
+import {ProtemState, ResultadoAcao, Transicao, novaNotificacao, novoEvento} from '../estado';
 import {codigoConfere} from './codigos';
 
 export type ResultadoRetirada = ResultadoAcao & {emprestimoId?: string; itemId?: string};
@@ -83,6 +83,14 @@ export function registrarRetirada(
       solicitacoes: s.solicitacoes.map((sol) => (sol.id === solic.id ? {...sol, status: 'concluida' as const} : sol)),
       emprestimos: [novoEmprestimo, ...s.emprestimos],
       notificacoes: [notif, ...s.notificacoes],
+      auditoria: [
+        novoEvento('retirada', s.agora, solic.solicitanteId, {
+          autorId: responsavelId,
+          itemId: item.id,
+          detalhe: `Devolução prevista para ${formatDateShort(solic.devolucaoDesejada)}`,
+        }),
+        ...s.auditoria,
+      ],
     },
     resultado: {
       sucesso: true,
@@ -102,6 +110,7 @@ export function registrarDevolucao(
   emprestimoId: string,
   comDefeito: boolean,
   descricaoDefeito?: string,
+  responsavelId?: string,
 ): Transicao<ResultadoAcao> {
   const emp = s.emprestimos.find((e) => e.id === emprestimoId);
   if (!emp) return {estado: s, resultado: {sucesso: false, mensagem: 'Empréstimo não encontrado.'}};
@@ -131,7 +140,7 @@ export function registrarDevolucao(
   const novoStatusItem: StatusItem = comDefeito ? 'manutencao' : 'disponivel';
   const itens = s.itens.map((i) => (i.id === emp.itemId ? {...i, status: novoStatusItem} : i));
 
-  const {usuarios, mensagem} = aplicarPoliticaAtraso(s, usuario, emprestimos, diasAtraso, clockNow);
+  const {usuarios, mensagem, eventoConta} = aplicarPoliticaAtraso(s, usuario, emprestimos, diasAtraso, clockNow, item?.nome);
 
   const notif = novaNotificacao(
     emp.usuarioId,
@@ -141,8 +150,17 @@ export function registrarDevolucao(
     '/meus-emprestimos',
   );
 
+  const eventoDevolucao = novoEvento(comDefeito ? 'devolucao_avaria' : 'devolucao', s.agora, emp.usuarioId, {
+    autorId: responsavelId,
+    itemId: emp.itemId,
+    motivo: comDefeito ? ocorrencias[0].descricao : undefined,
+    detalhe: diasAtraso > 0 ? `${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso` : 'No prazo',
+  });
+  // A consequência na conta (se houver) vem depois da devolução, então fica mais acima na lista
+  const auditoria = [...(eventoConta ? [eventoConta] : []), eventoDevolucao, ...s.auditoria];
+
   return {
-    estado: {...s, emprestimos, itens, ocorrencias, usuarios, notificacoes: [notif, ...s.notificacoes]},
+    estado: {...s, emprestimos, itens, ocorrencias, usuarios, notificacoes: [notif, ...s.notificacoes], auditoria},
     resultado: {sucesso: true, mensagem},
   };
 }
@@ -154,18 +172,36 @@ function aplicarPoliticaAtraso(
   emprestimos: Emprestimo[],
   diasAtraso: number,
   clockNow: Date,
-): {usuarios: Usuario[]; mensagem: string} {
+  nomeItem = 'o item',
+): {usuarios: Usuario[]; mensagem: string; eventoConta?: EventoAuditoria} {
   const padrao = 'Devolução registrada com sucesso!';
   if (!usuario) return {usuarios: s.usuarios, mensagem: padrao};
+
+  // Bloqueio ou suspensão aplicados pelo responsável: a devolução não mexe na conta
+  if (usuario.restricaoManual) {
+    const atraso = diasAtraso > 0 ? ` com ${diasAtraso} dia(s) de atraso` : '';
+    return {
+      usuarios: s.usuarios,
+      mensagem: `Devolução registrada${atraso}. A conta continua ${usuario.status} pelo responsável.`,
+    };
+  }
 
   const mudar = (mudanca: Partial<Usuario>) =>
     s.usuarios.map((u) => (u.id === usuario.id ? {...u, ...mudanca} : u));
   const temOutroAtraso = emprestimos.some((e) => e.usuarioId === usuario.id && !e.devolvidoEm && e.diasAtraso > 0);
+  // Feito pelo sistema (sem autor), como consequência da devolução
+  const evento = (tipo: 'conta_suspensa' | 'conta_reativada', motivo: string, detalhe?: string) =>
+    novoEvento(tipo, s.agora, usuario.id, {motivo, detalhe});
+  const desbloqueio = {status: 'ativa' as const};
 
   if (diasAtraso <= 0) {
     // Devolvido no prazo: se estava bloqueado e não há outros atrasos, volta a ativa
     if (!temOutroAtraso && usuario.status === 'bloqueada') {
-      return {usuarios: mudar({status: 'ativa'}), mensagem: padrao};
+      return {
+        usuarios: mudar(desbloqueio),
+        mensagem: padrao,
+        eventoConta: evento('conta_reativada', 'Nenhum item em atraso depois da devolução'),
+      };
     }
     return {usuarios: s.usuarios, mensagem: padrao};
   }
@@ -174,16 +210,20 @@ function aplicarPoliticaAtraso(
   if (politica === 'rigida') {
     // Suspende a pessoa pelo mesmo número de dias de atraso após a devolução
     const suspensoAte = addDays(clockNow, diasAtraso);
+    const prazo = `${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'}, até ${formatDateShort(suspensoAte)}`;
     return {
       usuarios: mudar({status: 'suspensa' as StatusUsuario, suspensoAte: suspensoAte.toISOString()}),
       mensagem: `Devolução registrada com atraso de ${diasAtraso} dia(s). Pela política rígida, a conta foi suspensa por ${diasAtraso} dia(s) (até ${formatDateShort(suspensoAte)}).`,
+      eventoConta: evento('conta_suspensa', `Devolveu "${nomeItem}" com ${diasAtraso} dia(s) de atraso (política rígida)`, prazo),
     };
   }
   if (politica === 'intermediaria') {
     // Desbloqueia após a devolução, desde que não tenha outros atrasos
+    const desbloqueia = !temOutroAtraso && usuario.status !== 'ativa';
     return {
-      usuarios: temOutroAtraso ? s.usuarios : mudar({status: 'ativa'}),
+      usuarios: temOutroAtraso ? s.usuarios : mudar(desbloqueio),
       mensagem: 'Devolução registrada. Como o item atrasado foi devolvido, a conta foi desbloqueada.',
+      eventoConta: desbloqueia ? evento('conta_reativada', `Devolveu "${nomeItem}", que estava em atraso`) : undefined,
     };
   }
   // Simples: não suspende

@@ -50,6 +50,7 @@ export function estadoDeTeste(mudanca: Partial<ProtemState> = {}): ProtemState {
     emprestimos: [],
     ocorrencias: [],
     notificacoes: [],
+    auditoria: [],
     ...mudanca,
   };
 }

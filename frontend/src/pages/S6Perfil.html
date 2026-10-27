@@ -33,6 +33,12 @@
           <mat-icon class="icon-sm" svgIcon="lock" />
           <div class="flex-1">
             <p class="font-semibold">Conta bloqueada</p>
+            @if (u.restricaoManual) {
+              <p class="mt-0.5">
+                Bloqueada pelo responsável em {{ formatarData(u.restricaoManual.em) }}. Motivo: {{ u.restricaoManual.motivo }}.
+                Para voltar a pedir itens, fale com o responsável pelo acervo.
+              </p>
+            } @else {
             <p class="mt-0.5">
               @if (atrasado) {
                 "{{ atrasado.itemNome }}" está atrasado há {{ plural(atrasado.dias, 'dia') }}.
@@ -45,14 +51,20 @@
               Ver item atrasado
               <mat-icon class="icon-xs" svgIcon="arrow_forward" />
             </a>
+            }
           </div>
         }
         @case ('suspensa') {
-          <mat-icon class="icon-sm" svgIcon="hourglass_empty" />
+          <mat-icon class="icon-sm" svgIcon="pause_circle" />
           <div>
             <p class="font-semibold">Suspensa até {{ formatarData(u.suspensoAte) }}</p>
             <p class="mt-0.5">
-              Consequência da política de atraso na última devolução. O acesso volta automaticamente depois dessa data.
+              @if (u.restricaoManual) {
+                Suspensa pelo responsável. Motivo: {{ u.restricaoManual.motivo }}.
+              } @else {
+                Consequência da política de atraso na última devolução.
+              }
+              Você não pode pedir itens até essa data; depois, a conta volta sozinha.
             </p>
           </div>
         }

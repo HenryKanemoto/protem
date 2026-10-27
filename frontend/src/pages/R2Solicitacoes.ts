@@ -16,6 +16,7 @@ export class R2Solicitacoes {
 
   readonly feedbackMensagem = signal<string | null>(null);
   readonly solicitacaoParaRecusar = signal<Solicitacao | null>(null);
+  readonly erroRecusa = signal<string | null>(null);
 
   readonly solicitacoesPendentes = computed(() => {
     return this.store.solicitacoes().filter((s) => s.status === 'pendente');
@@ -62,15 +63,18 @@ export class R2Solicitacoes {
   }
 
   abrirModalRecusa(solic: Solicitacao) {
+    this.erroRecusa.set(null);
     this.solicitacaoParaRecusar.set(solic);
   }
 
   confirmarRecusa(solicitacaoId: string, motivo: string) {
     const respId = this.store.usuarioLogado()?.id || 'user-marta';
-    const res = this.store.recusarPedido(solicitacaoId, respId, motivo || 'Solicitação recusada pelo responsável');
-    this.solicitacaoParaRecusar.set(null);
-    if (res.sucesso) {
-      this.feedbackMensagem.set('Pedido recusado. O item retornou como disponível para o catálogo.');
+    const res = this.store.recusarPedido(solicitacaoId, respId, motivo);
+    if (!res.sucesso) {
+      this.erroRecusa.set(res.mensagem);
+      return;
     }
+    this.solicitacaoParaRecusar.set(null);
+    this.feedbackMensagem.set('Pedido recusado. O item retornou como disponível para o catálogo.');
   }
 }
