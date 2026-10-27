@@ -4,12 +4,12 @@
       <h1 class="page-title">Relatórios</h1>
       <p class="page-subtitle">Visão da instituição no período: uso do acervo, atrasos, avarias e quem fez cada ação.</p>
     </div>
-    <div class="flex gap-1 self-start rounded-full border border-border bg-surface p-1 sm:self-auto" role="group" aria-label="Período">
+    <div class="flex shrink-0 gap-1 self-start rounded-full border border-border bg-surface p-1 sm:self-auto" role="group" aria-label="Período">
       @for (p of periodos; track p.valor) {
         <button
           type="button"
           (click)="periodoSelecionado.set(p.valor)"
-          class="h-8 rounded-full px-3 text-sm font-medium transition-colors"
+          class="h-8 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors"
           [class]="periodoSelecionado() === p.valor ? 'bg-brand-soft text-primary-strong' : 'text-text-muted hover:text-text'"
           [attr.aria-pressed]="periodoSelecionado() === p.valor"
         >

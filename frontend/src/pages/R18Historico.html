@@ -19,7 +19,7 @@
             <button
               type="button"
               (click)="periodo.set(p.valor)"
-              class="h-8 rounded-full px-3 text-sm font-medium transition-colors"
+              class="h-8 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors"
               [class]="periodo() === p.valor ? 'bg-brand-soft text-primary-strong' : 'text-text-muted hover:text-text'"
               [attr.aria-pressed]="periodo() === p.valor"
             >
@@ -69,13 +69,17 @@
     @if (visiveis().length > 0) {
       <ul class="divide-y divide-border">
         @for (l of visiveis(); track l.id) {
-          <li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-6">
-            <div class="min-w-0 sm:w-56 sm:shrink-0">
-              <a [routerLink]="['/painel/usuarios', l.pessoaId]" class="font-medium hover:underline">{{ l.pessoa }}</a>
-              <p class="mt-0.5 text-sm">
-                <a [routerLink]="['/painel/itens', l.itemId]" class="hover:underline">{{ l.item }}</a>
-                <span class="font-mono text-xs text-text-muted"> {{ l.patrimonio }}</span>
-              </p>
+          <!-- Abaixo de lg: pessoa e situação na primeira linha, etapas embaixo; em lg, três colunas -->
+          <li class="flex flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-start lg:gap-6">
+            <div class="flex items-start justify-between gap-3 lg:w-60 lg:shrink-0">
+              <div class="min-w-0">
+                <a [routerLink]="['/painel/usuarios', l.pessoaId]" class="font-medium hover:underline">{{ l.pessoa }}</a>
+                <p class="mt-0.5 text-sm">
+                  <a [routerLink]="['/painel/itens', l.itemId]" class="hover:underline">{{ l.item }}</a>
+                  <span class="font-mono text-xs text-text-muted"> {{ l.patrimonio }}</span>
+                </p>
+              </div>
+              <span class="shrink-0 lg:hidden"><app-status-badge [status]="l.situacao" /></span>
             </div>
             <ol class="flex min-w-0 flex-1 flex-col gap-1 text-sm" aria-label="Etapas">
               @for (e of l.etapas; track $index) {
@@ -90,7 +94,7 @@
                 </li>
               }
             </ol>
-            <div class="sm:shrink-0"><app-status-badge [status]="l.situacao" /></div>
+            <div class="hidden shrink-0 lg:block"><app-status-badge [status]="l.situacao" /></div>
           </li>
         }
       </ul>
