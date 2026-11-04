@@ -21,8 +21,9 @@ export class P0Landing {
 
   // Pacotes do pitch (valores de exemplo)
   readonly pacotes: Pacote[] = [
-    {nome: 'Essencial', preco: 'R$ 2.000', cobranca: 'pagamento único', detalhe: 'Até 100 itens no acervo'},
-    {nome: 'Completa', preco: 'R$ 3.600', cobranca: 'pagamento único', detalhe: 'Até 500 itens no acervo'},
-    {nome: 'Suporte mensal', preco: 'R$ 150', cobranca: 'por mês', detalhe: 'Ou R$ 1.500 por ano'},
+    {nome: 'Pequeno porte', preco: 'R$ 2.400', cobranca: 'pagamento único', detalhe: 'Até 100 itens no acervo e 50 usuários'},
+    {nome: 'Médio porte', preco: 'R$ 4.200', cobranca: 'pagamento único', detalhe: 'Até 500 itens no acervo e 300 usuários'},
+    {nome: 'Grande porte', preco: 'R$ 7.500', cobranca: 'pagamento único', detalhe: 'Até 2.000 itens no acervo e 1.000 usuários'},
+    {nome: 'Mentoria digital', preco: 'R$ 250', cobranca: 'pagamento único', detalhe: '2 sessões online de 45 minutos'},
   ];
 }
