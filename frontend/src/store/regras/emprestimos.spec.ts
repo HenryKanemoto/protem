@@ -150,8 +150,17 @@ describe('regras de retirada e devolução', () => {
       it('intermediária: continua bloqueada se ainda há outro item atrasado', () => {
         const s = comEmprestimoAtrasado('intermediaria');
         s.emprestimos.push(emprestimo('outro', 'b1', {devolucaoPrevista: '2026-10-14', diasAtraso: 1}));
-        const {estado} = registrarDevolucao(s, 'e', false);
+        const {estado, resultado} = registrarDevolucao(s, 'e', false);
         expect(buscar.usuario(estado, 'aluna').status).toBe('bloqueada');
+        // A mensagem não pode dizer que desbloqueou
+        expect(resultado.mensagem).not.toContain('desbloqueada');
+        expect(resultado.mensagem).toContain('continua bloqueada');
+      });
+
+      it('simples: conta bloqueada antes da troca de política é liberada na devolução', () => {
+        // Bloqueada pela política rígida; depois o responsável trocou para a simples
+        const {estado} = registrarDevolucao(comEmprestimoAtrasado('simples', 'bloqueada'), 'e', false);
+        expect(buscar.usuario(estado, 'aluna').status).toBe('ativa');
       });
 
       it('rígida: suspende pelo mesmo número de dias de atraso, contados da devolução', () => {

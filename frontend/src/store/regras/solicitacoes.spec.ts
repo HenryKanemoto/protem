@@ -27,12 +27,18 @@ describe('regras de solicitação', () => {
       ['pendente', 'pendente de aprovação'],
       ['bloqueada', 'bloqueada'],
       ['suspensa', 'suspensa'],
+      ['recusada', 'não foi aceito'],
     ] as const)('RN08/RN06: conta %s não pode pedir', (status, trecho) => {
       const s = estadoDeTeste({usuarios: [usuario('resp', {perfil: 'responsavel'}), usuario('aluna', {status})]});
       const {estado, resultado} = solicitarEmprestimo(s, 'a1', 'aluna', '2026-10-16');
       expect(resultado.sucesso).toBe(false);
       expect(resultado.mensagem).toContain(trecho);
       expect(estado).toBe(s);
+    });
+
+    it('RN08: conta com cadastro recusado também não passa na verificação de permissão', () => {
+      const s = estadoDeTeste({usuarios: [usuario('resp', {perfil: 'responsavel'}), usuario('aluna', {status: 'recusada'})]});
+      expect(verificarPermissaoSolicitacao(s, 'cat-a', 'aluna').pode).toBe(false);
     });
 
     it('recusa item que não está disponível', () => {

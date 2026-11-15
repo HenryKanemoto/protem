@@ -74,19 +74,27 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
       }
     }
 
-    const empItem = s.itens.find((i) => i.id === emp.itemId);
-    const empUser = s.usuarios.find((u) => u.id === emp.usuarioId);
+    const nomeItem = s.itens.find((i) => i.id === emp.itemId)?.nome || 'item';
+    const nomePessoa = s.usuarios.find((u) => u.id === emp.usuarioId)?.nome || 'Usuário';
+    // Um aviso por empréstimo: só conta aviso deste item criado depois desta retirada,
+    // senão um atraso antigo (do mesmo item ou de outro) calaria o aviso de um atraso novo
+    const retiradoEm = parseDate(emp.retiradoEm).getTime();
+    const avisoDesteEmprestimo = (usuarioId: string, mensagem: string) =>
+      notificacoes.some(
+        (n) =>
+          n.usuarioId === usuarioId &&
+          n.tipo === 'atraso' &&
+          n.mensagem.includes(mensagem) &&
+          parseDate(n.criadoEm).getTime() >= retiradoEm,
+      );
 
-    // Notificação de atraso para o usuário, uma única vez
-    const jaNotificado = notificacoes.some(
-      (n) => n.usuarioId === emp.usuarioId && n.tipo === 'atraso' && n.mensagem.includes('está atrasada'),
-    );
-    if (!jaNotificado) {
+    // Notificação de atraso para quem está com o item, uma única vez por empréstimo
+    if (!avisoDesteEmprestimo(emp.usuarioId, `"${nomeItem}" está atrasada`)) {
       notificacoes.unshift(
         novaNotificacao(
           emp.usuarioId,
           'atraso',
-          `Atenção: A devolução de "${empItem?.nome || 'item'}" está atrasada em ${diasAtraso} dia(s).`,
+          `Atenção: A devolução de "${nomeItem}" está atrasada em ${diasAtraso} dia(s).`,
           agoraIso,
           '/meus-emprestimos',
         ),
@@ -94,20 +102,10 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
     }
 
     // Notificar também os responsáveis sobre o atraso (Wireframe R17: "___ está atrasado com ___.")
+    const mensagemResp = `${nomePessoa} está atrasado com ${nomeItem}.`;
     responsaveis(s).forEach((resp) => {
-      const jaNotificadoResp = notificacoes.some(
-        (n) => n.usuarioId === resp.id && n.tipo === 'atraso' && n.mensagem.includes(empItem?.nome || ''),
-      );
-      if (!jaNotificadoResp) {
-        notificacoes.unshift(
-          novaNotificacao(
-            resp.id,
-            'atraso',
-            `${empUser?.nome || 'Usuário'} está atrasado com ${empItem?.nome || 'item'}.`,
-            agoraIso,
-            '/painel',
-          ),
-        );
+      if (!avisoDesteEmprestimo(resp.id, mensagemResp)) {
+        notificacoes.unshift(novaNotificacao(resp.id, 'atraso', mensagemResp, agoraIso, '/painel'));
       }
     });
 
@@ -120,17 +118,24 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
     const diffHours = (parseDate(emp.devolucaoPrevista).getTime() - clockNow.getTime()) / (1000 * 60 * 60);
     if (diffHours <= 0 || diffHours > 24) return;
 
-    // A mensagem usa a data formatada, então a checagem também precisa usar
+    // A mensagem usa a data formatada e o nome do item, então a checagem também precisa usar
+    // (dois itens que vencem no mesmo dia recebem um lembrete cada)
     const prazo = formatDateShort(emp.devolucaoPrevista);
+    const nomeItem = s.itens.find((i) => i.id === emp.itemId)?.nome || 'item';
     const jaTemLembrete = notificacoes.some(
-      (n) => n.usuarioId === emp.usuarioId && n.tipo === 'prazo_proximo' && n.mensagem.includes(prazo),
+      (n) =>
+        n.usuarioId === emp.usuarioId &&
+        n.tipo === 'prazo_proximo' &&
+        n.mensagem.includes(prazo) &&
+        // Lembretes salvos no formato antigo não tinham o nome do item
+        (n.mensagem.includes(`"${nomeItem}"`) || !n.mensagem.includes('"')),
     );
     if (!jaTemLembrete) {
       notificacoes.unshift(
         novaNotificacao(
           emp.usuarioId,
           'prazo_proximo',
-          `Lembrete: O prazo de devolução vence em breve (${prazo}).`,
+          `Lembrete: a devolução de "${nomeItem}" vence em breve (${prazo}).`,
           agoraIso,
           '/meus-emprestimos',
         ),

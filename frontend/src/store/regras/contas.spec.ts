@@ -41,6 +41,16 @@ describe('regras de conta', () => {
       expect(recusarUsuario(estado, id, 'Matrícula inválida').notificacoes[0].mensagem).toContain('Matrícula inválida');
     });
 
+    it('conta recusada não entra e vê o motivo da recusa', () => {
+      const {estado, resultado} = cadastrarUsuario(estadoDeTeste(), {...dados, senha: '123456'});
+      const recusada = recusarUsuario(estado, resultado.usuarioId!, 'Matrícula inválida', 'resp');
+      const tentativa = login({...recusada, usuarioLogadoId: null}, 'rafa@example.com', '123456');
+      expect(tentativa.resultado.sucesso).toBe(false);
+      expect(tentativa.resultado.mensagem).toContain('não foi aceito');
+      expect(tentativa.resultado.mensagem).toContain('Matrícula inválida');
+      expect(tentativa.estado.usuarioLogadoId).toBeNull();
+    });
+
     it('aprovação e recusa entram na auditoria com quem fez e o motivo', () => {
       const {estado, resultado} = cadastrarUsuario(estadoDeTeste(), dados);
       const id = resultado.usuarioId!;

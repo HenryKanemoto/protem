@@ -50,7 +50,25 @@ export function login(s: ProtemState, identificador: string, senha?: string): Tr
     };
   }
 
+  // RN08: cadastro recusado não entra
+  if (user.status === 'recusada') {
+    const motivo = motivoDaRecusaDeCadastro(s, user.id);
+    return {
+      estado: s,
+      resultado: {
+        sucesso: false,
+        mensagem: `Seu cadastro não foi aceito pelo responsável.${motivo ? ' Motivo: ' + motivo : ''}`,
+      },
+    };
+  }
+
   return {estado: {...s, usuarioLogadoId: user.id}, resultado: {sucesso: true, usuario: user}};
+}
+
+/** Motivo informado na recusa do cadastro (fica na auditoria), se houver. */
+export function motivoDaRecusaDeCadastro(s: ProtemState, usuarioId: string): string | undefined {
+  // A auditoria está do mais recente para o mais antigo
+  return s.auditoria.find((e) => e.tipo === 'conta_recusada' && e.afetadoId === usuarioId)?.motivo;
 }
 
 /** RN08: Conta nova nasce pendente e os responsáveis são notificados. */

@@ -17,6 +17,7 @@ function mudarStatusItem(s: ProtemState, itemId: string, status: StatusItem): It
 /** Motivo pelo qual a conta não pode solicitar, ou null se pode. */
 export function bloqueioDaConta(usuario: Usuario): string | null {
   if (usuario.status === 'pendente') return 'Sua conta ainda está aguardando aprovação.';
+  if (usuario.status === 'recusada') return 'Seu cadastro não foi aceito pelo responsável e não pode pedir itens.';
   const motivo = usuario.restricaoManual ? ` Motivo: ${usuario.restricaoManual.motivo}` : '';
   if (usuario.status === 'bloqueada') {
     return usuario.restricaoManual
@@ -100,7 +101,9 @@ export function solicitarEmprestimo(
   if (!usuario) return falha('Usuário não encontrado.');
 
   if (usuario.status === 'pendente') return falha('Sua conta ainda está pendente de aprovação.');
-  if (usuario.status === 'bloqueada' || usuario.status === 'suspensa') return falha(bloqueioDaConta(usuario)!);
+  // Bloqueada, suspensa ou com cadastro recusado
+  const bloqueio = bloqueioDaConta(usuario);
+  if (bloqueio) return falha(bloqueio);
 
   const item = s.itens.find((i) => i.id === itemId);
   if (!item) return falha('Item não encontrado.');

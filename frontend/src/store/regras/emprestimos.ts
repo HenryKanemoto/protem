@@ -219,16 +219,30 @@ function aplicarPoliticaAtraso(
   }
   if (politica === 'intermediaria') {
     // Desbloqueia após a devolução, desde que não tenha outros atrasos
-    const desbloqueia = !temOutroAtraso && usuario.status !== 'ativa';
+    if (temOutroAtraso) {
+      return {
+        usuarios: s.usuarios,
+        mensagem: 'Devolução registrada. A conta continua bloqueada porque há outro item em atraso.',
+      };
+    }
+    const desbloqueia = usuario.status !== 'ativa';
     return {
-      usuarios: temOutroAtraso ? s.usuarios : mudar(desbloqueio),
-      mensagem: 'Devolução registrada. Como o item atrasado foi devolvido, a conta foi desbloqueada.',
+      usuarios: desbloqueia ? mudar(desbloqueio) : s.usuarios,
+      mensagem: desbloqueia
+        ? 'Devolução registrada. Como o item atrasado foi devolvido, a conta foi desbloqueada.'
+        : `Devolução registrada com ${diasAtraso} dia(s) de atraso.`,
       eventoConta: desbloqueia ? evento('conta_reativada', `Devolveu "${nomeItem}", que estava em atraso`) : undefined,
     };
   }
-  // Simples: não suspende
-  return {
-    usuarios: s.usuarios,
-    mensagem: `Devolução registrada com ${diasAtraso} dia(s) de atraso (política simples).`,
-  };
+  // Simples: só registra o atraso. Se a conta ficou bloqueada por uma política anterior
+  // (o responsável trocou de política com o item já atrasado), a devolução a libera.
+  const mensagemSimples = `Devolução registrada com ${diasAtraso} dia(s) de atraso (política simples).`;
+  if (usuario.status === 'bloqueada' && !temOutroAtraso) {
+    return {
+      usuarios: mudar(desbloqueio),
+      mensagem: `${mensagemSimples} A conta foi desbloqueada.`,
+      eventoConta: evento('conta_reativada', `Devolveu "${nomeItem}", que estava em atraso`),
+    };
+  }
+  return {usuarios: s.usuarios, mensagem: mensagemSimples};
 }
