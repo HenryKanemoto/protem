@@ -62,16 +62,18 @@ export class RelogioFlutuante {
     const usuario = this.store.usuarios().find((u) => u.id === usuarioId);
     if (!usuario) return;
 
-    const currentUrl = this.router.url;
-    // Se o usuário for solicitante e estiver em rota /painel, redirecionar para /catalogo
-    if (usuario.perfil !== 'responsavel' && currentUrl.startsWith('/painel')) {
-      if (usuario.status === 'pendente') {
-        this.router.navigate(['/aguardando']);
-      } else {
-        this.router.navigate(['/catalogo']);
-      }
-    } else if (usuario.perfil === 'responsavel' && !currentUrl.startsWith('/painel')) {
-      this.router.navigate(['/painel']);
+    // Os guards só rodam ao navegar: sem isso, quem troca de usuário continua numa tela
+    // que a nova conta não pode ver (ex.: conta pendente no catálogo) ou parado no login.
+    const url = this.router.url.split(/[?#]/)[0];
+    const noPainel = url.startsWith('/painel');
+    const telaDeAcesso = ['/', '/login', '/cadastro', '/aguardando'].includes(url);
+
+    if (usuario.status === 'pendente' || usuario.status === 'recusada') {
+      if (url !== '/aguardando') this.router.navigate(['/aguardando']);
+    } else if (usuario.perfil === 'responsavel') {
+      if (!noPainel) this.router.navigate(['/painel']);
+    } else if (noPainel || telaDeAcesso) {
+      this.router.navigate(['/catalogo']);
     }
   }
 }

@@ -6,14 +6,23 @@
   <main class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">
     <div
       class="flex size-14 items-center justify-center rounded-card"
-      [class]="estaAprovada() ? 'bg-ok-soft text-ok' : 'bg-brand-soft text-warn'"
+      [class]="estaAprovada() ? 'bg-ok-soft text-ok' : foiRecusada() ? 'bg-danger-soft text-danger' : 'bg-brand-soft text-warn'"
     >
-      <mat-icon class="icon-lg" [svgIcon]="estaAprovada() ? 'verified' : 'hourglass_top'" />
+      <mat-icon class="icon-lg" [svgIcon]="estaAprovada() ? 'verified' : foiRecusada() ? 'block' : 'hourglass_top'" />
     </div>
 
     @if (estaAprovada()) {
       <h1 class="page-title mt-6">Conta aprovada</h1>
       <p class="page-subtitle">Tudo certo! Você já pode pedir materiais e equipamentos pelo catálogo.</p>
+    } @else if (foiRecusada()) {
+      <h1 class="page-title mt-6">Cadastro não aceito</h1>
+      <p class="page-subtitle">
+        O responsável pelo acervo não aprovou esta conta, então ela não pode pedir itens. Procure o setor do acervo se
+        achar que houve engano.
+      </p>
+      @if (motivoRecusa()) {
+        <p class="alert alert-danger mt-4">Motivo: {{ motivoRecusa() }}</p>
+      }
     } @else {
       <h1 class="page-title mt-6">Cadastro recebido</h1>
       <p class="page-subtitle">
@@ -39,7 +48,7 @@
       }
       <div class="flex items-center justify-between gap-4 px-5 py-3">
         <dt class="text-text-muted">Situação</dt>
-        <dd><app-status-badge [status]="estaAprovada() ? 'ativa' : 'pendente'" /></dd>
+        <dd><app-status-badge [status]="estaAprovada() ? 'ativa' : foiRecusada() ? 'recusada' : 'pendente'" /></dd>
       </div>
     </dl>
 
@@ -53,7 +62,7 @@
       <button type="button" (click)="voltarAoLogin()" class="btn btn-secondary btn-lg btn-block">Voltar ao login</button>
     </div>
 
-    @if (!estaAprovada()) {
+    @if (!estaAprovada() && !foiRecusada()) {
       <section class="mt-8 rounded-card border border-dashed border-border-input p-4">
         <p class="page-eyebrow">Atalho de demonstração</p>
         <p class="mt-2 text-sm text-text-muted">

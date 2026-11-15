@@ -69,6 +69,14 @@ export class P3Aguardando {
     return u ? u.status === 'ativa' : false;
   });
 
+  /** O responsável recusou o cadastro: a tela explica, mostra o motivo e não oferece aprovação simulada. */
+  readonly foiRecusada = computed(() => this.usuarioAtual()?.status === 'recusada');
+
+  readonly motivoRecusa = computed(() => {
+    const u = this.usuarioAtual();
+    return u && this.foiRecusada() ? this.store.motivoRecusaCadastro(u.id) : undefined;
+  });
+
   voltarAoLogin() {
     this.store.logout();
     this.router.navigate(['/login']);

@@ -1,12 +1,21 @@
 import {inject} from '@angular/core';
 import {CanActivateFn, Router} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
+import {Usuario} from '../types/models';
+
+/**
+ * Conta que ainda não pode usar o sistema: pendente (RN08) ou com o cadastro recusado.
+ * As duas vão para /aguardando, que explica a situação.
+ */
+function aguardandoOuRecusada(usuario: Usuario): boolean {
+  return usuario.status === 'pendente' || usuario.status === 'recusada';
+}
 
 /**
  * Guard para rotas de Solicitante (/catalogo, /item/:id, /solicitar/:id, /meus-emprestimos, /notificacoes, /perfil).
  * Permite apenas perfis 'aluno' ou 'professor'.
  * Se for 'responsavel', redireciona para /painel.
- * Se status for 'pendente', redireciona para /aguardando.
+ * Se a conta estiver pendente ou recusada, redireciona para /aguardando.
  * Se não logado, redireciona para /login.
  */
 export const solicitanteGuard: CanActivateFn = () => {
@@ -18,8 +27,7 @@ export const solicitanteGuard: CanActivateFn = () => {
     return router.parseUrl('/login');
   }
 
-  // Se um usuário pendente tentar acessar qualquer outra rota, redirecione para /aguardando
-  if (usuario.status === 'pendente') {
+  if (aguardandoOuRecusada(usuario)) {
     return router.parseUrl('/aguardando');
   }
 
@@ -43,7 +51,7 @@ export const podeSolicitarGuard: CanActivateFn = () => {
     return router.parseUrl('/login');
   }
 
-  if (usuario.status === 'pendente') {
+  if (aguardandoOuRecusada(usuario)) {
     return router.parseUrl('/aguardando');
   }
 
@@ -57,7 +65,7 @@ export const podeSolicitarGuard: CanActivateFn = () => {
 /**
  * Guard para rotas do Responsável (/painel e sub-rotas).
  * Permite apenas perfil 'responsavel'.
- * Se pendente, redireciona para /aguardando.
+ * Se a conta estiver pendente ou recusada, redireciona para /aguardando.
  * Se for solicitante, redireciona para /catalogo (ou /perfil se bloqueado/suspenso).
  * Se não logado, redireciona para /login.
  */
@@ -70,7 +78,7 @@ export const responsavelGuard: CanActivateFn = () => {
     return router.parseUrl('/login');
   }
 
-  if (usuario.status === 'pendente') {
+  if (aguardandoOuRecusada(usuario)) {
     return router.parseUrl('/aguardando');
   }
 
@@ -86,14 +94,14 @@ export const responsavelGuard: CanActivateFn = () => {
 
 /**
  * Guard para rotas públicas (como /cadastro):
- * Se o usuário atual for 'pendente', redireciona para /aguardando.
+ * Se a conta atual estiver pendente ou recusada, redireciona para /aguardando.
  */
 export const cadastroPublicGuard: CanActivateFn = () => {
   const store = inject(ProtemStore);
   const router = inject(Router);
   const usuario = store.usuarioLogado();
 
-  if (usuario && usuario.status === 'pendente') {
+  if (usuario && aguardandoOuRecusada(usuario)) {
     return router.parseUrl('/aguardando');
   }
 
