@@ -76,6 +76,10 @@
         </div>
       </section>
 
+      @if (erroDevolucao()) {
+        <p class="alert alert-danger" role="alert">{{ erroDevolucao() }}</p>
+      }
+
       <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <a routerLink="/painel/leitor" class="btn btn-ghost btn-lg">Cancelar</a>
         <button type="button" (click)="executarConfirmacaoDevolucao()" class="btn btn-primary btn-lg">Confirmar devolução</button>

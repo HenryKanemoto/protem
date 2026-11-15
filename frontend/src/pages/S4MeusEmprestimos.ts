@@ -115,9 +115,8 @@ export class S4MeusEmprestimos {
 
     dev.forEach((emp) => {
       const item = this.getItem(emp.itemId);
-      const temOcorrencia = this.store
-        .ocorrencias()
-        .some((o) => o.emprestimoId === emp.id || (o.itemId === emp.itemId && o.usuarioId === u.id));
+      // Só a ocorrência desta devolução conta (outra devolução do mesmo item pode ter tido avaria)
+      const temOcorrencia = this.store.ocorrencias().some((o) => o.emprestimoId === emp.id);
 
       lista.push({
         tipo: 'emprestimo',

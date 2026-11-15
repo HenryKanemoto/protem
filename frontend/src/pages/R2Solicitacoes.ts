@@ -55,7 +55,7 @@ export class R2Solicitacoes {
   }
 
   aprovarPedido(solicitacaoId: string) {
-    const respId = this.store.usuarioLogado()?.id || 'user-marta';
+    const respId = this.store.usuarioLogado()?.id ?? '';
     const res = this.store.aprovarPedido(solicitacaoId, respId);
     if (res.sucesso) {
       this.feedbackMensagem.set('Pedido aprovado! O item foi marcado como reservado e aguarda retirada hoje.');
@@ -68,7 +68,7 @@ export class R2Solicitacoes {
   }
 
   confirmarRecusa(solicitacaoId: string, motivo: string) {
-    const respId = this.store.usuarioLogado()?.id || 'user-marta';
+    const respId = this.store.usuarioLogado()?.id ?? '';
     const res = this.store.recusarPedido(solicitacaoId, respId, motivo);
     if (!res.sucesso) {
       this.erroRecusa.set(res.mensagem);

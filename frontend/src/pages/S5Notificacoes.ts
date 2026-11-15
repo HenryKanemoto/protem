@@ -48,14 +48,29 @@ export class S5Notificacoes {
 
   readonly temNaoLidas = computed(() => this.notificacoes().some((n) => !n.lida));
 
-  readonly rotuloDestino = () => 'Meus empréstimos';
+  readonly rotuloDestino = (n: Notificacao) => this.destino(n).rotulo;
+
+  /**
+   * Para onde o aviso leva. Os de pedido vão para /meus-emprestimos (Wireframe S5);
+   * os de conta (bloqueio, suspensão, reativação) vão para o perfil ou o catálogo.
+   */
+  private destino(n: Notificacao): {rota: string; rotulo: string} {
+    const rotulos: Record<string, string> = {
+      '/meus-emprestimos': 'Meus empréstimos',
+      '/catalogo': 'Catálogo',
+      '/perfil': 'Perfil',
+      '/codigos': 'Meus códigos',
+    };
+    return rotulos[n.destino]
+      ? {rota: n.destino, rotulo: rotulos[n.destino]}
+      : {rota: '/meus-emprestimos', rotulo: 'Meus empréstimos'};
+  }
 
   abrirNotificacao(n: Notificacao) {
     if (!n.lida) {
       this.store.marcarNotificacaoComoLida(n.id);
     }
-    // Clicar no aviso leva ao pedido em /meus-emprestimos (Wireframe S5)
-    this.router.navigate(['/meus-emprestimos']);
+    this.router.navigate([this.destino(n).rota]);
   }
 
   marcarTodasComoLidas() {

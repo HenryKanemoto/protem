@@ -20,6 +20,8 @@ export class R6Devolucao {
   readonly comDefeito = signal(false);
   readonly descricaoDefeito = signal('');
   readonly erroValidacao = signal<string | null>(null);
+  /** Erro da regra de devolução (ex.: o item já tinha sido devolvido em outra aba). */
+  readonly erroDevolucao = signal<string | null>(null);
 
   readonly plural = plural;
 
@@ -61,6 +63,7 @@ export class R6Devolucao {
     if (!emp) return;
 
     this.erroValidacao.set(null);
+    this.erroDevolucao.set(null);
     if (this.comDefeito() && !this.descricaoDefeito().trim()) {
       this.erroValidacao.set('Descreva a avaria para registrar a ocorrência.');
       return;
@@ -68,17 +71,20 @@ export class R6Devolucao {
 
     const res = this.store.registrarDevolucao(
       emp.id,
-      resp?.id || 'user-marta',
+      resp?.id || '',
       this.comDefeito(),
       this.comDefeito() ? this.descricaoDefeito().trim() : undefined
     );
 
-    if (res.sucesso) {
-      // Volta ao painel com mensagem de sucesso
-      this.router.navigate(['/painel'], {
-        state: { sucesso: `Devolução registrada com sucesso para "${it?.nome}". ${res.mensagem}` },
-      });
+    if (!res.sucesso) {
+      // Antes a falha era silenciosa: o botão parecia não fazer nada
+      this.erroDevolucao.set(res.mensagem);
+      return;
     }
+    // Volta ao painel com mensagem de sucesso
+    this.router.navigate(['/painel'], {
+      state: { sucesso: `Devolução registrada com sucesso para "${it?.nome}". ${res.mensagem}` },
+    });
   }
 
   getIconeCategoria(categoriaId: string): string {
