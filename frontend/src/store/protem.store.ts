@@ -4,6 +4,7 @@ import {Categoria, Item, PoliticaAtraso, Solicitacao} from '../types/models';
 import {getInitialDemoState} from './demo-data';
 import {ProtemState, Transicao} from './estado';
 import {FONTE_DE_DADOS} from './fonte-de-dados';
+import {observarOutrasAbas} from './persistencia';
 import * as acervo from './regras/acervo';
 import * as contas from './regras/contas';
 import * as emprestimos from './regras/emprestimos';
@@ -86,6 +87,9 @@ export class ProtemStore {
       estado: () => this.state(),
       receberItens: (itens) => this.receberItens(itens),
     });
+    // Outra aba gravou: usa os dados dela, mas cada aba continua com o próprio usuário logado
+    // (dá para deixar o aluno numa aba e o responsável na outra durante a apresentação)
+    observarOutrasAbas((estado) => this.state.set({...estado, usuarioLogadoId: this.state().usuarioLogadoId}));
   }
 
   // ==========================================
@@ -187,6 +191,11 @@ export class ProtemStore {
 
   cadastrarUsuario(dados: contas.DadosCadastro) {
     return this.executar((s) => contas.cadastrarUsuario(s, dados));
+  }
+
+  /** Motivo que o responsável deu ao recusar o cadastro (se deu algum). */
+  motivoRecusaCadastro(usuarioId: string): string | undefined {
+    return contas.motivoDaRecusaDeCadastro(this.state(), usuarioId);
   }
 
   // Ações do responsável: quem está logado fica registrado na auditoria

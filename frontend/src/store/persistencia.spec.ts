@@ -1,5 +1,5 @@
 import {estadoDeTeste} from './regras/estado-de-teste';
-import {carregarEstado, salvarEstado} from './persistencia';
+import {carregarEstado, observarOutrasAbas, salvarEstado} from './persistencia';
 
 describe('persistência no navegador', () => {
   beforeEach(() => localStorage.clear());
@@ -38,6 +38,31 @@ describe('persistência no navegador', () => {
   ])('dados corrompidos (%s) voltam para o seed', (_caso, texto) => {
     localStorage.setItem('protem:v2', texto);
     expect(carregarEstado().doSeed).toBe(true);
+  });
+
+  describe('outras abas', () => {
+    const avisar = (key: string, newValue: string | null) =>
+      window.dispatchEvent(new StorageEvent('storage', {key, newValue}));
+
+    it('recebe o estado que outra aba gravou', () => {
+      const recebidos: unknown[] = [];
+      const parar = observarOutrasAbas((estado) => recebidos.push(estado));
+      const s = estadoDeTeste({usuarioLogadoId: 'resp'});
+      avisar('protem:v2', JSON.stringify(s));
+      parar();
+      expect(recebidos).toEqual([s]);
+    });
+
+    it('ignora outras chaves, remoção e dados corrompidos; para de ouvir quando pedido', () => {
+      const recebidos: unknown[] = [];
+      const parar = observarOutrasAbas((estado) => recebidos.push(estado));
+      avisar('outra-chave', JSON.stringify(estadoDeTeste()));
+      avisar('protem:v2', null);
+      avisar('protem:v2', '{quebrado');
+      parar();
+      avisar('protem:v2', JSON.stringify(estadoDeTeste()));
+      expect(recebidos).toEqual([]);
+    });
   });
 
   it('informa cota cheia sem lançar erro', () => {

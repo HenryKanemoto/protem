@@ -37,6 +37,23 @@ export function salvarEstado(estado: ProtemState): ResultadoGravacao {
   }
 }
 
+/**
+ * Avisa quando outra aba deste navegador grava o estado. Sem isso, cada aba fica com a sua
+ * cópia em memória e a próxima gravação de uma apaga o que a outra fez.
+ * Devolve a função que para de ouvir.
+ */
+export function observarOutrasAbas(aoMudar: (estado: ProtemState) => void): () => void {
+  if (typeof window === 'undefined') return () => undefined;
+  // O evento "storage" só dispara nas OUTRAS abas, nunca na que gravou
+  const ouvir = (evento: StorageEvent) => {
+    if (evento.key !== CHAVE || evento.newValue === null) return;
+    const estado = validar(evento.newValue);
+    if (estado) aoMudar(estado);
+  };
+  window.addEventListener('storage', ouvir);
+  return () => window.removeEventListener('storage', ouvir);
+}
+
 function ler(chave: string): string | null {
   try {
     return localStorage.getItem(chave);
