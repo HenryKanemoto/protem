@@ -131,6 +131,7 @@ O botão escuro no canto inferior direito abre o **modo demonstração**:
 - **Entrar como:** troca de usuário sem fazer login. Em cima ficam os 3 perfis do login; embaixo, as **10 personas**, cada uma com uma linha dizendo o que ela mostra.
 - **Reiniciar dados de demonstração:** volta tudo ao estado inicial (no modo api, inclusive os itens no banco).
 - Os dados ficam salvos **neste navegador**: outro navegador ou outro computador começa do zero.
+- **Várias abas** do mesmo navegador compartilham os dados: o que se faz em uma aparece na outra. Cada aba mantém o próprio usuário, então dá para deixar o aluno numa aba e o responsável em outra. Ao recarregar, a aba entra com o último usuário usado.
 
 Os dados de demonstração usam datas relativas ao relógio, então nunca ficam velhos. Além dos 3 perfis do login (sem histórico), há 10 alunos fictícios com comportamentos diferentes:
 
@@ -190,7 +191,7 @@ Patrimônio e código QR são únicos (`409` se repetirem). Campos obrigatórios
 
 Nada vem de CDN: o app abre igual sem internet ou com domínios externos bloqueados.
 
-- **Fontes** (Geist, Geist Mono e Bricolage Grotesque): pacotes `@fontsource-variable/*`, ligados em `styles` no [frontend/angular.json](frontend/angular.json). Os arquivos `.woff2` vão junto no build.
+- **Fontes** (Atkinson Hyperlegible Next e Atkinson Hyperlegible Mono): pacotes `@fontsource-variable/*`, ligados em `styles` no [frontend/angular.json](frontend/angular.json). Os arquivos `.woff2` vão junto no build.
 - **Ícones**: SVGs do Material Icons (variante *round*) embutidos em [frontend/src/app/icones.ts](frontend/src/app/icones.ts) e registrados no `MatIconRegistry`. Nos templates, use `<mat-icon svgIcon="nome" />`. Ao usar um ícone novo, rode `npm run icones` para regerar o arquivo (nomes em <https://fonts.google.com/icons>). O `mat-icon` já sai com `aria-hidden="true"`; botão só com ícone precisa de `aria-label`.
 
 ## Estrutura do frontend
