@@ -296,5 +296,11 @@ Os endereços antigos (`/painel/itens...` e `/painel/solicitacoes`) continuam fu
 **Decisões que tomei sem consultar (revisem):**
 - Subcategoria de um nível só e sempre opcional; prazo e limite não mudam por subcategoria.
 - A aba Devoluções lista tudo que está emprestado agora (não só o que vence hoje), do mais urgente para o menos.
-- O número da aba Devoluções conta todos os empréstimos em aberto; o selo do menu "Pedidos" segue contando só pedidos esperando análise.
+- ~~O número da aba Devoluções contava todos os empréstimos em aberto e o selo do menu só os pedidos esperando análise.~~ Ajustado na rodada 6b (abaixo).
 
+### Rodada 6b: números de Pedidos e diálogo "Encaminhar item"
+
+- **Números de Pedidos alinhados.** As abas e o selo do menu agora contam o que espera o responsável: *Empréstimos* = pedidos esperando análise + pedidos aprovados esperando retirada; *Devoluções* = atrasadas + as que vencem hoje; o selo do menu é a soma das duas. Empréstimos no prazo seguem listados na aba, mas não entram na conta (não pedem ação hoje). Regra em `pendenciasDePedidos` (`lib/resumo-painel.ts`), com testes.
+- **Diálogo "Encaminhar item" cortava o campo de motivo.** O botão fixo do rodapé cobria o campo quando o diálogo passava da altura da tela. Agora só o corpo rola; o título, a mensagem de erro e os botões ficam fora da rolagem. O diálogo ficou mais largo (as descrições dos destinos cabem em menos linhas), então em 1366×768 o campo de motivo aparece inteiro sem rolar. Se faltar destino ou motivo, a mensagem aparece junto aos botões e o foco vai ao campo com problema, já à vista.
+- **Botão "Demonstração" não cobre mais os diálogos.** Ele ficava por cima do rodapé de qualquer diálogo no celular (impedia tocar em "Cancelar"); agora fica atrás.
+- **Pendência registrada:** foto do item-01 no seed do banco aponta para um endereço externo (só no modo api); fica para depois.
