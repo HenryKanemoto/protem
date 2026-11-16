@@ -1,5 +1,5 @@
 import {Emprestimo, Item, Solicitacao} from '../types/models';
-import {atrasados, devolucoesDeHoje, emprestadosNoPrazo, maisPedidos, nomeBase, taxaDeAtraso, usoDoAcervo} from './resumo-painel';
+import {atrasados, devolucoesDeHoje, emprestadosNoPrazo, maisPedidos, nomeBase, pendenciasDePedidos, taxaDeAtraso, usoDoAcervo} from './resumo-painel';
 
 const agora = new Date(2026, 10, 15, 9, 0); // 15/11/2026
 
@@ -55,6 +55,29 @@ describe('resumo do painel', () => {
 
     it('atrasados: do maior atraso para o menor', () => {
       expect(atrasados(lista).map((e) => e.id)).toEqual(['atraso3', 'atraso1']);
+    });
+  });
+
+  describe('pendências da tela Pedidos', () => {
+    it('conta pedidos pendentes e aprovados, mais devoluções atrasadas e de hoje', () => {
+      const pedidos = [
+        pedido('p1', 'i1', 0, 'pendente'),
+        pedido('p2', 'i2', 0, 'aprovada'),
+        pedido('p3', 'i3', 1, 'recusada'),
+        pedido('p4', 'i4', 3, 'concluida'),
+        pedido('p5', 'i5', 3, 'expirada'),
+      ];
+      const emprestimos = [
+        emp('hoje', {devolucaoPrevista: '2026-11-15'}),
+        emp('amanha', {devolucaoPrevista: '2026-11-16'}),
+        emp('atraso', {devolucaoPrevista: '2026-11-13', diasAtraso: 2}),
+        emp('devolvido', {devolucaoPrevista: '2026-11-15', devolvidoEm: new Date(2026, 10, 14).toISOString()}),
+      ];
+      expect(pendenciasDePedidos(pedidos, emprestimos, agora)).toEqual({emprestimos: 2, devolucoes: 2, total: 4});
+    });
+
+    it('sem nada esperando, tudo zero', () => {
+      expect(pendenciasDePedidos([], [], agora)).toEqual({emprestimos: 0, devolucoes: 0, total: 0});
     });
   });
 

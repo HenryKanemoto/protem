@@ -1,5 +1,6 @@
 import {Injectable, computed, inject, signal} from '@angular/core';
 import {addHours, parseDate} from '../lib/date-utils';
+import {pendenciasDePedidos} from '../lib/resumo-painel';
 import {Categoria, Item, PoliticaAtraso, Solicitacao, Subcategoria, TipoDestino} from '../types/models';
 import {getInitialDemoState} from './demo-data';
 import {ProtemState, Transicao} from './estado';
@@ -68,6 +69,11 @@ export class ProtemStore {
 
   readonly solicitacoesPendentesCount = computed(
     () => this.state().solicitacoes.filter((s) => s.status === 'pendente').length,
+  );
+
+  /** Número da tela Pedidos: pedidos e retiradas esperando, devoluções atrasadas ou de hoje. */
+  readonly pedidosParaAgir = computed(() =>
+    pendenciasDePedidos(this.state().solicitacoes, this.state().emprestimos, this.agora()),
   );
 
   readonly contasPendentesCount = computed(() => this.state().usuarios.filter((u) => u.status === 'pendente').length);

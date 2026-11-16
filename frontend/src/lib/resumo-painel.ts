@@ -24,6 +24,24 @@ export function atrasados(emprestimos: Emprestimo[]): Emprestimo[] {
   return emprestimos.filter((e) => !e.devolvidoEm && e.diasAtraso > 0).sort((a, b) => b.diasAtraso - a.diasAtraso);
 }
 
+export interface PendenciasDePedidos {
+  /** Pedidos esperando análise mais pedidos aprovados esperando retirada. */
+  emprestimos: number;
+  /** Devoluções atrasadas mais as que vencem hoje. */
+  devolucoes: number;
+  total: number;
+}
+
+/**
+ * O que está esperando o responsável na tela Pedidos. É o número das duas abas e do selo do menu,
+ * então os três sempre batem. Empréstimos que ainda estão no prazo não contam: não pedem ação hoje.
+ */
+export function pendenciasDePedidos(solicitacoes: Solicitacao[], emprestimos: Emprestimo[], agora: Date): PendenciasDePedidos {
+  const pedidos = solicitacoes.filter((s) => s.status === 'pendente' || s.status === 'aprovada').length;
+  const devolucoes = atrasados(emprestimos).length + devolucoesDeHoje(emprestimos, agora).length;
+  return {emprestimos: pedidos, devolucoes, total: pedidos + devolucoes};
+}
+
 export interface UsoDoAcervo {
   emUso: number;
   total: number;

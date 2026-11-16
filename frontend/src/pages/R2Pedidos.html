@@ -20,12 +20,12 @@
     <button type="button" role="tab" id="aba-emprestimos" class="tab" [class.tab-active]="aba() === 'emprestimos'" [attr.aria-selected]="aba() === 'emprestimos'" aria-controls="painel-pedidos" (click)="abrirAba('emprestimos')">
       <mat-icon class="icon-sm" svgIcon="inbox" />
       Empréstimos
-      <span class="font-mono text-xs text-text-muted">{{ solicitacoesPendentes().length + pedidosAprovadosHoje().length }}</span>
+      <span class="font-mono text-xs text-text-muted">{{ store.pedidosParaAgir().emprestimos }}</span>
     </button>
     <button type="button" role="tab" id="aba-devolucoes" class="tab" [class.tab-active]="aba() === 'devolucoes'" [attr.aria-selected]="aba() === 'devolucoes'" aria-controls="painel-pedidos" (click)="abrirAba('devolucoes')">
       <mat-icon class="icon-sm" svgIcon="event" />
       Devoluções
-      <span class="font-mono text-xs text-text-muted">{{ totalDevolucoes() }}</span>
+      <span class="font-mono text-xs text-text-muted">{{ store.pedidosParaAgir().devolucoes }}</span>
     </button>
   </div>
 

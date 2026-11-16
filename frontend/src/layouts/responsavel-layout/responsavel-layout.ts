@@ -55,7 +55,7 @@ export class ResponsavelLayout {
           rotulo: 'Pedidos',
           rota: '/painel/pedidos',
           icone: 'inbox',
-          badge: () => this.store.solicitacoesPendentesCount(),
+          badge: () => this.store.pedidosParaAgir().total,
           tambemEm: ['/painel/retirada'],
         },
         {rotulo: 'Leitor de QR code', rota: '/painel/leitor', icone: 'qr_code_scanner', tambemEm: ['/painel/devolucao']},
