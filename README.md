@@ -88,8 +88,6 @@ Na primeira subida, o backend roda as migrations sozinho: cria a tabela `itens` 
 - Se o backend estiver desligado, o app continua funcionando no navegador e mostra um aviso no topo com o botão "Tentar de novo".
 - Build de produção no modo api: `npm run build:api` (o servidor precisa responder em `/api`).
 
-> Usa o Claude Code no app desktop? O arquivo [.claude/launch.json](.claude/launch.json) tem as configurações `frontend` (modo local), `frontend-api` e `backend`.
-
 ## Build estático (para abrir por um link)
 
 ```bash
