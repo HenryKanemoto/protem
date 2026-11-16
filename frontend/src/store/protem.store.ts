@@ -1,6 +1,6 @@
 import {Injectable, computed, inject, signal} from '@angular/core';
 import {addHours, parseDate} from '../lib/date-utils';
-import {Categoria, Item, PoliticaAtraso, Solicitacao, TipoDestino} from '../types/models';
+import {Categoria, Item, PoliticaAtraso, Solicitacao, Subcategoria, TipoDestino} from '../types/models';
 import {getInitialDemoState} from './demo-data';
 import {ProtemState, Transicao} from './estado';
 import {FONTE_DE_DADOS} from './fonte-de-dados';
@@ -41,6 +41,7 @@ export class ProtemStore {
   readonly configuracao = computed(() => this.state().configuracao);
   readonly usuarios = computed(() => this.state().usuarios);
   readonly categorias = computed(() => this.state().categorias);
+  readonly subcategorias = computed(() => this.state().subcategorias);
   readonly itens = computed(() => this.state().itens);
   readonly solicitacoes = computed(() => this.state().solicitacoes);
   readonly emprestimos = computed(() => this.state().emprestimos);
@@ -304,6 +305,14 @@ export class ProtemStore {
 
   salvarCategoria(cat: Categoria) {
     this.atualizar((s) => acervo.salvarCategoria(s, cat));
+  }
+
+  salvarSubcategoria(subcategoria: Subcategoria) {
+    return this.executar((s) => acervo.salvarSubcategoria(s, subcategoria));
+  }
+
+  removerSubcategoria(subcategoriaId: string) {
+    return this.executar((s) => acervo.removerSubcategoria(s, subcategoriaId));
   }
 
   resolverOcorrencia(ocorrenciaId: string, itemRetornarDisponivel = true, responsavelId?: string) {

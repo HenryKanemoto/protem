@@ -145,7 +145,7 @@ export function solicitarEmprestimo(
       'novo_pedido',
       `${usuario.nome} solicitou o empréstimo de: ${item.nome}.`,
       s.agora,
-      '/painel/solicitacoes',
+      '/painel/pedidos',
     ),
   );
 
@@ -282,7 +282,7 @@ export function enviarLembrete(s: ProtemState, solicitacaoId: string): Transicao
       'lembrete',
       `Lembrete de análise: ${solicitante?.nome || 'Solicitante'} aguarda avaliação do pedido para "${item?.nome || 'item'}".`,
       s.agora,
-      '/painel/solicitacoes',
+      '/painel/pedidos',
     ),
   );
 

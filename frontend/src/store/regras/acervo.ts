@@ -1,4 +1,4 @@
-import {Categoria, DestinoEncaminhamento, Item, PoliticaAtraso, StatusItem, TipoDestino} from '../../types/models';
+import {Categoria, DestinoEncaminhamento, Item, PoliticaAtraso, StatusItem, Subcategoria, TipoDestino} from '../../types/models';
 import {ProtemState, ResultadoAcao, Transicao, novoEvento} from '../estado';
 import {destinosDe} from './avaria';
 
@@ -8,8 +8,53 @@ function upsert<T extends {id: string}>(lista: T[], registro: T): T[] {
     : [registro, ...lista];
 }
 
+/**
+ * Grava o item. A subcategoria só vale se pertencer à categoria do item;
+ * se a categoria mudou (ou a subcategoria não existe), ela é descartada.
+ */
 export function salvarItem(s: ProtemState, item: Item): ProtemState {
-  return {...s, itens: upsert(s.itens, item)};
+  const sub = item.subcategoriaId ? s.subcategorias.find((x) => x.id === item.subcategoriaId) : undefined;
+  const gravado: Item = {...item};
+  if (sub && sub.categoriaId === item.categoriaId) gravado.subcategoriaId = sub.id;
+  else delete gravado.subcategoriaId;
+  return {...s, itens: upsert(s.itens, gravado)};
+}
+
+/** Cria ou renomeia uma subcategoria. O nome é obrigatório e único dentro da categoria. */
+export function salvarSubcategoria(s: ProtemState, subcategoria: Subcategoria): Transicao<ResultadoAcao> {
+  const falha = (mensagem: string) => ({estado: s, resultado: {sucesso: false, mensagem}});
+  const nome = subcategoria.nome.trim();
+  if (!nome) return falha('Informe o nome da subcategoria.');
+  if (!s.categorias.some((c) => c.id === subcategoria.categoriaId)) return falha('Categoria não encontrada.');
+  const existente = s.subcategorias.find((x) => x.id === subcategoria.id);
+  if (existente && existente.categoriaId !== subcategoria.categoriaId) {
+    return falha('Uma subcategoria não pode mudar de categoria.');
+  }
+  const repetida = s.subcategorias.some(
+    (x) =>
+      x.id !== subcategoria.id &&
+      x.categoriaId === subcategoria.categoriaId &&
+      x.nome.localeCompare(nome, 'pt-BR', {sensitivity: 'base'}) === 0,
+  );
+  if (repetida) return falha('Já existe uma subcategoria com esse nome nesta categoria.');
+  return {
+    estado: {...s, subcategorias: upsert(s.subcategorias, {...subcategoria, nome})},
+    resultado: {sucesso: true, mensagem: 'Subcategoria salva.'},
+  };
+}
+
+/** Só sai da lista se nenhum item estiver usando. */
+export function removerSubcategoria(s: ProtemState, subcategoriaId: string): Transicao<ResultadoAcao> {
+  const falha = (mensagem: string) => ({estado: s, resultado: {sucesso: false, mensagem}});
+  if (!s.subcategorias.some((x) => x.id === subcategoriaId)) return falha('Subcategoria não encontrada.');
+  const emUso = s.itens.filter((i) => i.subcategoriaId === subcategoriaId).length;
+  if (emUso > 0) {
+    return falha(`${emUso === 1 ? '1 item usa' : emUso + ' itens usam'} essa subcategoria. Mude ${emUso === 1 ? 'o item' : 'os itens'} antes de remover.`);
+  }
+  return {
+    estado: {...s, subcategorias: s.subcategorias.filter((x) => x.id !== subcategoriaId)},
+    resultado: {sucesso: true, mensagem: 'Subcategoria removida.'},
+  };
 }
 
 export function removerItem(s: ProtemState, itemId: string): ProtemState {

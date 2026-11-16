@@ -45,6 +45,7 @@ export function estadoDeTeste(mudanca: Partial<ProtemState> = {}): ProtemState {
     configuracao: {politicaAtraso: 'rigida'},
     usuarios: [usuario('resp', {perfil: 'responsavel'}), usuario('aluna')],
     categorias,
+    subcategorias: [],
     itens: [item('a1', 'cat-a'), item('a2', 'cat-a'), item('b1', 'cat-b'), item('b2', 'cat-b'), item('b3', 'cat-b')],
     solicitacoes: [],
     emprestimos: [],

@@ -12,6 +12,7 @@ import {
   Ocorrencia,
   Solicitacao,
   StatusItem,
+  Subcategoria,
   Usuario,
 } from '../types/models';
 
@@ -146,6 +147,30 @@ export function getInitialDemoState(): ProtemState {
     },
   ];
 
+  // Subcategorias: só onde ajudam a achar (Projetores e Notebooks ficam sem, de propósito)
+  const subcategorias: Subcategoria[] = [
+    {id: 'sub-arduino', categoriaId: 'cat-eletronica', nome: 'Arduino'},
+    {id: 'sub-raspberry', categoriaId: 'cat-eletronica', nome: 'Raspberry Pi'},
+    {id: 'sub-robotica', categoriaId: 'cat-eletronica', nome: 'Robótica'},
+    {id: 'sub-ferr-manuais', categoriaId: 'cat-ferramentas', nome: 'Manuais'},
+    {id: 'sub-ferr-eletricas', categoriaId: 'cat-ferramentas', nome: 'Elétricas'},
+    {id: 'sub-ferr-medicao', categoriaId: 'cat-ferramentas', nome: 'Medição'},
+    {id: 'sub-lab-microscopia', categoriaId: 'cat-laboratorio', nome: 'Microscopia'},
+    {id: 'sub-lab-medicao', categoriaId: 'cat-laboratorio', nome: 'Medição'},
+  ];
+  const subcategoriaDe: Record<string, string> = {
+    'item-06': 'sub-arduino',
+    'item-07': 'sub-arduino',
+    'item-08': 'sub-raspberry',
+    'item-09': 'sub-robotica',
+    'item-10': 'sub-ferr-manuais',
+    'item-11': 'sub-ferr-eletricas',
+    'item-12': 'sub-ferr-medicao',
+    'item-13': 'sub-lab-microscopia',
+    'item-14': 'sub-lab-medicao',
+    'item-15': 'sub-lab-medicao',
+  };
+
   // Situação de hoje dos itens que não estão no catálogo; os demais estão disponíveis
   const situacaoHoje: Partial<Record<string, StatusItem>> = {
     'item-02': 'reservado', // Igor retira hoje
@@ -177,6 +202,7 @@ export function getInitialDemoState(): ProtemState {
   ].map(([id, categoriaId, nome, descricao, patrimonio, codigoQr]) => ({
     id,
     categoriaId,
+    ...(subcategoriaDe[id] ? {subcategoriaId: subcategoriaDe[id]} : {}),
     nome,
     descricao,
     patrimonio,
@@ -325,9 +351,9 @@ export function getInitialDemoState(): ProtemState {
 
   // Avisos de atraso e de prazo próximo são gerados pela rotina automática ao carregar
   const notificacoes: Notificacao[] = [
-    aviso('user-enzo', 'novo_pedido', 'Gabriela Sato Ribeiro solicitou o empréstimo de: Kit Raspberry Pi 4 Model B.', ha20Minutos, '/painel/solicitacoes'),
+    aviso('user-enzo', 'novo_pedido', 'Gabriela Sato Ribeiro solicitou o empréstimo de: Kit Raspberry Pi 4 Model B.', ha20Minutos, '/painel/pedidos'),
     aviso('user-enzo', 'nova_conta', 'Nova conta de aluno: Diego Alves Barreto aguarda aprovação.', ha20Minutos, '/painel/contas'),
-    aviso('user-enzo', 'novo_pedido', 'Gabriela Sato Ribeiro solicitou o empréstimo de: Kit Arduino Iniciante #1.', ha3Horas, '/painel/solicitacoes', true),
+    aviso('user-enzo', 'novo_pedido', 'Gabriela Sato Ribeiro solicitou o empréstimo de: Kit Arduino Iniciante #1.', ha3Horas, '/painel/pedidos', true),
     aviso(
       'user-igor',
       'aprovacao',
@@ -375,6 +401,7 @@ export function getInitialDemoState(): ProtemState {
     },
     usuarios,
     categorias,
+    subcategorias,
     itens,
     solicitacoes: ordenarPorData(solicitacoes, (s) => s.criadoEm),
     emprestimos: ordenarPorData(emprestimos, (e) => e.retiradoEm),

@@ -37,6 +37,13 @@ export interface Categoria {
   descricao?: string;
 }
 
+/** Divisão opcional de uma categoria (ex.: Ferramentas > Elétricas). Prazo e limite continuam na categoria. */
+export interface Subcategoria {
+  id: string;
+  categoriaId: string;
+  nome: string;
+}
+
 export type StatusItem =
   | 'disponivel'
   | 'solicitado'
@@ -50,6 +57,8 @@ export type StatusItem =
 export interface Item {
   id: string;
   categoriaId: string;
+  /** Opcional: precisa pertencer à categoria do item. */
+  subcategoriaId?: string;
   nome: string;
   descricao: string;
   patrimonio: string;
@@ -156,7 +165,7 @@ export interface Notificacao {
   mensagem: string;
   lida: boolean;
   criadoEm: string; // ISO date string
-  destino: string;  // Route path e.g. /meus-emprestimos or /painel/solicitacoes
+  destino: string;  // Route path e.g. /meus-emprestimos or /painel/pedidos
 }
 
 export type TipoEventoAuditoria =

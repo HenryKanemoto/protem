@@ -7,6 +7,7 @@ import {
   Notificacao,
   Ocorrencia,
   Solicitacao,
+  Subcategoria,
   TipoNotificacao,
   Usuario,
 } from '../types/models';
@@ -17,6 +18,7 @@ export interface ProtemState {
   configuracao: Configuracao;
   usuarios: Usuario[];
   categorias: Categoria[];
+  subcategorias: Subcategoria[];
   itens: Item[];
   solicitacoes: Solicitacao[];
   emprestimos: Emprestimo[];

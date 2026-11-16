@@ -11,10 +11,10 @@ describe('persistência no navegador', () => {
     expect(estado.itens.length).toBeGreaterThan(0);
   });
 
-  it('grava em protem:v3 e lê de volta', () => {
+  it('grava em protem:v4 e lê de volta', () => {
     const s = estadoDeTeste({usuarioLogadoId: 'aluna'});
     expect(salvarEstado(s)).toBe('ok');
-    expect(localStorage.getItem('protem:v3')).not.toBeNull();
+    expect(localStorage.getItem('protem:v4')).not.toBeNull();
     expect(carregarEstado()).toEqual({estado: s, doSeed: false});
   });
 
@@ -36,7 +36,7 @@ describe('persistência no navegador', () => {
     ['relógio inválido', JSON.stringify({...estadoDeTeste(), agora: 'ontem'})],
     ['política desconhecida', JSON.stringify({...estadoDeTeste(), configuracao: {politicaAtraso: 'x'}})],
   ])('dados corrompidos (%s) voltam para o seed', (_caso, texto) => {
-    localStorage.setItem('protem:v3', texto);
+    localStorage.setItem('protem:v4', texto);
     expect(carregarEstado().doSeed).toBe(true);
   });
 
@@ -48,7 +48,7 @@ describe('persistência no navegador', () => {
       const recebidos: unknown[] = [];
       const parar = observarOutrasAbas((estado) => recebidos.push(estado));
       const s = estadoDeTeste({usuarioLogadoId: 'resp'});
-      avisar('protem:v3', JSON.stringify(s));
+      avisar('protem:v4', JSON.stringify(s));
       parar();
       expect(recebidos).toEqual([s]);
     });
@@ -57,10 +57,10 @@ describe('persistência no navegador', () => {
       const recebidos: unknown[] = [];
       const parar = observarOutrasAbas((estado) => recebidos.push(estado));
       avisar('outra-chave', JSON.stringify(estadoDeTeste()));
-      avisar('protem:v3', null);
-      avisar('protem:v3', '{quebrado');
+      avisar('protem:v4', null);
+      avisar('protem:v4', '{quebrado');
       parar();
-      avisar('protem:v3', JSON.stringify(estadoDeTeste()));
+      avisar('protem:v4', JSON.stringify(estadoDeTeste()));
       expect(recebidos).toEqual([]);
     });
   });
