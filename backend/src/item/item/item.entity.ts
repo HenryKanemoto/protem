@@ -10,6 +10,10 @@ export class ItemEntity {
     @Column({length:64})
     categoriaId:string;
 
+    // Opcional: subcategoria dentro da categoria (as subcategorias em si ficam no frontend)
+    @Column({type:'varchar', length:64, nullable:true})
+    subcategoriaId:string|null;
+
     @Column({length:120})
     nome:string;
 

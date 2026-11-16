@@ -13,6 +13,7 @@ export type StatusItem = typeof STATUS_ITEM[number];
 export interface Item {
     id: string,
     categoriaId: string,
+    subcategoriaId?: string | null,
     nome: string,
     descricao: string,
     patrimonio: string,
@@ -25,6 +26,7 @@ export interface Item {
 export interface ItemRequestDTO {
     id?: string,
     categoriaId: string,
+    subcategoriaId?: string | null,
     nome: string,
     descricao?: string,
     patrimonio: string,

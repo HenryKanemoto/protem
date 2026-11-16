@@ -73,6 +73,7 @@ export class ItemService {
             id,
             nome,
             categoriaId,
+            subcategoriaId: dto.subcategoriaId?.trim() || null,
             patrimonio,
             codigoQr,
             descricao: dto.descricao?.trim() ?? '',

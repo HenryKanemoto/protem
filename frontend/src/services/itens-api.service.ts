@@ -35,6 +35,7 @@ function paraItem(api: ItemApi): Item {
   const item: Item = {
     id: api.id,
     categoriaId: api.categoriaId,
+    ...(api.subcategoriaId ? {subcategoriaId: api.subcategoriaId} : {}),
     nome: api.nome,
     descricao: api.descricao,
     patrimonio: api.patrimonio,
