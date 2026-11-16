@@ -239,3 +239,34 @@ Princípio pedido pela equipe: nada importante depende de "descobrir" um clique.
 - [ ] Nomes dos 3 perfis do login ("Enzo Capiel", "Gustavo Machado", "Camila Cristina") seguem os mesmos; confirmar se são fictícios.
 - [ ] Recusa de **cadastro** continua com motivo opcional (só a recusa de pedido passou a exigir).
 - [ ] Auditoria, histórico e contas ficam no navegador também no modo api; o back-end só guarda os itens.
+
+---
+
+# Rodada 5: diferenciais (branch `feat/diferenciais`)
+
+| Área | Antes | Agora |
+|---|---|---|
+| Código de retirada | Aparecia na notificação de aprovação | Fica só em *Meus códigos*, escondido até a pessoa tocar para ver, com botão de copiar. As notificações levam à página, sem o código |
+| Código de devolução | Não existia | Gerado na retirada; o responsável o digita ao devolver. Sem o código, "devolver sem código" exige motivo e fica na auditoria |
+| Avaria | Descrição livre | Tipo obrigatório (estética, funcional leve, incompleto, quebrado). Todo tipo vai para manutenção (RN07 mantida) |
+| Item sem conserto | Ficava em manutenção para sempre | Pode ser **encaminhado** (doação, descarte, garantia...) a um destino configurável; novo estado "encaminhado", que sai do acervo. O back-end aceita o estado por uma migration (não testada contra MySQL real) |
+| Relatórios | Só na tela | **Baixar PDF** no Histórico, nas Avarias e na Auditoria, gerado no navegador (jsPDF, carregado só ao clicar) com os filtros em uso |
+| Acessibilidade | Nenhuma opção | Painel (botão no topo de toda tela): texto de 87,5% a 150%, modo escuro, alto contraste, mais espaço no texto, menos animação. Salvo por usuário em `protem:a11y:v1:<id>`, fora do estado principal |
+| Contraste | Só o tema claro conferido | `npm run contraste` confere 30 pares de cor nos 4 temas (claro, escuro, alto contraste, escuro + alto) contra o AA; todos passam |
+| Leitor de QR | Só aviso na tela | Bipe agudo na leitura certa, dois tons graves em aviso e erro, vibração e aviso para leitor de tela. A câmera não repete o mesmo código em menos de 3 s. Pode ser desligado no painel |
+| Painel do responsável | Contadores e três listas | Resumo: **O que fazer agora** (pedidos, atrasos, devoluções e retiradas de hoje), **Acervo em uso** (número em destaque), taxa de atraso dos últimos 30 dias e gráfico de **Mais pedidos**. Um só botão preenchido |
+| Meus empréstimos | Texto solto por pedido | Linha do tempo Pedido → Aprovação → Retirada → Devolução, com data e a etapa atual em destaque |
+| Primeiro acesso | Só o formulário | "Como funciona" em três passos no login; estados vazios apontam o catálogo |
+| Acessibilidade (informação) | Não existia | Página pública `/acessibilidade`: recursos, referência WCAG 2.1 AA e o que ainda falta |
+
+**Verificação:** 203 testes no front-end (7 no back-end), lint limpo, build de produção. Verificações no Edge (1366×768 e 390×844) com nenhuma requisição externa e nenhum erro de console: códigos, avarias e encaminhamento, os 3 PDFs (renderizados em imagem para conferir), o painel de acessibilidade (inclui tema escuro e texto a 150% sem rolagem horizontal), o retorno do leitor (som, vibração e silêncio quando desligado), o painel resumido e a linha do tempo.
+
+**Não alterado:** RN01 a RN10, o back-end e o Docker (além da migration do estado "encaminhado"). Chave do navegador segue `protem:v2` (os campos novos são opcionais).
+
+**Proposta, sem código:** [Score Protem](PROPOSTA-SCORE.md), um índice só informativo de histórico de uso, opt-in e com cuidados de LGPD.
+
+**Pendências:**
+- [ ] Migration `ItemEncaminhado` não foi rodada contra um MySQL real (Docker desligado nesta máquina).
+- [ ] Dados antigos no navegador mantêm avisos com o código escrito; os dados novos e o seed estão limpos.
+- [ ] Não há teste com leitores de tela (NVDA, VoiceOver), VLibras nem leitura em voz alta; a página `/acessibilidade` diz isso.
+- [ ] Relatório com números de Lighthouse/axe e PWA: não feitos, a decidir.

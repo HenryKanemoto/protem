@@ -121,6 +121,10 @@ Na tela de login, o bloco **"Acesso rápido de demonstração"** entra com um cl
 3. **Responsável** → *Leitor de QR code*. Escanear o QR do item leva à confirmação da retirada, que só é registrada com o código que a pessoa mostrar no app. O código vale uma vez, até o fim do dia. No pedido aprovado do seed (persona Igor), o código é `K7PM4X`.
 4. Na devolução, o mesmo leitor leva à tela *Registrar devolução*. Ali dá para marcar **"Voltou com avaria"**, e o item vai para *Manutenção*.
 
+### Acessibilidade
+
+O botão com o boneco, no topo de toda tela, abre o painel: tamanho do texto, modo escuro, alto contraste, mais espaço no texto, menos animação e som e vibração no leitor de QR. As escolhas ficam salvas no navegador, por usuário. A página `/acessibilidade` explica o que o Protem faz e o que ainda falta.
+
 ### Painel de demonstração (relógio)
 
 O botão escuro no canto inferior direito abre o **modo demonstração**:
@@ -231,6 +235,7 @@ frontend/src/
 | `npm run build:api` | Build de produção, modo api |
 | `npm run servir` | Serve o build em <http://localhost:4300>, com fallback de rotas |
 | `npm run icones` | Regera `src/app/icones.ts` depois de usar um ícone novo |
+| `npm run contraste` | Confere o contraste (WCAG AA) de todos os pares de cor nos 4 temas |
 | `npm test` | Testes (regras de negócio, seed e persistência) |
 | `npm run lint` | Lint |
 
