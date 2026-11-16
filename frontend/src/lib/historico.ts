@@ -1,4 +1,5 @@
 import {Emprestimo, Item, Ocorrencia, Solicitacao, Usuario} from '../types/models';
+import {rotuloCategoriaAvaria} from '../store/regras/avaria';
 import {formatDateShort} from './date-utils';
 
 /** Situação final de um pedido no histórico; também é a chave de cor do StatusBadge. */
@@ -12,6 +13,19 @@ export type SituacaoHistorico =
   | 'devolvido'
   | 'devolvido_atraso'
   | 'devolvido_avaria';
+
+/** Texto de cada situação (o StatusBadge tem os mesmos). Usado também nos PDFs. */
+export const ROTULOS_SITUACAO: Record<SituacaoHistorico, string> = {
+  pendente: 'Pendente',
+  aguardando_retirada: 'Aguardando retirada',
+  recusado: 'Recusado',
+  expirado: 'Expirado',
+  emprestado: 'Emprestado',
+  atrasado: 'Atrasado',
+  devolvido: 'Devolvido',
+  devolvido_atraso: 'Devolvido com atraso',
+  devolvido_avaria: 'Devolvido com avaria',
+};
 
 /** Agrupamento usado no filtro do histórico. */
 export type GrupoHistorico = 'andamento' | 'devolvidos' | 'nao_retirados' | 'atraso' | 'avaria';
@@ -81,8 +95,18 @@ export function montarHistorico(d: Dados): LinhaHistorico[] {
         etapas.push({
           rotulo: avaria ? 'Devolvido com avaria' : 'Devolvido',
           data: emp.devolvidoEm,
-          observacao: avaria ? `${atraso}; ${avaria.descricao}` : atraso,
+          observacao: avaria ? `${atraso}; ${rotuloCategoriaAvaria(avaria.categoria)}: ${avaria.descricao}` : atraso,
         });
+        // O fim da avaria: o item foi consertado ou encaminhado a um destino
+        if (avaria?.desfecho === 'encaminhado' && item?.encaminhamento) {
+          etapas.push({
+            rotulo: 'Item encaminhado',
+            data: item.encaminhamento.em,
+            observacao: `${item.encaminhamento.destinoNome}; ${item.encaminhamento.motivo}`,
+          });
+        } else if (avaria?.desfecho === 'consertado' && avaria.resolvidoEm) {
+          etapas.push({rotulo: 'Item consertado', data: avaria.resolvidoEm});
+        }
         situacao = avaria ? 'devolvido_avaria' : emp.diasAtraso > 0 ? 'devolvido_atraso' : 'devolvido';
       } else {
         situacao = emp.diasAtraso > 0 ? 'atrasado' : 'emprestado';
