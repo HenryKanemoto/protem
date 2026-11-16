@@ -1,6 +1,7 @@
 import {addDays, calculateDiasAtraso, formatDateShort, parseDate} from '../../lib/date-utils';
-import {Emprestimo, EventoAuditoria, Ocorrencia, StatusItem, StatusUsuario, Usuario} from '../../types/models';
+import {CategoriaAvaria, Emprestimo, EventoAuditoria, Ocorrencia, StatusItem, StatusUsuario, Usuario} from '../../types/models';
 import {ProtemState, ResultadoAcao, Transicao, novaNotificacao, novoEvento} from '../estado';
+import {ehCategoriaAvaria, rotuloCategoriaAvaria} from './avaria';
 import {codigoConfere, codigoDevolucaoConfere, codigosEmUso, gerarCodigoRetirada, normalizarCodigo} from './codigos';
 
 export type ResultadoRetirada = ResultadoAcao & {emprestimoId?: string; itemId?: string};
@@ -109,12 +110,13 @@ export function registrarRetirada(
  * RN07: Item devolvido com defeito vai para manutenção, sai do catálogo e gera ocorrência.
  */
 /**
- * Como a devolução foi confirmada: com o código que a pessoa mostrou ou, se ela não tiver,
- * sem código e com motivo.
+ * Dados da devolução além do empréstimo: como foi confirmada (com o código que a pessoa
+ * mostrou ou, se ela não tiver, sem código e com motivo) e, se voltou com avaria, de que tipo.
  */
-export interface ConfirmacaoDevolucao {
+export interface OpcoesDevolucao {
   codigo?: string;
   semCodigoMotivo?: string;
+  categoriaAvaria?: CategoriaAvaria;
 }
 
 export function registrarDevolucao(
@@ -123,19 +125,19 @@ export function registrarDevolucao(
   comDefeito: boolean,
   descricaoDefeito?: string,
   responsavelId?: string,
-  confirmacao: ConfirmacaoDevolucao = {},
+  opcoes: OpcoesDevolucao = {},
 ): Transicao<ResultadoAcao> {
   const emp = s.emprestimos.find((e) => e.id === emprestimoId);
   if (!emp) return {estado: s, resultado: {sucesso: false, mensagem: 'Empréstimo não encontrado.'}};
   if (emp.devolvidoEm) return {estado: s, resultado: {sucesso: false, mensagem: 'Item já consta como devolvido.'}};
 
   // Empréstimo com código: confere o código ou aceita "sem código" com motivo
-  const semCodigoMotivo = confirmacao.semCodigoMotivo?.trim();
+  const semCodigoMotivo = opcoes.semCodigoMotivo?.trim();
   if (emp.codigoDevolucao && !semCodigoMotivo) {
-    if (!normalizarCodigo(confirmacao.codigo ?? '')) {
+    if (!normalizarCodigo(opcoes.codigo ?? '')) {
       return {estado: s, resultado: {sucesso: false, mensagem: 'Informe o código de devolução que a pessoa mostrar.'}};
     }
-    if (!codigoDevolucaoConfere(emp, confirmacao.codigo ?? '')) {
+    if (!codigoDevolucaoConfere(emp, opcoes.codigo ?? '')) {
       return {
         estado: s,
         resultado: {
@@ -143,6 +145,17 @@ export function registrarDevolucao(
           mensagem: 'Código de devolução incorreto. Peça à pessoa que mostre o código no app, em Meus códigos.',
         },
       };
+    }
+  }
+
+  // Avaria: o tipo e a descrição são obrigatórios (a ocorrência precisa servir de prova depois)
+  const descricao = descricaoDefeito?.trim() ?? '';
+  if (comDefeito) {
+    if (!ehCategoriaAvaria(opcoes.categoriaAvaria)) {
+      return {estado: s, resultado: {sucesso: false, mensagem: 'Escolha o tipo de avaria.'}};
+    }
+    if (!descricao) {
+      return {estado: s, resultado: {sucesso: false, mensagem: 'Descreva a avaria para registrar a ocorrência.'}};
     }
   }
 
@@ -165,7 +178,8 @@ export function registrarDevolucao(
       emprestimoId: emp.id,
       itemId: emp.itemId,
       usuarioId: emp.usuarioId,
-      descricao: descricaoDefeito || 'Defeito relatado na devolução do item.',
+      descricao,
+      categoria: opcoes.categoriaAvaria,
       status: 'aberta',
       criadoEm: s.agora,
     };
@@ -180,7 +194,7 @@ export function registrarDevolucao(
   const notif = novaNotificacao(
     emp.usuarioId,
     'aprovacao',
-    `A devolução de "${item?.nome || 'item'}" foi confirmada pelo responsável.${comDefeito ? ' O item foi encaminhado para manutenção com registro de ocorrência.' : ''}`,
+    `A devolução de "${item?.nome || 'item'}" foi confirmada pelo responsável.${comDefeito ? ' O item foi para a manutenção e a ocorrência foi registrada.' : ''}`,
     s.agora,
     '/meus-emprestimos',
   );
@@ -190,6 +204,7 @@ export function registrarDevolucao(
     itemId: emp.itemId,
     motivo: comDefeito ? ocorrencias[0].descricao : undefined,
     detalhe:
+      (comDefeito ? `${rotuloCategoriaAvaria(opcoes.categoriaAvaria)}. ` : '') +
       (diasAtraso > 0 ? `${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso` : 'No prazo') +
       (usouSemCodigo ? `. Sem código de devolução: ${semCodigoMotivo}` : ''),
   });

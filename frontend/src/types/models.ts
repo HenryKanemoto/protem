@@ -43,7 +43,9 @@ export type StatusItem =
   | 'reservado'
   | 'emprestado'
   | 'atrasado'
-  | 'manutencao';
+  | 'manutencao'
+  /** Saiu do acervo: foi enviado a um destino (CRC, SENAI Lab...). Não volta ao catálogo. */
+  | 'encaminhado';
 
 export interface Item {
   id: string;
@@ -54,6 +56,28 @@ export interface Item {
   codigoQr: string;
   foto?: string;
   status: StatusItem;
+  /** Presente quando o item foi encaminhado (status "encaminhado"). */
+  encaminhamento?: Encaminhamento;
+}
+
+/** Tipo de destino de um item que não tem mais conserto no acervo. */
+export type TipoDestino = 'doacao' | 'recondicionamento' | 'aprendizado';
+
+export interface DestinoEncaminhamento {
+  id: string;
+  nome: string;
+  tipo: TipoDestino;
+  descricao: string;
+}
+
+/** Para onde o item foi, quando e por quê. O nome do destino fica gravado: ele pode ser editado depois. */
+export interface Encaminhamento {
+  destinoId: string;
+  destinoNome: string;
+  tipo: TipoDestino;
+  em: string; // ISO date string
+  porId: string;
+  motivo: string;
 }
 
 export type StatusSolicitacao =
@@ -95,15 +119,24 @@ export interface Emprestimo {
 
 export type StatusOcorrencia = 'aberta' | 'resolvida';
 
+/** Quanto o item ficou danificado, escolhido pelo responsável na devolução com avaria. */
+export type CategoriaAvaria = 'estetica' | 'funcional_leve' | 'incompleto' | 'quebrado';
+
+/** Como a ocorrência terminou: o item foi consertado ou encaminhado a um destino. */
+export type DesfechoOcorrencia = 'consertado' | 'encaminhado';
+
 export interface Ocorrencia {
   id: string;
   emprestimoId?: string;
   itemId: string;
   usuarioId: string;
   descricao: string;
+  /** Ocorrências antigas, de antes das categorias, não têm. */
+  categoria?: CategoriaAvaria;
   status: StatusOcorrencia;
   criadoEm: string;          // ISO date string
   resolvidoEm?: string;      // ISO date string
+  desfecho?: DesfechoOcorrencia;
 }
 
 export type TipoNotificacao =
@@ -139,7 +172,9 @@ export type TipoEventoAuditoria =
   | 'pedido_expirado'
   | 'retirada'
   | 'devolucao'
-  | 'devolucao_avaria';
+  | 'devolucao_avaria'
+  | 'item_consertado'
+  | 'item_encaminhado';
 
 /** Registro de quem fez o quê, com quem e por quê. Gravado pelas próprias regras. */
 export interface EventoAuditoria {
@@ -157,4 +192,6 @@ export type PoliticaAtraso = 'simples' | 'intermediaria' | 'rigida';
 
 export interface Configuracao {
   politicaAtraso: PoliticaAtraso;
+  /** Para onde o responsável pode encaminhar item sem conserto. Sem a lista, vale a padrão. */
+  destinosEncaminhamento?: DestinoEncaminhamento[];
 }

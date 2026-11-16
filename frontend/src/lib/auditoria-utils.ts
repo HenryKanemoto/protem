@@ -1,12 +1,13 @@
 import {TipoEventoAuditoria} from '../types/models';
 
-export type GrupoEvento = 'contas' | 'restricoes' | 'pedidos' | 'movimentacao';
+export type GrupoEvento = 'contas' | 'restricoes' | 'pedidos' | 'movimentacao' | 'acervo';
 
 export const GRUPOS_EVENTO: {valor: GrupoEvento; rotulo: string}[] = [
   {valor: 'contas', rotulo: 'Cadastros'},
   {valor: 'restricoes', rotulo: 'Bloqueios e suspensões'},
   {valor: 'pedidos', rotulo: 'Pedidos'},
   {valor: 'movimentacao', rotulo: 'Retiradas e devoluções'},
+  {valor: 'acervo', rotulo: 'Conserto e encaminhamento'},
 ];
 
 /** Nome, ícone e grupo de cada tipo de evento, na ordem em que aparecem no filtro. */
@@ -24,4 +25,6 @@ export const TIPOS_EVENTO: Record<TipoEventoAuditoria, {rotulo: string; icone: s
   retirada: {rotulo: 'Retirada', icone: 'outbox', grupo: 'movimentacao'},
   devolucao: {rotulo: 'Devolução', icone: 'move_to_inbox', grupo: 'movimentacao'},
   devolucao_avaria: {rotulo: 'Devolução com avaria', icone: 'build', grupo: 'movimentacao'},
+  item_consertado: {rotulo: 'Item consertado', icone: 'handyman', grupo: 'acervo'},
+  item_encaminhado: {rotulo: 'Item encaminhado', icone: 'local_shipping', grupo: 'acervo'},
 };

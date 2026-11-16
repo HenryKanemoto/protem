@@ -12,6 +12,7 @@ const STATUS: Record<string, {label: string; tom: Tom}> = {
   emprestado: {label: 'Emprestado', tom: 'emprestado'},
   atrasado: {label: 'Atrasado', tom: 'atrasado'},
   manutencao: {label: 'Em manutenção', tom: 'manutencao'},
+  encaminhado: {label: 'Encaminhado', tom: 'neutro'},
   // Usuários
   ativa: {label: 'Ativa', tom: 'disponivel'},
   pendente: {label: 'Pendente', tom: 'solicitado'},

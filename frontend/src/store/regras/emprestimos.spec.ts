@@ -116,7 +116,7 @@ describe('regras de retirada e devolução', () => {
 
     it('RN07: com avaria o item vai para manutenção e abre ocorrência', () => {
       const s = estadoDeTeste({emprestimos: [emprestimo('e', 'a1')]});
-      const {estado} = registrarDevolucao(s, 'e', true, 'Tela trincada');
+      const {estado} = registrarDevolucao(s, 'e', true, 'Tela trincada', 'resp', {categoriaAvaria: 'estetica'});
 
       expect(buscar.item(estado, 'a1').status).toBe('manutencao');
       expect(estado.ocorrencias).toHaveLength(1);
@@ -125,6 +125,7 @@ describe('regras de retirada e devolução', () => {
         itemId: 'a1',
         usuarioId: 'aluna',
         descricao: 'Tela trincada',
+        categoria: 'estetica',
         status: 'aberta',
       });
     });

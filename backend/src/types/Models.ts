@@ -5,6 +5,7 @@ export const STATUS_ITEM = [
     'emprestado',
     'atrasado',
     'manutencao',
+    'encaminhado',
 ] as const;
 
 export type StatusItem = typeof STATUS_ITEM[number];

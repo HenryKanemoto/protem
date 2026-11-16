@@ -1,8 +1,10 @@
 import {ProtemState, novoEvento as evento} from './estado';
+import {rotuloCategoriaAvaria} from './regras/avaria';
 import {garantirCodigosDeDevolucao} from './regras/codigos';
 import {addDays, addHours, calculateDiasAtraso, formatDateShort, parseDate, toDateInputValue} from '../lib/date-utils';
 import {
   Categoria,
+  CategoriaAvaria,
   Emprestimo,
   EventoAuditoria,
   Item,
@@ -194,7 +196,7 @@ export function getInitialDemoState(): ProtemState {
     n: string,
     pessoa: string,
     itemId: string,
-    o: {pedido: number; hora?: number; prazo: number; devolvido?: [number, number]; avaria?: string},
+    o: {pedido: number; hora?: number; prazo: number; devolvido?: [number, number]; avaria?: string; categoriaAvaria?: CategoriaAvaria},
   ) => {
     const hora = o.hora ?? 9;
     const solId = `solic-${n}`;
@@ -229,6 +231,7 @@ export function getInitialDemoState(): ProtemState {
         itemId,
         usuarioId: pessoa,
         descricao: o.avaria,
+        categoria: o.categoriaAvaria,
         status: 'aberta',
         criadoEm: devolvidoEm,
       });
@@ -255,6 +258,7 @@ export function getInitialDemoState(): ProtemState {
     prazo: -1,
     devolvido: [-1, 16],
     avaria: 'Mandril travado ao fixar broca de 8 mm; motor esquentando.',
+    categoriaAvaria: 'quebrado',
   });
 
   // Davi: um empréstimo tranquilo e um pedido recusado
@@ -451,7 +455,9 @@ function auditoriaDoSeed(s: ProtemState, extras: EventoAuditoria[]): EventoAudit
         ...base,
         autorId: RESPONSAVEL,
         motivo: avaria?.descricao,
-        detalhe: e.diasAtraso > 0 ? `${dias(e.diasAtraso)} de atraso` : 'No prazo',
+        detalhe:
+          (avaria ? `${rotuloCategoriaAvaria(avaria.categoria)}. ` : '') +
+          (e.diasAtraso > 0 ? `${dias(e.diasAtraso)} de atraso` : 'No prazo'),
       }),
     );
     if (e.diasAtraso > 0) {

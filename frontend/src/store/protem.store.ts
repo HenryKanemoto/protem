@@ -1,11 +1,12 @@
 import {Injectable, computed, inject, signal} from '@angular/core';
 import {addHours, parseDate} from '../lib/date-utils';
-import {Categoria, Item, PoliticaAtraso, Solicitacao} from '../types/models';
+import {Categoria, Item, PoliticaAtraso, Solicitacao, TipoDestino} from '../types/models';
 import {getInitialDemoState} from './demo-data';
 import {ProtemState, Transicao} from './estado';
 import {FONTE_DE_DADOS} from './fonte-de-dados';
 import {observarOutrasAbas} from './persistencia';
 import * as acervo from './regras/acervo';
+import {destinosDe} from './regras/avaria';
 import * as contas from './regras/contas';
 import * as emprestimos from './regras/emprestimos';
 import {garantirCodigos} from './regras/codigos';
@@ -282,10 +283,10 @@ export class ProtemStore {
     responsavelId: string,
     comDefeito: boolean,
     descricaoDefeito?: string,
-    confirmacao?: emprestimos.ConfirmacaoDevolucao,
+    opcoes?: emprestimos.OpcoesDevolucao,
   ) {
     return this.executar((s) =>
-      emprestimos.registrarDevolucao(s, emprestimoId, comDefeito, descricaoDefeito, responsavelId, confirmacao),
+      emprestimos.registrarDevolucao(s, emprestimoId, comDefeito, descricaoDefeito, responsavelId, opcoes),
     );
   }
 
@@ -305,8 +306,24 @@ export class ProtemStore {
     this.atualizar((s) => acervo.salvarCategoria(s, cat));
   }
 
-  resolverOcorrencia(ocorrenciaId: string, itemRetornarDisponivel = true) {
-    this.atualizar((s) => acervo.resolverOcorrencia(s, ocorrenciaId, itemRetornarDisponivel));
+  resolverOcorrencia(ocorrenciaId: string, itemRetornarDisponivel = true, responsavelId?: string) {
+    this.atualizar((s) => acervo.resolverOcorrencia(s, ocorrenciaId, itemRetornarDisponivel, responsavelId));
+  }
+
+  /** Item sem conserto vai para um destino (CRC, SENAI Lab...); sai do acervo. */
+  encaminharItem(itemId: string, responsavelId: string, destinoId: string, motivo: string) {
+    return this.executar((s) => acervo.encaminharItem(s, itemId, responsavelId, destinoId, motivo));
+  }
+
+  /** Destinos em vigor: os de Configurações ou, se nunca mexeram, os padrão. */
+  readonly destinosEncaminhamento = computed(() => destinosDe(this.state().configuracao));
+
+  salvarDestino(dados: {id?: string; nome: string; tipo: TipoDestino; descricao: string}) {
+    return this.executar((s) => acervo.salvarDestino(s, dados));
+  }
+
+  removerDestino(destinoId: string) {
+    return this.executar((s) => acervo.removerDestino(s, destinoId));
   }
 
   alterarPoliticaAtraso(novaPolitica: PoliticaAtraso) {

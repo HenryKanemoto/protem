@@ -11,7 +11,10 @@ describe('auditoria', () => {
     s = aprovarPedido(s, pedido.id, 'resp').estado;
     const codigo = buscar.solicitacao(s, pedido.id).codigoRetirada!;
     s = registrarRetirada(s, 'a1', 'resp', codigo).estado;
-    s = registrarDevolucao(s, s.emprestimos[0].id, true, 'Tela trincada', 'resp', {codigo: s.emprestimos[0].codigoDevolucao}).estado;
+    s = registrarDevolucao(s, s.emprestimos[0].id, true, 'Tela trincada', 'resp', {
+      codigo: s.emprestimos[0].codigoDevolucao,
+      categoriaAvaria: 'funcional_leve',
+    }).estado;
 
     expect(s.auditoria.map((e) => [e.tipo, e.autorId, e.afetadoId, e.itemId])).toEqual([
       ['devolucao_avaria', 'resp', 'aluna', 'a1'],
