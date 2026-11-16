@@ -8,6 +8,7 @@ import {RelogioFlutuante} from '../../components/relogio-flutuante/relogio-flutu
 import {BrandLogo} from '../../components/brand-logo/brand-logo';
 import {AvisoApi} from '../../components/aviso-api/aviso-api';
 import {iniciais} from '../../lib/texto-utils';
+import {BotaoAcessibilidade} from '../../components/painel-acessibilidade/botao-acessibilidade';
 
 interface NavItem {
   rotulo: string;
@@ -26,7 +27,7 @@ interface NavGrupo {
 @Component({
   selector: 'app-responsavel-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, MatIconModule, RelogioFlutuante, BrandLogo, AvisoApi],
+  imports: [RouterOutlet, RouterLink, MatIconModule, RelogioFlutuante, BrandLogo, AvisoApi, BotaoAcessibilidade],
   templateUrl: './responsavel-layout.html',
 })
 export class ResponsavelLayout {

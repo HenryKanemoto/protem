@@ -22,7 +22,7 @@ const ARQUIVOS = {
   template: `
     @switch (variante()) {
       @case ('horizontal') {
-        <span class="flex flex-col gap-2">
+        <span class="logo-claro flex flex-col gap-2">
           <img [src]="arquivos.horizontal" alt="Protem" [style.height.px]="tamanho()" class="block w-auto max-w-full" />
           @if (comSubtitulo()) {
             <span class="text-sm text-text-muted">Plataforma Web de Empréstimos</span>
@@ -62,7 +62,7 @@ const ARQUIVOS = {
           <span class="flex flex-col gap-1">
             <span
               class="font-display text-lg font-semibold leading-none tracking-tight"
-              [class]="escuro() ? 'text-white' : 'text-brand-navy'"
+              [class]="escuro() ? 'text-white' : 'text-text-heading'"
             >
               Protem
             </span>

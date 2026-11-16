@@ -20,6 +20,7 @@
       </div>
 
       <div class="flex items-center gap-1 sm:gap-2">
+        <app-botao-acessibilidade [escuro]="true" />
         <a routerLink="/notificacoes" class="btn-icon btn-icon-escuro relative hidden md:inline-flex" aria-label="Notificações">
           <mat-icon svgIcon="notifications_none" />
           @if (store.totalNaoLidas() > 0) {
@@ -35,7 +36,7 @@
             [attr.aria-expanded]="menuAberto()"
             aria-haspopup="menu"
           >
-            <span class="avatar size-8 !bg-brand-soft text-xs !text-brand-navy">{{ iniciais() }}</span>
+            <span class="avatar size-8 !bg-white text-xs !text-brand-navy">{{ iniciais() }}</span>
             <span class="hidden text-left sm:block">
               <span class="block max-w-[140px] truncate text-sm font-medium leading-tight">{{ usuario()?.nome }}</span>
               <span class="block text-xs leading-tight text-white/60">{{ perfil() }}</span>

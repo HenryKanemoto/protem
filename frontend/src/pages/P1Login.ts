@@ -5,11 +5,12 @@ import {MatIconModule} from '@angular/material/icon';
 import {RelogioFlutuante} from '../components/relogio-flutuante/relogio-flutuante';
 import {Usuario} from '../types/models';
 import {BrandLogo} from '../components/brand-logo/brand-logo';
+import {BotaoAcessibilidade} from '../components/painel-acessibilidade/botao-acessibilidade';
 
 @Component({
   selector: 'app-p1-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule, RelogioFlutuante, BrandLogo],
+  imports: [RouterLink, MatIconModule, RelogioFlutuante, BrandLogo, BotaoAcessibilidade],
   templateUrl: './P1Login.html',
 })
 export class P1Login {

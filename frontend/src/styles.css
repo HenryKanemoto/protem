@@ -41,8 +41,14 @@
   --color-border-input: #7c879b; /* borda de campos (3,6:1) */
   --color-sidebar-hover: #1b2b55; /* hover e item ativo no menu lateral */
   --color-focus-ring: #2f6bff;
+  --color-focus-ring-navy: #2f6bff; /* foco dentro do menu e do cabeçalho em navy */
   --color-danger: #b91c1c; /* erro e ações destrutivas, com texto branco (6,5:1) */
   --color-danger-hover: #991b1b;
+  /* Fundos de botão, que não mudam com o tema: texto branco sempre por cima (os tokens acima
+     viram tons claros no modo escuro, porque também são usados como cor de texto) */
+  --color-primary-pressed: #2558d9; /* botão primário em hover (6,0:1 com branco) */
+  --color-danger-fill: #b91c1c; /* botão de ação destrutiva (6,5:1 com branco) */
+  --color-danger-fill-hover: #991b1b;
 
   /* Estados (texto sobre fundo, pelo menos 5:1) */
   --color-disponivel: #166534;
@@ -96,6 +102,13 @@
   :focus-visible {
     outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
+  }
+  :where(aside, header) :focus-visible {
+    outline-color: var(--color-focus-ring-navy);
+  }
+  /* O painel de acessibilidade abre dentro do cabeçalho, mas é um diálogo de fundo claro */
+  .modal :focus-visible {
+    outline-color: var(--color-focus-ring);
   }
 
   ::selection {
@@ -151,22 +164,22 @@
   }
   .btn-primary,
   .btn-ok {
-    @apply bg-primary text-white hover:bg-primary-hover active:bg-primary-hover;
+    @apply bg-primary text-white hover:bg-primary-pressed active:bg-primary-pressed;
   }
   .btn-secondary {
-    @apply bg-surface text-brand-navy border border-border-input hover:bg-brand-soft;
+    @apply bg-surface text-text-heading border border-border-input hover:bg-brand-soft;
   }
   .btn-ghost {
     @apply bg-transparent text-primary-hover hover:bg-brand-soft hover:text-primary-strong;
   }
   .btn-danger {
-    @apply bg-danger text-white hover:bg-danger-hover;
+    @apply bg-danger-fill text-white hover:bg-danger-fill-hover;
   }
   .btn-danger-ghost {
     @apply bg-transparent text-danger hover:bg-danger-soft;
   }
   .btn-icon {
-    @apply inline-flex items-center justify-center size-9 rounded-control text-text-muted hover:bg-brand-soft hover:text-brand-navy cursor-pointer transition-colors;
+    @apply inline-flex items-center justify-center size-9 rounded-control text-text-muted hover:bg-brand-soft hover:text-text-heading cursor-pointer transition-colors;
   }
   /* Botão de ícone sobre o navy (menu lateral e cabeçalho) */
   .btn-icon-escuro {
@@ -367,6 +380,171 @@
   }
   .modal-title {
     @apply font-display text-lg font-semibold;
+  }
+}
+
+/* ==========================================================================
+   Acessibilidade (painel no cabeçalho; preferências em lib/acessibilidade.ts)
+   O serviço Acessibilidade põe data-tema, data-contraste, data-movimento e data-espaco no <html>
+   e o tamanho do texto em html { font-size }. Aqui ficam só os valores de cada opção.
+   Os pares de cor de cada tema são conferidos por `npm run contraste` (WCAG AA).
+   ========================================================================== */
+
+/* ---- Modo escuro: mesmos tokens, valores para fundo escuro ----
+   O navy da marca (menu, cabeçalho, QR code) e o dourado não mudam. */
+:root[data-tema='escuro'] {
+  color-scheme: dark;
+
+  --color-brand-soft: #182753;
+  --color-primary-hover: #9bb8ff; /* links e ícones azuis sobre a superfície escura */
+  --color-primary-strong: #b9cdff; /* texto azul sobre brand-soft */
+  --color-text: #e6ebf5;
+  --color-text-heading: #ffffff;
+  --color-text-muted: #aab5cc;
+  --color-bg: #0a1126;
+  --color-surface: #121c38;
+  --color-border: #2b3a62;
+  --color-border-input: #8390ad;
+  --color-focus-ring: #9bb8ff;
+  --color-danger: #fca5a5; /* texto de erro; o fundo do botão é danger-fill */
+  --color-danger-hover: #fecaca;
+
+  --color-disponivel: #86efac;
+  --color-disponivel-bg: #12351f;
+  --color-solicitado: #fdba74;
+  --color-solicitado-bg: #3a1d0c;
+  --color-reservado: #fcd34d;
+  --color-reservado-bg: #36290a;
+  --color-emprestado: #a9c2ff;
+  --color-emprestado-bg: #1a2c5c;
+  --color-atrasado: #fca5a5;
+  --color-atrasado-bg: #3f1414;
+  --color-manutencao: #d8b4fe;
+  --color-manutencao-bg: #2e1650;
+
+  --shadow-pop: 0 8px 24px -12px rgb(0 0 0 / 0.6), 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+:root[data-tema='escuro'] .modal {
+  border: 1px solid var(--color-border);
+}
+
+/* O logotipo horizontal oficial é navy: no escuro ele ganha um fundo claro, como uma etiqueta */
+:root[data-tema='escuro'] .logo-claro {
+  background: #ffffff;
+  border-radius: var(--radius-control);
+  padding: 0.5rem 0.75rem;
+}
+
+/* ---- Alto contraste: preto no branco, bordas firmes, foco mais grosso ---- */
+:root[data-contraste='alto'] {
+  --color-brand-soft: #e2ebff;
+  --color-primary: #1d3fae;
+  --color-primary-hover: #1d3fae;
+  --color-primary-strong: #102a80;
+  --color-primary-pressed: #102a80;
+  --color-text: #000000;
+  --color-text-heading: #000000;
+  --color-text-muted: #2b3342;
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-border: #4b5567;
+  --color-border-input: #1f2937;
+  --color-focus-ring: #1d3fae;
+  --color-focus-ring-navy: #ffd84d;
+  --color-danger: #8f1111;
+  --color-danger-hover: #6f0d0d;
+  --color-danger-fill: #8f1111;
+  --color-danger-fill-hover: #6f0d0d;
+
+  --color-disponivel: #0b3d1c;
+  --color-disponivel-bg: #d3f5de;
+  --color-solicitado: #6b2307;
+  --color-solicitado-bg: #ffe4c7;
+  --color-reservado: #5c3305;
+  --color-reservado-bg: #fdecaa;
+  --color-emprestado: #102a80;
+  --color-emprestado-bg: #d6e3ff;
+  --color-atrasado: #8f1111;
+  --color-atrasado-bg: #fdd5d5;
+  --color-manutencao: #4a1380;
+  --color-manutencao-bg: #ead9ff;
+
+  --shadow-pop: none;
+}
+
+:root[data-tema='escuro'][data-contraste='alto'] {
+  --color-brand-soft: #1a2a60;
+  --color-primary: #2f6afe;
+  --color-primary-hover: #c2d4ff;
+  --color-primary-strong: #dbe6ff;
+  --color-primary-pressed: #2558d9;
+  --color-text: #ffffff;
+  --color-text-heading: #ffffff;
+  --color-text-muted: #dfe5f2;
+  --color-bg: #000000;
+  --color-surface: #070b18;
+  --color-border: #aab5cc;
+  --color-border-input: #d3dbec;
+  --color-focus-ring: #ffd84d;
+  --color-focus-ring-navy: #ffd84d;
+  --color-danger: #ffc2c2;
+  --color-danger-hover: #ffe0e0;
+  --color-danger-fill: #b91c1c;
+  --color-danger-fill-hover: #991b1b;
+
+  --color-disponivel: #b7f7ca;
+  --color-disponivel-bg: #072913;
+  --color-solicitado: #ffd3a8;
+  --color-solicitado-bg: #2e1506;
+  --color-reservado: #ffe58a;
+  --color-reservado-bg: #2b2007;
+  --color-emprestado: #cfdcff;
+  --color-emprestado-bg: #112252;
+  --color-atrasado: #ffc2c2;
+  --color-atrasado-bg: #330d0d;
+  --color-manutencao: #ead9ff;
+  --color-manutencao-bg: #240f40;
+}
+
+:root[data-contraste='alto'] :focus-visible {
+  outline-width: 3px;
+}
+:root[data-contraste='alto'] .card,
+:root[data-contraste='alto'] .stat,
+:root[data-contraste='alto'] .modal {
+  border-color: var(--color-border-input);
+}
+:root[data-contraste='alto'] .btn-secondary,
+:root[data-contraste='alto'] .chip {
+  border-color: var(--color-text);
+}
+
+/* ---- Mais espaço entre as linhas e as palavras (WCAG 1.4.12) ----
+   Fica fora das camadas do Tailwind de propósito: assim vale sobre as classes leading-*. */
+:root[data-espaco='amplo'] body,
+:root[data-espaco='amplo'] :is(p, li, td, th, dd, label, .hint, .label, .alert, .empty-text, .page-subtitle) {
+  line-height: 1.9;
+  word-spacing: 0.1em;
+}
+
+/* ---- Menos animação: pelo painel ou pelo "reduzir movimento" do sistema ---- */
+:root[data-movimento='reduzido'] *,
+:root[data-movimento='reduzido'] *::before,
+:root[data-movimento='reduzido'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

@@ -6,11 +6,12 @@ import {RelogioFlutuante} from '../../components/relogio-flutuante/relogio-flutu
 import {BrandLogo} from '../../components/brand-logo/brand-logo';
 import {AvisoApi} from '../../components/aviso-api/aviso-api';
 import {iniciais, rotuloPerfil} from '../../lib/texto-utils';
+import {BotaoAcessibilidade} from '../../components/painel-acessibilidade/botao-acessibilidade';
 
 @Component({
   selector: 'app-solicitante-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatIconModule, RelogioFlutuante, BrandLogo, AvisoApi],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatIconModule, RelogioFlutuante, BrandLogo, AvisoApi, BotaoAcessibilidade],
   templateUrl: './solicitante-layout.html',
 })
 export class SolicitanteLayout {

@@ -11,6 +11,18 @@
     <link rel="icon" type="image/png" href="brand/protem_logos/protem_3_prazo_icone.png" />
     <link rel="apple-touch-icon" href="brand/protem_logos/protem_3_prazo_icone.png" />
     <link rel="manifest" href="manifest.webmanifest" />
+    <!-- Aplica o tema e o tamanho do texto antes de o app carregar, para a tela não piscar em claro.
+         O resto (e a troca por usuário) é feito por services/acessibilidade.service.ts. -->
+    <script>
+      try {
+        var a = JSON.parse(localStorage.getItem('protem:a11y:v1') || '{}');
+        var h = document.documentElement;
+        if (a.escuro === true) h.setAttribute('data-tema', 'escuro');
+        if (a.altoContraste === true) h.setAttribute('data-contraste', 'alto');
+        var t = { '-1': '87.5%', '1': '112.5%', '2': '125%', '3': '150%' }[a.tamanhoTexto];
+        if (t) h.style.fontSize = t;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <app-root></app-root>
