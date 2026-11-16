@@ -269,3 +269,32 @@ Princípio pedido pela equipe: nada importante depende de "descobrir" um clique.
 - [x] Migration `ItemEncaminhado` testada em MySQL 8.4 real: sobe, desce e sobe de novo; o app no modo api envia o item encaminhado ao banco e "Reiniciar dados" devolve o seed.
 - [ ] Não há teste com leitores de tela (NVDA, VoiceOver), VLibras nem leitura em voz alta; a página `/acessibilidade` diz isso.
 - [ ] Relatório com números de Lighthouse/axe e PWA: não feitos, a decidir.
+
+## Rodada 6: subcategorias, Inventário e Pedidos
+
+Pedido da equipe depois da rodada 5. O Score Protem segue só como proposta, em espera.
+
+| Tela | Antes | Depois |
+|------|-------|--------|
+| Subcategorias | Só categorias | Cada categoria pode ter subcategorias (ex.: Kits de eletrônica > Arduino, Raspberry Pi, Robótica). Opcionais, um nível só. **Prazo e limite por pessoa continuam na categoria** (RN02 e RN03 não mudam) |
+| Categorias (responsável) | Prazo, limite e nº de itens | Cada cartão lista as subcategorias; na edição da categoria há a seção **Subcategorias** para incluir, renomear e remover. Nome único dentro da categoria; não remove enquanto algum item usar |
+| Item (formulário) | Só categoria | Campo **Subcategoria** (opcional) que acompanha a categoria escolhida; trocar de categoria limpa a subcategoria |
+| Catálogo | Chips de categoria | Ao escolher uma categoria que tem subcategorias, aparece uma segunda linha de chips ("Tipo") com a contagem de itens disponíveis; o cartão mostra categoria · subcategoria |
+| Itens → **Inventário** | Menu, títulos e `/painel/itens` | Nome e endereço `/painel/inventario`. A lista mostra categoria · subcategoria; atrás de "Filtros" há categoria, subcategoria e situação; a busca também acha pela subcategoria. Para quem pede, "item" continua sendo "item" |
+| Solicitações → **Pedidos** | Só pedidos de empréstimo | Endereço `/painel/pedidos`, com duas abas: **Empréstimos** (aguardando análise e aguardando retirada) e **Devoluções** (atrasadas, vencem hoje e no prazo, cada uma com "Registrar devolução"). A aba fica na URL (`?aba=devolucoes`) e as duas mostram quantos itens têm |
+
+Os endereços antigos (`/painel/itens...` e `/painel/solicitacoes`) continuam funcionando: redirecionam para os novos.
+
+**Back-end:** coluna `subcategoriaId` (nula) na tabela `itens`, pela migration `ItemSubcategoria`. Os itens da demonstração ganham as subcategorias do seed. As subcategorias em si ficam no front-end, como as categorias.
+
+**Dados:** a chave do navegador sobe para `protem:v4` (o estado ganhou `subcategorias`). Quem abrir o app começa do seed novo; os dados antigos são apagados na primeira gravação.
+
+**Verificação:** 210 testes no front-end (7 no back-end), lint limpo, build local e `build:api`. Migration testada em MySQL 8.4 real (sobe, desce e sobe de novo; 10 itens do seed com subcategoria). No Edge (1366×768 e 390×844), sem requisição externa nem erro de console: menu e redirecionamentos, filtros do Inventário, gestão de subcategorias, item com subcategoria, chips do Catálogo, abas de Pedidos; no modo api, a subcategoria do item vai e volta do banco.
+
+**Não alterado:** RN01 a RN10, estados, política de atraso, Docker e modo demonstração.
+
+**Decisões que tomei sem consultar (revisem):**
+- Subcategoria de um nível só e sempre opcional; prazo e limite não mudam por subcategoria.
+- A aba Devoluções lista tudo que está emprestado agora (não só o que vence hoje), do mais urgente para o menos.
+- O número da aba Devoluções conta todos os empréstimos em aberto; o selo do menu "Pedidos" segue contando só pedidos esperando análise.
+

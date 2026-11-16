@@ -31,7 +31,7 @@ O app tem uma camada de dados com duas implementações ([frontend/src/store/fon
 
 | Modo | Onde ficam os dados | Como rodar |
 |------|---------------------|------------|
-| **`local`** (padrão) | Tudo no navegador (`localStorage`, chave `protem:v3`). Nenhuma requisição de rede. | `npm start` ou `npm run dev` |
+| **`local`** (padrão) | Tudo no navegador (`localStorage`, chave `protem:v4`). Nenhuma requisição de rede. | `npm start` ou `npm run dev` |
 | **`api`** | Itens do acervo no MySQL, via back-end; o resto no navegador. | `npm run dev:api` (veja abaixo) |
 
 - Nos dois modos, as regras de negócio rodam no navegador, em funções puras ([frontend/src/store/regras](frontend/src/store/regras)), cobertas por testes.
@@ -117,7 +117,7 @@ Na tela de login, o bloco **"Acesso rápido de demonstração"** entra com um cl
 ### Ciclo de um empréstimo
 
 1. **Aluno** → *Catálogo* → escolhe um item → *Pedir emprestado* → escolhe a data de devolução (limitada pelo prazo da categoria).
-2. **Responsável** → *Solicitações* → *Aprovar*. O item fica **reservado** e precisa ser retirado no mesmo dia. Quem pediu recebe um **código de retirada** (em *Meus empréstimos* e *Meus códigos*); o responsável não vê esse código.
+2. **Responsável** → *Pedidos* → *Aprovar*. O item fica **reservado** e precisa ser retirado no mesmo dia. Quem pediu recebe um **código de retirada** (em *Meus empréstimos* e *Meus códigos*); o responsável não vê esse código.
 3. **Responsável** → *Leitor de QR code*. Escanear o QR do item leva à confirmação da retirada, que só é registrada com o código que a pessoa mostrar no app. O código vale uma vez, até o fim do dia. No pedido aprovado do seed (persona Igor), o código é `K7PM4X`.
 4. Na devolução, o mesmo leitor leva à tela *Registrar devolução*. Ali dá para marcar **"Voltou com avaria"**, e o item vai para *Manutenção*.
 
@@ -163,7 +163,7 @@ Todos os dados pessoais são inventados: e-mails em `example.com` (domínio rese
 
 | Regra | Onde |
 |-------|------|
-| RN01: todo pedido precisa de aprovação | Solicitações |
+| RN01: todo pedido precisa de aprovação | Pedidos |
 | RN02: devolução dentro do prazo máximo da categoria | Pedir emprestado |
 | RN03: limite de itens por pessoa em cada categoria | Catálogo / Pedir emprestado |
 | RN04: pedido aprovado expira se não for retirado no mesmo dia | Rotina automática |
@@ -210,7 +210,7 @@ frontend/src/
 │   ├── fonte-de-dados/  FonteLocal (só navegador) e FonteApi (itens no back-end)
 │   ├── regras/          regras de negócio em funções puras, por assunto, com testes
 │   ├── demo-data.ts     dados iniciais de demonstração
-│   └── persistencia.ts  leitura e gravação no localStorage (chave protem:v3)
+│   └── persistencia.ts  leitura e gravação no localStorage (chave protem:v4)
 ├── services/       chamadas HTTP do modo api (itens-api.service.ts)
 ├── lib/            utilitários de data, texto, imagem e categoria
 └── styles.css      sistema visual: cores, fontes e classes (.btn, .card, .input, .table...)
