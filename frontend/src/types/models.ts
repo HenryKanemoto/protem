@@ -87,6 +87,10 @@ export interface Emprestimo {
   devolucaoPrevista: string; // ISO date string YYYY-MM-DD
   devolvidoEm?: string;      // ISO date string
   diasAtraso: number;
+  /** Código que quem retirou mostra ao responsável na devolução. Vale até o item voltar. */
+  codigoDevolucao?: string;
+  /** Preenchido quando o responsável devolveu sem o código (o motivo fica aqui e na auditoria). */
+  devolvidoSemCodigoMotivo?: string;
 }
 
 export type StatusOcorrencia = 'aberta' | 'resolvida';

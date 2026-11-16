@@ -11,7 +11,7 @@ describe('auditoria', () => {
     s = aprovarPedido(s, pedido.id, 'resp').estado;
     const codigo = buscar.solicitacao(s, pedido.id).codigoRetirada!;
     s = registrarRetirada(s, 'a1', 'resp', codigo).estado;
-    s = registrarDevolucao(s, s.emprestimos[0].id, true, 'Tela trincada', 'resp').estado;
+    s = registrarDevolucao(s, s.emprestimos[0].id, true, 'Tela trincada', 'resp', {codigo: s.emprestimos[0].codigoDevolucao}).estado;
 
     expect(s.auditoria.map((e) => [e.tipo, e.autorId, e.afetadoId, e.itemId])).toEqual([
       ['devolucao_avaria', 'resp', 'aluna', 'a1'],
@@ -58,7 +58,7 @@ describe('auditoria', () => {
     s = aprovarPedido(s, s.solicitacoes[0].id, 'resp').estado;
     s = registrarRetirada(s, 'b1', 'resp', s.solicitacoes[0].codigoRetirada!).estado;
     s = executarRotinaAutomatica({...s, agora: new Date(2026, 9, 18, 9).toISOString()}, new Date(2026, 9, 18, 9));
-    s = registrarDevolucao(s, s.emprestimos[0].id, false, undefined, 'resp').estado;
+    s = registrarDevolucao(s, s.emprestimos[0].id, false, undefined, 'resp', {codigo: s.emprestimos[0].codigoDevolucao}).estado;
 
     expect(buscar.usuario(s, 'aluna').status).toBe('suspensa');
     expect(s.auditoria[0]).toMatchObject({tipo: 'conta_suspensa', afetadoId: 'aluna'});

@@ -1,4 +1,5 @@
 import {ProtemState, novoEvento as evento} from './estado';
+import {garantirCodigosDeDevolucao} from './regras/codigos';
 import {addDays, addHours, calculateDiasAtraso, formatDateShort, parseDate, toDateInputValue} from '../lib/date-utils';
 import {
   Categoria,
@@ -30,7 +31,7 @@ export const PERSONAS_DEMO: {id: string; resumo: string}[] = [
   {id: 'user-fabio', resumo: 'Aprovado e não retirou (expirou)'},
   {id: 'user-gabriela', resumo: 'Muitos pedidos; no limite'},
   {id: 'user-helena', resumo: 'Suspensa pelo responsável'},
-  {id: 'user-igor', resumo: 'Retira hoje (código K7PM4X)'},
+  {id: 'user-igor', resumo: 'Retira hoje; código em Meus códigos'},
   {id: 'user-diego', resumo: 'Recém-cadastrado; aguarda aprovação'},
 ];
 
@@ -304,7 +305,7 @@ export function getInitialDemoState(): ProtemState {
   emprestou('h1', 'user-helena', 'item-15', {pedido: -14, prazo: -13, devolvido: [-13, 10]});
   emprestou('h2', 'user-helena', 'item-07', {pedido: -10, prazo: -5, devolvido: [-6, 14]});
 
-  // Igor: pedido aprovado hoje, retira com o código K7PM4X
+  // Igor: pedido aprovado hoje, retira com o código K7PM4X (só aparece em Meus códigos)
   emprestou('i1', 'user-igor', 'item-05', {pedido: -12, prazo: -10, devolvido: [-11, 10]});
   solicitacoes.push({
     id: 'solic-i2',
@@ -326,9 +327,9 @@ export function getInitialDemoState(): ProtemState {
     aviso(
       'user-igor',
       'aprovacao',
-      'Seu pedido para "Projetor BenQ MW560" foi APROVADO! Realize a retirada hoje no setor responsável com o código K7PM4X.',
+      'Seu pedido para "Projetor BenQ MW560" foi APROVADO! Retire hoje no setor responsável. Seu código de retirada está em Meus códigos.',
       em(0, 8, 30),
-      '/meus-emprestimos',
+      '/codigos',
     ),
     aviso(
       'user-davi',
@@ -377,7 +378,8 @@ export function getInitialDemoState(): ProtemState {
     notificacoes,
     auditoria: [],
   };
-  return {
+  // Empréstimos em aberto já nascem com código de devolução (só aparece em Meus códigos)
+  return garantirCodigosDeDevolucao({
     ...estado,
     auditoria: auditoriaDoSeed(estado, [
       // A única ação manual que não sai dos pedidos e empréstimos
@@ -387,7 +389,7 @@ export function getInitialDemoState(): ProtemState {
         detalhe: `5 dias, até ${formatDateShort(em(3, 14))}`,
       }),
     ]),
-  };
+  });
 }
 
 /**

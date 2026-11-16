@@ -1,7 +1,7 @@
 import {addDays, calculateDiasAtraso, formatDateShort, parseDate} from '../../lib/date-utils';
 import {Emprestimo, EventoAuditoria, Ocorrencia, StatusItem, StatusUsuario, Usuario} from '../../types/models';
 import {ProtemState, ResultadoAcao, Transicao, novaNotificacao, novoEvento} from '../estado';
-import {codigoConfere} from './codigos';
+import {codigoConfere, codigoDevolucaoConfere, codigosEmUso, gerarCodigoRetirada, normalizarCodigo} from './codigos';
 
 export type ResultadoRetirada = ResultadoAcao & {emprestimoId?: string; itemId?: string};
 
@@ -52,7 +52,7 @@ export function registrarRetirada(
       estado: s,
       resultado: {
         sucesso: false,
-        mensagem: 'Código de retirada incorreto. Peça à pessoa que mostre o código no app, em Meus empréstimos.',
+        mensagem: 'Código de retirada incorreto. Peça à pessoa que mostre o código no app, em Meus códigos.',
       },
     };
   }
@@ -66,14 +66,17 @@ export function registrarRetirada(
     retiradoEm: s.agora,
     devolucaoPrevista: solic.devolucaoDesejada,
     diasAtraso: 0,
+    // A pessoa mostra este código ao responsável quando for devolver (só aparece em Meus códigos)
+    codigoDevolucao: gerarCodigoRetirada(codigosEmUso(s)),
   };
 
+  // A mensagem não traz o código: ele só aparece em Meus códigos
   const notif = novaNotificacao(
     solic.solicitanteId,
     'aprovacao',
-    `Retirada confirmada para "${item.nome}". Devolução prevista: ${formatDateShort(solic.devolucaoDesejada)}.`,
+    `Retirada confirmada para "${item.nome}". Devolução prevista: ${formatDateShort(solic.devolucaoDesejada)}. Seu código de devolução está em Meus códigos.`,
     s.agora,
-    '/meus-emprestimos',
+    '/codigos',
   );
 
   return {
@@ -105,23 +108,55 @@ export function registrarRetirada(
  * RN06: Política de atraso configurável (simples, intermediária, rígida).
  * RN07: Item devolvido com defeito vai para manutenção, sai do catálogo e gera ocorrência.
  */
+/**
+ * Como a devolução foi confirmada: com o código que a pessoa mostrou ou, se ela não tiver,
+ * sem código e com motivo.
+ */
+export interface ConfirmacaoDevolucao {
+  codigo?: string;
+  semCodigoMotivo?: string;
+}
+
 export function registrarDevolucao(
   s: ProtemState,
   emprestimoId: string,
   comDefeito: boolean,
   descricaoDefeito?: string,
   responsavelId?: string,
+  confirmacao: ConfirmacaoDevolucao = {},
 ): Transicao<ResultadoAcao> {
   const emp = s.emprestimos.find((e) => e.id === emprestimoId);
   if (!emp) return {estado: s, resultado: {sucesso: false, mensagem: 'Empréstimo não encontrado.'}};
   if (emp.devolvidoEm) return {estado: s, resultado: {sucesso: false, mensagem: 'Item já consta como devolvido.'}};
+
+  // Empréstimo com código: confere o código ou aceita "sem código" com motivo
+  const semCodigoMotivo = confirmacao.semCodigoMotivo?.trim();
+  if (emp.codigoDevolucao && !semCodigoMotivo) {
+    if (!normalizarCodigo(confirmacao.codigo ?? '')) {
+      return {estado: s, resultado: {sucesso: false, mensagem: 'Informe o código de devolução que a pessoa mostrar.'}};
+    }
+    if (!codigoDevolucaoConfere(emp, confirmacao.codigo ?? '')) {
+      return {
+        estado: s,
+        resultado: {
+          sucesso: false,
+          mensagem: 'Código de devolução incorreto. Peça à pessoa que mostre o código no app, em Meus códigos.',
+        },
+      };
+    }
+  }
 
   const item = s.itens.find((i) => i.id === emp.itemId);
   const usuario = s.usuarios.find((u) => u.id === emp.usuarioId);
   const clockNow = parseDate(s.agora);
   const diasAtraso = calculateDiasAtraso(emp.devolucaoPrevista, clockNow);
 
-  const emprestimos = s.emprestimos.map((e) => (e.id === emprestimoId ? {...e, devolvidoEm: s.agora, diasAtraso} : e));
+  const usouSemCodigo = !!emp.codigoDevolucao && !!semCodigoMotivo;
+  const emprestimos = s.emprestimos.map((e) =>
+    e.id === emprestimoId
+      ? {...e, devolvidoEm: s.agora, diasAtraso, ...(usouSemCodigo ? {devolvidoSemCodigoMotivo: semCodigoMotivo} : {})}
+      : e,
+  );
 
   const ocorrencias = [...s.ocorrencias];
   if (comDefeito) {
@@ -154,7 +189,9 @@ export function registrarDevolucao(
     autorId: responsavelId,
     itemId: emp.itemId,
     motivo: comDefeito ? ocorrencias[0].descricao : undefined,
-    detalhe: diasAtraso > 0 ? `${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso` : 'No prazo',
+    detalhe:
+      (diasAtraso > 0 ? `${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso` : 'No prazo') +
+      (usouSemCodigo ? `. Sem código de devolução: ${semCodigoMotivo}` : ''),
   });
   // A consequência na conta (se houver) vem depois da devolução, então fica mais acima na lista
   const auditoria = [...(eventoConta ? [eventoConta] : []), eventoDevolucao, ...s.auditoria];

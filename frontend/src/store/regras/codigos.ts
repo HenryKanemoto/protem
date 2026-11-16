@@ -1,13 +1,15 @@
-import {Solicitacao} from '../../types/models';
+import {Emprestimo, Solicitacao} from '../../types/models';
 import {ProtemState} from '../estado';
 
 /**
- * Código de retirada: quem pediu recebe na aprovação e mostra ao responsável na hora de
- * retirar, para ninguém retirar no nome de outra pessoa. O responsável não vê o código em
- * nenhuma tela; ele só digita o que a pessoa mostrar.
+ * Códigos de retirada e de devolução. Quem pediu o item recebe os dois e só os vê em
+ * "Meus códigos": o responsável não os vê em nenhuma tela, só digita o que a pessoa mostrar.
+ * Assim ninguém retira nem devolve no nome de outra pessoa.
  *
- * - Vale só enquanto o pedido está "aprovado": depois da retirada (concluída) ou da
+ * - Retirada: vale só enquanto o pedido está "aprovado": depois da retirada (concluída) ou da
  *   expiração no fim do dia (RN04), deixa de valer. Por isso é de uso único.
+ * - Devolução: nasce na retirada e vale até o item ser devolvido. Se a pessoa não tiver o
+ *   código, o responsável devolve sem ele, com motivo (fica na auditoria).
  * - Sem caracteres que se confundem ao ler em voz alta ou na tela (0/O, 1/I/L).
  */
 export const ALFABETO_CODIGO = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -18,14 +20,19 @@ export function normalizarCodigo(codigo: string): string {
   return codigo.toUpperCase().replace(/[\s-]/g, '');
 }
 
-/** Códigos de pedidos aprovados (os únicos que ainda podem ser usados). */
+/** Códigos que ainda podem ser usados: de pedidos aprovados e de empréstimos em aberto. */
 export function codigosEmUso(s: ProtemState): Set<string> {
-  return new Set(
-    s.solicitacoes.filter((sol) => sol.status === 'aprovada' && sol.codigoRetirada).map((sol) => sol.codigoRetirada!),
-  );
+  const emUso = new Set<string>();
+  for (const sol of s.solicitacoes) {
+    if (sol.status === 'aprovada' && sol.codigoRetirada) emUso.add(sol.codigoRetirada);
+  }
+  for (const emp of s.emprestimos) {
+    if (!emp.devolvidoEm && emp.codigoDevolucao) emUso.add(emp.codigoDevolucao);
+  }
+  return emUso;
 }
 
-/** Gera um código que não está em uso por outro pedido aprovado. */
+/** Gera um código que não está em uso por outro pedido ou empréstimo. */
 export function gerarCodigoRetirada(emUso: Set<string>, aleatorio: () => number = Math.random): string {
   for (;;) {
     let codigo = '';
@@ -45,9 +52,18 @@ export function codigoConfere(solicitacao: Solicitacao, digitado: string): boole
   );
 }
 
+/** O código digitado libera a devolução deste empréstimo? */
+export function codigoDevolucaoConfere(emprestimo: Emprestimo, digitado: string): boolean {
+  return (
+    !emprestimo.devolvidoEm &&
+    !!emprestimo.codigoDevolucao &&
+    normalizarCodigo(digitado) === emprestimo.codigoDevolucao
+  );
+}
+
 /**
- * Pedidos aprovados antes de existir o código (dados salvos no navegador) recebem um,
- * para a retirada não ficar travada. Devolve o mesmo estado se nada faltar.
+ * Pedidos aprovados e empréstimos em aberto salvos antes de existirem os códigos recebem um,
+ * para a retirada e a devolução não ficarem travadas. Devolve o mesmo estado se nada faltar.
  */
 export function garantirCodigosDeRetirada(s: ProtemState): ProtemState {
   if (!s.solicitacoes.some((sol) => sol.status === 'aprovada' && !sol.codigoRetirada)) return s;
@@ -61,4 +77,23 @@ export function garantirCodigosDeRetirada(s: ProtemState): ProtemState {
       return {...sol, codigoRetirada};
     }),
   };
+}
+
+export function garantirCodigosDeDevolucao(s: ProtemState): ProtemState {
+  if (!s.emprestimos.some((emp) => !emp.devolvidoEm && !emp.codigoDevolucao)) return s;
+  const emUso = codigosEmUso(s);
+  return {
+    ...s,
+    emprestimos: s.emprestimos.map((emp) => {
+      if (emp.devolvidoEm || emp.codigoDevolucao) return emp;
+      const codigoDevolucao = gerarCodigoRetirada(emUso);
+      emUso.add(codigoDevolucao);
+      return {...emp, codigoDevolucao};
+    }),
+  };
+}
+
+/** Os dois ajustes juntos, usados ao carregar o estado. */
+export function garantirCodigos(s: ProtemState): ProtemState {
+  return garantirCodigosDeDevolucao(garantirCodigosDeRetirada(s));
 }

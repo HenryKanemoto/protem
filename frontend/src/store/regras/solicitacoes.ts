@@ -184,9 +184,10 @@ export function aprovarPedido(s: ProtemState, solicitacaoId: string, responsavel
   const notif = novaNotificacao(
     solic.solicitanteId,
     'aprovacao',
-    `Seu pedido para "${item?.nome || 'o item'}" foi APROVADO! Realize a retirada hoje no setor responsável com o código ${codigoRetirada}.`,
+    // O código não vai na mensagem: só aparece em Meus códigos
+    `Seu pedido para "${item?.nome || 'o item'}" foi APROVADO! Retire hoje no setor responsável. Seu código de retirada está em Meus códigos.`,
     s.agora,
-    '/meus-emprestimos',
+    '/codigos',
   );
 
   return {

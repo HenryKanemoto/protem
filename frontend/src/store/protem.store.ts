@@ -8,7 +8,7 @@ import {observarOutrasAbas} from './persistencia';
 import * as acervo from './regras/acervo';
 import * as contas from './regras/contas';
 import * as emprestimos from './regras/emprestimos';
-import {garantirCodigosDeRetirada} from './regras/codigos';
+import {garantirCodigos} from './regras/codigos';
 import {executarRotinaAutomatica} from './regras/rotina';
 import * as solicitacoes from './regras/solicitacoes';
 
@@ -81,8 +81,8 @@ export class ProtemStore {
   constructor() {
     // Garante consistência com o relógio virtual antes de qualquer tela ler o estado
     // (aplica expirações, atrasos e suspensões pendentes no estado salvo ou no seed)
-    // e dá código de retirada a pedidos aprovados salvos antes de o código existir
-    this.atualizar((s) => executarRotinaAutomatica(garantirCodigosDeRetirada(s), parseDate(s.agora)));
+    // e dá código de retirada e de devolução a quem foi salvo antes de os códigos existirem
+    this.atualizar((s) => executarRotinaAutomatica(garantirCodigos(s), parseDate(s.agora)));
     this.fonte.conectar({
       estado: () => this.state(),
       receberItens: (itens) => this.receberItens(itens),
@@ -105,19 +105,29 @@ export class ProtemStore {
     this.fonte.salvar(antes, depois);
   }
 
+  /**
+   * Códigos de quem está logado: de retirada (pedidos aprovados) e de devolução (empréstimos
+   * em aberto). É a única fonte dos códigos nas telas: eles só aparecem em Meus códigos.
+   */
   readonly meusCodigos = computed(() => {
-  const user = this.usuarioLogado();
-  if (!user) return [];
-  const itens = this.state().itens;
-  return this.state()
-    .solicitacoes.filter((s) => s.solicitanteId === user.id && s.codigoRetirada)
-    .map((s) => ({
-      solicitacaoId: s.id,
-      codigo: s.codigoRetirada!,
-      item: itens.find((i) => i.id === s.itemId),
-      status: s.status,
-    }));
-});
+    const user = this.usuarioLogado();
+    if (!user) return {retiradas: [], devolucoes: []};
+    const {itens, solicitacoes, emprestimos} = this.state();
+    return {
+      retiradas: solicitacoes
+        .filter((s) => s.solicitanteId === user.id && s.status === 'aprovada' && s.codigoRetirada)
+        .map((s) => ({id: s.id, codigo: s.codigoRetirada!, item: itens.find((i) => i.id === s.itemId)})),
+      devolucoes: emprestimos
+        .filter((e) => e.usuarioId === user.id && !e.devolvidoEm && e.codigoDevolucao)
+        .map((e) => ({
+          id: e.id,
+          codigo: e.codigoDevolucao!,
+          item: itens.find((i) => i.id === e.itemId),
+          devolucaoPrevista: e.devolucaoPrevista,
+          atrasado: e.diasAtraso > 0,
+        })),
+    };
+  });
 
   /** Igual a atualizar(), para regras que também devolvem um resultado para a tela. */
   private executar<R>(fn: (s: ProtemState) => Transicao<R>): R {
@@ -267,9 +277,15 @@ export class ProtemStore {
     return this.executar((s) => emprestimos.registrarRetirada(s, itemId, responsavelId, codigoRetirada));
   }
 
-  registrarDevolucao(emprestimoId: string, responsavelId: string, comDefeito: boolean, descricaoDefeito?: string) {
+  registrarDevolucao(
+    emprestimoId: string,
+    responsavelId: string,
+    comDefeito: boolean,
+    descricaoDefeito?: string,
+    confirmacao?: emprestimos.ConfirmacaoDevolucao,
+  ) {
     return this.executar((s) =>
-      emprestimos.registrarDevolucao(s, emprestimoId, comDefeito, descricaoDefeito, responsavelId),
+      emprestimos.registrarDevolucao(s, emprestimoId, comDefeito, descricaoDefeito, responsavelId, confirmacao),
     );
   }
 
