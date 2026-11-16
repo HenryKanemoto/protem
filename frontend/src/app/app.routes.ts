@@ -28,6 +28,11 @@ export const routes: Routes = [
     loadComponent: () => import('../pages/P2Cadastro').then((m) => m.P2Cadastro),
   },
   {
+    path: 'acessibilidade',
+    title: 'Acessibilidade · Protem',
+    loadComponent: () => import('../pages/P4Acessibilidade').then((m) => m.P4Acessibilidade),
+  },
+  {
     path: 'aguardando',
     title: 'Aguardando aprovação · Protem',
     loadComponent: () => import('../pages/P3Aguardando').then((m) => m.P3Aguardando),

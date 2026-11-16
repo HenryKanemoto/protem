@@ -30,6 +30,13 @@ export class P1Login {
     {perfil: 'responsavel' as const, rotulo: 'Responsável', nome: 'Enzo Capiel'},
   ];
 
+  /** Primeiro acesso: o caminho de um pedido (Pedido, Retirada, Devolução). */
+  readonly passos = [
+    {icone: 'search', titulo: 'Peça', texto: 'Escolha um item no catálogo e diga até quando precisa dele. O responsável analisa o pedido.'},
+    {icone: 'qr_code_scanner', titulo: 'Retire', texto: 'Com o pedido aprovado, retire no mesmo dia e mostre o seu código ou o QR code do item.'},
+    {icone: 'assignment_return', titulo: 'Devolva', texto: 'Devolva no prazo e mostre o código de devolução. Atraso pode bloquear a conta.'},
+  ];
+
   // Decoração do painel lateral
   readonly etiquetas = [
     {codigo: 'NX-0001', nome: 'Projetor Epson', recuo: 40},

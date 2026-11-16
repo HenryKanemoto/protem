@@ -1,4 +1,5 @@
 import {ChangeDetectionStrategy, Component, computed, inject} from '@angular/core';
+import {RouterLink} from '@angular/router';
 import {MatIconModule} from '@angular/material/icon';
 import {
   PASSOS_TEXTO,
@@ -35,7 +36,7 @@ const OPCOES: Opcao[] = [
 @Component({
   selector: 'app-painel-acessibilidade',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, Modal],
+  imports: [MatIconModule, Modal, RouterLink],
   template: `
     @if (aberto()) {
       <app-modal rotulo="titulo-acessibilidade" (fechar)="fechar()">
@@ -98,6 +99,10 @@ const OPCOES: Opcao[] = [
             </li>
           }
         </ul>
+
+        <a routerLink="/acessibilidade" (click)="fechar()" class="text-sm font-medium text-primary-hover hover:underline">
+          Sobre a acessibilidade no Protem
+        </a>
 
         <div class="flex items-center justify-between gap-3">
           <button type="button" class="btn btn-ghost" (click)="restaurar()" [disabled]="!personalizado()">
