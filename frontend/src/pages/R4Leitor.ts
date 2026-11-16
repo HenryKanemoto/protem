@@ -202,7 +202,7 @@ export class R4Leitor {
     } else if (item.status === 'disponivel') {
       this.avisar('aviso', `"${item.nome}" está disponível: não há retirada nem devolução para registrar.`);
     } else if (item.status === 'solicitado') {
-      this.avisar('aviso', `"${item.nome}" tem um pedido em análise. Aprove-o em Solicitações antes da retirada.`);
+      this.avisar('aviso', `"${item.nome}" tem um pedido em análise. Aprove-o em Pedidos antes da retirada.`);
     } else if (item.status === 'manutencao') {
       this.avisar('aviso', `"${item.nome}" está em manutenção e não pode ser retirado.`);
     } else if (item.status === 'encaminhado') {

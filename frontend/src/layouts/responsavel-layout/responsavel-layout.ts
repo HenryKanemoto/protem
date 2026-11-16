@@ -52,8 +52,8 @@ export class ResponsavelLayout {
       itens: [
         {rotulo: 'Painel', rota: '/painel', icone: 'space_dashboard'},
         {
-          rotulo: 'Solicitações',
-          rota: '/painel/solicitacoes',
+          rotulo: 'Pedidos',
+          rota: '/painel/pedidos',
           icone: 'inbox',
           badge: () => this.store.solicitacoesPendentesCount(),
           tambemEm: ['/painel/retirada'],
@@ -64,7 +64,7 @@ export class ResponsavelLayout {
     {
       titulo: 'Acervo',
       itens: [
-        {rotulo: 'Itens', rota: '/painel/itens', icone: 'inventory_2'},
+        {rotulo: 'Inventário', rota: '/painel/inventario', icone: 'inventory_2'},
         {rotulo: 'Categorias', rota: '/painel/categorias', icone: 'category'},
         {
           rotulo: 'Manutenção',

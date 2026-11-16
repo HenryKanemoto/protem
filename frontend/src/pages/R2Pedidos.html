@@ -1,8 +1,8 @@
 <div class="page">
   <header class="page-header">
     <div>
-      <h1 class="page-title">Solicitações</h1>
-      <p class="page-subtitle">Todo pedido precisa da sua aprovação. Ao aprovar, o item fica reservado e a retirada é no mesmo dia.</p>
+      <h1 class="page-title">Pedidos</h1>
+      <p class="page-subtitle">Empréstimos para aprovar e retirar, e devoluções para receber.</p>
     </div>
   </header>
 
@@ -16,6 +16,21 @@
     </div>
   }
 
+  <div class="-mb-4 flex border-b border-border" role="tablist" aria-label="Pedidos">
+    <button type="button" role="tab" id="aba-emprestimos" class="tab" [class.tab-active]="aba() === 'emprestimos'" [attr.aria-selected]="aba() === 'emprestimos'" aria-controls="painel-pedidos" (click)="abrirAba('emprestimos')">
+      <mat-icon class="icon-sm" svgIcon="inbox" />
+      Empréstimos
+      <span class="font-mono text-xs text-text-muted">{{ solicitacoesPendentes().length + pedidosAprovadosHoje().length }}</span>
+    </button>
+    <button type="button" role="tab" id="aba-devolucoes" class="tab" [class.tab-active]="aba() === 'devolucoes'" [attr.aria-selected]="aba() === 'devolucoes'" aria-controls="painel-pedidos" (click)="abrirAba('devolucoes')">
+      <mat-icon class="icon-sm" svgIcon="event" />
+      Devoluções
+      <span class="font-mono text-xs text-text-muted">{{ totalDevolucoes() }}</span>
+    </button>
+  </div>
+
+  <div id="painel-pedidos" role="tabpanel" [attr.aria-labelledby]="'aba-' + aba()" class="flex flex-col gap-8">
+  @if (aba() === 'emprestimos') {
   <!-- Pedidos aguardando análise -->
   <section class="card" aria-labelledby="titulo-pendentes">
     <div class="card-header">
@@ -93,6 +108,102 @@
       <p class="px-6 py-10 text-center text-sm text-text-muted">Nenhum pedido aprovado aguardando retirada.</p>
     }
   </section>
+
+  } @else {
+  <!-- Devoluções: o que está com alguém agora, do mais urgente para o menos -->
+  @if (totalDevolucoes() === 0) {
+    <section class="card empty">
+      <mat-icon class="icon-xl" svgIcon="task_alt" />
+      <p class="empty-title">Nada para devolver</p>
+      <p class="empty-text">Nenhum item está emprestado agora. Quando alguém retirar, ele aparece aqui.</p>
+    </section>
+  }
+
+  @if (devolucoesAtrasadas().length > 0) {
+    <section class="card" aria-labelledby="titulo-atrasadas">
+      <div class="card-header">
+        <div>
+          <h2 id="titulo-atrasadas" class="card-title">
+            Atrasadas <span class="font-sans text-sm font-normal text-text-muted">{{ devolucoesAtrasadas().length }}</span>
+          </h2>
+          <p class="text-sm text-text-muted">Passaram do prazo. A conta fica restrita até a devolução, conforme a política de atraso.</p>
+        </div>
+      </div>
+      <ul class="divide-y divide-border">
+        @for (e of devolucoesAtrasadas(); track e.id) {
+          <li class="grid gap-3 px-5 py-4 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] md:items-center md:gap-6">
+            <div class="min-w-0">
+              <p class="font-medium">{{ getUsuario(e.usuarioId)?.nome || 'Pessoa removida' }}</p>
+              <p class="text-sm capitalize text-text-muted">{{ getUsuario(e.usuarioId)?.perfil }}</p>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate">{{ getItem(e.itemId)?.nome || 'Item removido' }}</p>
+              <p class="text-sm font-medium text-atrasado">{{ plural(e.diasAtraso, 'dia') }} de atraso · devolvia em {{ formatarData(e.devolucaoPrevista) }}</p>
+            </div>
+            <a [routerLink]="['/painel/devolucao', e.itemId]" class="btn btn-secondary btn-sm">Registrar devolução</a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (devolucoesDeHoje().length > 0) {
+    <section class="card" aria-labelledby="titulo-hoje">
+      <div class="card-header">
+        <div>
+          <h2 id="titulo-hoje" class="card-title">
+            Vencem hoje <span class="font-sans text-sm font-normal text-text-muted">{{ devolucoesDeHoje().length }}</span>
+          </h2>
+          <p class="text-sm text-text-muted">O prazo termina no fim do dia.</p>
+        </div>
+      </div>
+      <ul class="divide-y divide-border">
+        @for (e of devolucoesDeHoje(); track e.id) {
+          <li class="grid gap-3 px-5 py-4 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] md:items-center md:gap-6">
+            <div class="min-w-0">
+              <p class="font-medium">{{ getUsuario(e.usuarioId)?.nome || 'Pessoa removida' }}</p>
+              <p class="text-sm capitalize text-text-muted">{{ getUsuario(e.usuarioId)?.perfil }}</p>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate">{{ getItem(e.itemId)?.nome || 'Item removido' }}</p>
+              <p class="text-sm text-text-muted">devolve hoje</p>
+            </div>
+            <a [routerLink]="['/painel/devolucao', e.itemId]" class="btn btn-secondary btn-sm">Registrar devolução</a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (devolucoesNoPrazo().length > 0) {
+    <section class="card" aria-labelledby="titulo-no-prazo">
+      <div class="card-header">
+        <div>
+          <h2 id="titulo-no-prazo" class="card-title">
+            No prazo <span class="font-sans text-sm font-normal text-text-muted">{{ devolucoesNoPrazo().length }}</span>
+          </h2>
+          <p class="text-sm text-text-muted">Com a pessoa e dentro do prazo. Receba a devolução quando ela chegar.</p>
+        </div>
+      </div>
+      <ul class="divide-y divide-border">
+        @for (e of devolucoesNoPrazo(); track e.id) {
+          <li class="grid gap-3 px-5 py-4 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] md:items-center md:gap-6">
+            <div class="min-w-0">
+              <p class="font-medium">{{ getUsuario(e.usuarioId)?.nome || 'Pessoa removida' }}</p>
+              <p class="text-sm capitalize text-text-muted">{{ getUsuario(e.usuarioId)?.perfil }}</p>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate">{{ getItem(e.itemId)?.nome || 'Item removido' }}</p>
+              <p class="text-sm text-text-muted">{{ prazo(e.devolucaoPrevista) }}</p>
+            </div>
+            <a [routerLink]="['/painel/devolucao', e.itemId]" class="btn btn-ghost btn-sm">Registrar devolução</a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+  }
+  </div>
 
   <!-- Confirmação de recusa -->
   @if (solicitacaoParaRecusar(); as solic) {

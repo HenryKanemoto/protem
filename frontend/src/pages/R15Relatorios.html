@@ -67,7 +67,7 @@
           @for (item of rankingMaisEmprestados(); track item.id) {
             <li>
               <a
-                [routerLink]="['/painel/itens', item.id]"
+                [routerLink]="['/painel/inventario', item.id]"
                 class="group block rounded-control px-2 py-2 transition-colors hover:bg-bg"
                 [title]="item.nome + ': ' + plural(item.total, 'empréstimo')"
               >
@@ -103,7 +103,7 @@
             <li class="flex items-center gap-4 px-5 py-3 sm:px-6">
               <div class="min-w-0 flex-1">
                 <p class="truncate font-medium">{{ user?.nome || 'Usuário' }}</p>
-                <a [routerLink]="['/painel/itens', atraso.itemId]" class="block truncate text-xs text-text-muted hover:text-text hover:underline">
+                <a [routerLink]="['/painel/inventario', atraso.itemId]" class="block truncate text-xs text-text-muted hover:text-text hover:underline">
                   {{ it?.nome || 'Item' }}
                 </a>
               </div>
@@ -136,7 +136,7 @@
             @for (def of rankingDefeitos(); track def.id) {
               <tr>
                 <td>
-                  <a [routerLink]="['/painel/itens', def.id]" class="font-medium hover:underline">{{ def.nome }}</a>
+                  <a [routerLink]="['/painel/inventario', def.id]" class="font-medium hover:underline">{{ def.nome }}</a>
                 </td>
                 <td class="text-text-muted">{{ def.categoriaNome }}</td>
                 <td class="text-right tabular-nums">{{ def.total }}</td>
@@ -192,7 +192,7 @@
               <p class="flex flex-wrap items-baseline justify-between gap-x-3">
                 <span class="font-medium">
                   @if (it) {
-                    <a [routerLink]="['/painel/itens', it.id]" class="hover:underline">{{ it.nome }}</a>
+                    <a [routerLink]="['/painel/inventario', it.id]" class="hover:underline">{{ it.nome }}</a>
                     <span class="font-mono text-xs text-text-muted"> {{ it.patrimonio }}</span>
                   } @else {
                     Item removido

@@ -95,10 +95,12 @@ export const routes: Routes = [
         loadComponent: () => import('../pages/R1Painel').then((m) => m.R1Painel),
       },
       {
-        path: 'solicitacoes',
-        title: 'Solicitações · Protem',
-        loadComponent: () => import('../pages/R2Solicitacoes').then((m) => m.R2Solicitacoes),
+        path: 'pedidos',
+        title: 'Pedidos · Protem',
+        loadComponent: () => import('../pages/R2Pedidos').then((m) => m.R2Pedidos),
       },
+      // Endereço antigo (links salvos, avisos já enviados)
+      {path: 'solicitacoes', redirectTo: 'pedidos', pathMatch: 'full'},
       {
         path: 'contas',
         title: 'Contas · Protem',
@@ -120,25 +122,30 @@ export const routes: Routes = [
         loadComponent: () => import('../pages/R6Devolucao').then((m) => m.R6Devolucao),
       },
       {
-        path: 'itens',
-        title: 'Itens · Protem',
-        loadComponent: () => import('../pages/R7Itens').then((m) => m.R7Itens),
+        path: 'inventario',
+        title: 'Inventário · Protem',
+        loadComponent: () => import('../pages/R7Inventario').then((m) => m.R7Inventario),
       },
       {
-        path: 'itens/novo',
+        path: 'inventario/novo',
         title: 'Novo item · Protem',
         loadComponent: () => import('../pages/R8ItemForm').then((m) => m.R8ItemForm),
       },
       {
-        path: 'itens/:id/editar',
+        path: 'inventario/:id/editar',
         title: 'Editar item · Protem',
         loadComponent: () => import('../pages/R8ItemForm').then((m) => m.R8ItemForm),
       },
       {
-        path: 'itens/:id',
+        path: 'inventario/:id',
         title: 'Ficha do item · Protem',
         loadComponent: () => import('../pages/R9ItemDetalhes').then((m) => m.R9ItemDetalhes),
       },
+      // Endereços antigos do inventário
+      {path: 'itens', redirectTo: 'inventario', pathMatch: 'full'},
+      {path: 'itens/novo', redirectTo: 'inventario/novo', pathMatch: 'full'},
+      {path: 'itens/:id/editar', redirectTo: 'inventario/:id/editar', pathMatch: 'full'},
+      {path: 'itens/:id', redirectTo: 'inventario/:id', pathMatch: 'full'},
       {
         path: 'categorias',
         title: 'Categorias · Protem',

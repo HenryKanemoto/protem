@@ -1,7 +1,7 @@
 <div class="page">
-  <a routerLink="/painel/itens" class="back-link">
+  <a routerLink="/painel/inventario" class="back-link">
     <mat-icon class="icon-sm" svgIcon="arrow_back" />
-    Itens
+    Inventário
   </a>
 
   @if (item(); as i) {
@@ -9,7 +9,7 @@
 
     <header class="page-header">
       <div class="min-w-0">
-        <p class="page-eyebrow">{{ cat?.nome || 'Sem categoria' }}</p>
+        <p class="page-eyebrow">{{ cat?.nome || 'Sem categoria' }}@if (subcategoria(); as sc) { · {{ sc.nome }} }</p>
         <h1 class="page-title mt-1 flex flex-wrap items-center gap-3">
           {{ i.nome }}
           <app-status-badge [status]="i.status" />
@@ -26,7 +26,7 @@
             Remover
           </button>
         }
-        <a [routerLink]="['/painel/itens', i.id, 'editar']" class="btn btn-secondary">
+        <a [routerLink]="['/painel/inventario', i.id, 'editar']" class="btn btn-secondary">
           <mat-icon class="icon-sm" svgIcon="edit" />
           Editar
         </a>
@@ -174,7 +174,7 @@
       <mat-icon class="icon-xl" svgIcon="help_outline" />
       <p class="empty-title">Item não encontrado</p>
       <p class="empty-text">Esse item não existe no acervo.</p>
-      <a routerLink="/painel/itens" class="btn btn-secondary btn-sm mt-3">Voltar para itens</a>
+      <a routerLink="/painel/inventario" class="btn btn-secondary btn-sm mt-3">Voltar ao inventário</a>
     </div>
   }
 </div>

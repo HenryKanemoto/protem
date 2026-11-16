@@ -214,7 +214,7 @@ export class R15Relatorios {
   }
 
   abrirItem(id: string) {
-    this.router.navigate(['/painel/itens', id]);
+    this.router.navigate(['/painel/inventario', id]);
   }
 
   // ==========================================

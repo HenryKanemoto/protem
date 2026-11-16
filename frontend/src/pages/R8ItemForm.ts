@@ -25,6 +25,14 @@ export class R8ItemForm {
   readonly nome = signal('');
   readonly descricao = signal('');
   readonly categoriaId = signal('');
+  readonly subcategoriaId = signal('');
+  /** Subcategorias da categoria escolhida (vazio: o campo some). */
+  readonly subcategoriasDisponiveis = computed(() =>
+    this.store
+      .subcategorias()
+      .filter((s) => s.categoriaId === this.categoriaId())
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+  );
   readonly patrimonio = signal('');
   readonly fotoDataUrl = signal<string | null>(null);
   readonly processandoFoto = signal(false);
@@ -38,6 +46,7 @@ export class R8ItemForm {
         this.nome.set(item.nome);
         this.descricao.set(item.descricao || '');
         this.categoriaId.set(item.categoriaId);
+        this.subcategoriaId.set(item.subcategoriaId ?? '');
         this.patrimonio.set(item.patrimonio);
         this.fotoDataUrl.set(item.foto || null);
       }
@@ -74,6 +83,12 @@ export class R8ItemForm {
       if (!existentes.has(codigo)) return codigo;
     }
     return `NX-${prefixo}-${Date.now()}`;
+  }
+
+  /** Trocar de categoria limpa a subcategoria, que só vale dentro da categoria dela. */
+  escolherCategoria(id: string) {
+    this.categoriaId.set(id);
+    this.subcategoriaId.set('');
   }
 
   async onFotoSelecionada(event: Event) {
@@ -124,10 +139,15 @@ export class R8ItemForm {
     const itemExistente = this.store.itens().find((i) => i.id === idAtual);
     const idFinal = idAtual || 'item-' + Date.now();
 
+    const subcategoriaId = this.subcategoriasDisponiveis().some((s) => s.id === this.subcategoriaId())
+      ? this.subcategoriaId()
+      : undefined;
     const itemParaSalvar: Item = {
+      ...itemExistente,
       id: idFinal,
       nome,
       categoriaId: catId,
+      subcategoriaId,
       patrimonio: patri,
       // Editando: preserva o código QR existente
       codigoQr: itemExistente?.codigoQr || this.gerarCodigoQr(catId),
@@ -139,11 +159,11 @@ export class R8ItemForm {
     this.store.salvarItem(itemParaSalvar);
 
     // Conforme Wireframe R8: Salvar -> R9
-    this.router.navigate(['/painel/itens', idFinal]);
+    this.router.navigate(['/painel/inventario', idFinal]);
   }
 
   cancelar() {
     // Conforme Wireframe R8: Cancelar -> R7
-    this.router.navigate(['/painel/itens']);
+    this.router.navigate(['/painel/inventario']);
   }
 }

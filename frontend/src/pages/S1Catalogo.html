@@ -55,7 +55,7 @@
       @for (opcao of filtros(); track opcao.id) {
         <button
           type="button"
-          (click)="categoriaSelecionada.set(opcao.id)"
+          (click)="escolherCategoria(opcao.id)"
           class="chip shrink-0"
           [class.chip-active]="categoriaSelecionada() === opcao.id"
           [attr.aria-pressed]="categoriaSelecionada() === opcao.id"
@@ -65,12 +65,30 @@
         </button>
       }
     </div>
+    @if (subfiltros().length > 0) {
+      <div class="sem-rolagem -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrar por subcategoria">
+        <span class="shrink-0 text-sm text-text-muted">Tipo:</span>
+        @for (opcao of subfiltros(); track opcao.id) {
+          <button
+            type="button"
+            (click)="subcategoriaSelecionada.set(opcao.id)"
+            class="chip shrink-0"
+            [class.chip-active]="subcategoriaSelecionada() === opcao.id"
+            [attr.aria-pressed]="subcategoriaSelecionada() === opcao.id"
+          >
+            {{ opcao.nome }}
+            <span class="font-mono text-xs">{{ opcao.total }}</span>
+          </button>
+        }
+      </div>
+    }
   </div>
 
   @if (itensFiltrados().length > 0) {
     <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       @for (item of itensFiltrados(); track item.id) {
         @let cat = getCategoria(item.categoriaId);
+        @let subcat = getSubcategoria(item.subcategoriaId);
         <li>
           <a
             [routerLink]="['/item', item.id]"
@@ -79,7 +97,7 @@
             <app-item-thumb [item]="item" [tamanhoIcone]="44" class="aspect-[16/10]" />
             <div class="flex flex-1 flex-col gap-1 p-4">
               <h2 class="font-sans text-[0.9375rem] font-semibold leading-snug tracking-normal">{{ item.nome }}</h2>
-              <p class="text-sm text-text-muted">{{ cat?.nome || 'Geral' }} · até {{ plural(cat?.prazoMaxDias, 'dia') }}</p>
+              <p class="text-sm text-text-muted">{{ cat?.nome || 'Geral' }}{{ subcat ? ' · ' + subcat.nome : '' }} · até {{ plural(cat?.prazoMaxDias, 'dia') }}</p>
             </div>
           </a>
         </li>
@@ -92,7 +110,7 @@
       <p class="empty-text">
         Os itens podem estar emprestados ou em manutenção. Tente outra categoria ou volte mais tarde.
       </p>
-      @if (termoBusca() || categoriaSelecionada() !== 'todas') {
+      @if (termoBusca() || categoriaSelecionada() !== 'todas' || subcategoriaSelecionada() !== 'todas') {
         <button type="button" (click)="limparFiltros()" class="btn btn-secondary btn-sm mt-3">Limpar filtros</button>
       }
     </div>

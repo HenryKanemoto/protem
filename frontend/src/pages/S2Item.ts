@@ -24,6 +24,11 @@ export class S2Item {
     return this.store.itens().find((i) => i.id === id) || null;
   });
 
+  readonly subcategoria = computed(() => {
+    const id = this.item()?.subcategoriaId;
+    return id ? this.store.subcategorias().find((s) => s.id === id) || null : null;
+  });
+
   readonly categoria = computed(() => {
     const it = this.item();
     if (!it) return null;

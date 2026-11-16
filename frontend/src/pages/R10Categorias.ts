@@ -19,6 +19,14 @@ export class R10Categorias {
     return this.store.itens().filter((i) => i.categoriaId === catId).length;
   }
 
+  nomesSubcategorias(catId: string): string {
+    return this.store
+      .subcategorias()
+      .filter((s) => s.categoriaId === catId)
+      .map((s) => s.nome)
+      .join(', ');
+  }
+
   getIconeCategoria(categoriaId: string): string {
     return iconeCategoria(categoriaId);
   }

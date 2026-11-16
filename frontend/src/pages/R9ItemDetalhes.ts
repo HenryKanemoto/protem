@@ -37,6 +37,11 @@ export class R9ItemDetalhes {
     return this.store.categorias().find((c) => c.id === it.categoriaId) || null;
   });
 
+  readonly subcategoria = computed(() => {
+    const id = this.item()?.subcategoriaId;
+    return id ? this.store.subcategorias().find((s) => s.id === id) || null : null;
+  });
+
   readonly historicoEmprestimos = computed(() => {
     const it = this.item();
     if (!it) return [];
@@ -94,7 +99,7 @@ export class R9ItemDetalhes {
     const it = this.item();
     if (!it || !this.podeRemover()) return;
     this.store.removerItem(it.id);
-    this.router.navigate(['/painel/itens']);
+    this.router.navigate(['/painel/inventario']);
   }
 
   getIconeCategoria(categoriaId?: string): string {

@@ -1,7 +1,7 @@
 <div class="page">
   <header class="page-header">
     <div>
-      <h1 class="page-title">Itens</h1>
+      <h1 class="page-title">Inventário</h1>
       <p class="page-subtitle flex flex-wrap items-center gap-2">
         {{ itensFiltrados().length }} de {{ store.itens().length }} itens do acervo
         @switch (store.conexao()) {
@@ -18,13 +18,13 @@
         }
       </p>
     </div>
-    <a routerLink="/painel/itens/novo" class="btn btn-primary self-start sm:self-auto">
+    <a routerLink="/painel/inventario/novo" class="btn btn-primary self-start sm:self-auto">
       <mat-icon class="icon-sm" svgIcon="add" />
       Novo item
     </a>
   </header>
 
-  <!-- Busca sempre visível; categoria e situação atrás do botão Filtros -->
+  <!-- Busca sempre visível; categoria, subcategoria e situação atrás do botão Filtros -->
   <div class="flex gap-2">
     <div class="input-group flex-1 sm:max-w-sm">
       <mat-icon class="icon-sm" svgIcon="search" />
@@ -33,7 +33,7 @@
         class="input"
         [value]="termoBusca()"
         (input)="termoBusca.set($any($event.target).value)"
-        placeholder="Nome, patrimônio ou QR"
+        placeholder="Nome, subcategoria, patrimônio ou QR"
         aria-label="Buscar item"
       />
     </div>
@@ -50,11 +50,23 @@
   </div>
 
   @if (filtrosAbertos()) {
-  <div id="filtros-itens" class="grid gap-3 sm:max-w-xl sm:grid-cols-2">
-    <select class="select" [value]="categoriaSelecionada()" (change)="categoriaSelecionada.set($any($event.target).value)" aria-label="Filtrar por categoria">
+  <div id="filtros-itens" class="grid gap-3 sm:max-w-3xl sm:grid-cols-3">
+    <select class="select" [value]="categoriaSelecionada()" (change)="escolherCategoria($any($event.target).value)" aria-label="Filtrar por categoria">
       <option value="todas">Todas as categorias</option>
       @for (cat of store.categorias(); track cat.id) {
-        <option [value]="cat.id">{{ cat.nome }}</option>
+        <option [value]="cat.id" [selected]="cat.id === categoriaSelecionada()">{{ cat.nome }}</option>
+      }
+    </select>
+    <select
+      class="select"
+      [value]="subcategoriaSelecionada()"
+      (change)="subcategoriaSelecionada.set($any($event.target).value)"
+      [disabled]="subcategoriasDoFiltro().length === 0"
+      aria-label="Filtrar por subcategoria"
+    >
+      <option value="todas">{{ categoriaSelecionada() === 'todas' ? 'Subcategoria (escolha a categoria)' : subcategoriasDoFiltro().length ? 'Todas as subcategorias' : 'Sem subcategorias' }}</option>
+      @for (s of subcategoriasDoFiltro(); track s.id) {
+        <option [value]="s.id" [selected]="s.id === subcategoriaSelecionada()">{{ s.nome }}</option>
       }
     </select>
     <select class="select" [value]="situacaoSelecionada()" (change)="situacaoSelecionada.set($any($event.target).value)" aria-label="Filtrar por situação">
@@ -77,19 +89,20 @@
       <ul class="divide-y divide-border">
         @for (item of itensFiltrados(); track item.id) {
           @let cat = getCategoria(item.categoriaId);
+          @let subcat = getSubcategoria(item.subcategoriaId);
           <li>
             <a
-              [routerLink]="['/painel/itens', item.id]"
+              [routerLink]="['/painel/inventario', item.id]"
               class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-bg sm:px-5 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_8rem_8rem] md:gap-4"
             >
               <span class="flex min-w-0 items-center gap-3 max-md:contents">
                 <app-item-thumb [item]="item" [tamanhoIcone]="20" class="size-10 shrink-0 rounded-control" />
                 <span class="min-w-0">
                   <span class="block truncate font-medium">{{ item.nome }}</span>
-                  <span class="block text-sm text-text-muted md:hidden">{{ item.patrimonio }}</span>
+                  <span class="block text-sm text-text-muted md:hidden">{{ subcat ? subcat.nome + ' · ' : '' }}{{ item.patrimonio }}</span>
                 </span>
               </span>
-              <span class="hidden truncate text-sm text-text-muted md:block">{{ cat?.nome || '—' }}</span>
+              <span class="hidden truncate text-sm text-text-muted md:block">{{ cat?.nome || '—' }}@if (subcat) { · {{ subcat.nome }} }</span>
               <span class="hidden font-mono text-sm text-text-muted md:block">{{ item.patrimonio }}</span>
               <span class="text-right"><app-status-badge [status]="item.status" /></span>
             </a>

@@ -83,4 +83,86 @@
       </button>
     </div>
   </form>
+
+  <section class="card card-pad flex flex-col gap-4" aria-labelledby="titulo-subcategorias">
+    <div>
+      <h2 id="titulo-subcategorias" class="font-display text-lg font-semibold">Subcategorias</h2>
+      <p class="mt-0.5 text-sm text-text-muted">
+        Ajudam a achar o item (ex.: Arduino e Raspberry Pi em Kits de eletrônica). O prazo e o limite continuam sendo os da categoria.
+      </p>
+    </div>
+
+    @if (!modoEdicao()) {
+      <p class="text-sm text-text-muted">Salve a categoria primeiro; depois você volta aqui para incluir as subcategorias.</p>
+    } @else {
+      @if (avisoSub()) {
+        <p role="status" class="text-sm font-medium text-disponivel">{{ avisoSub() }}</p>
+      }
+      @if (erroLista()) {
+        <p role="alert" class="field-error">{{ erroLista() }}</p>
+      }
+
+      @if (subcategoriasDaCategoria().length === 0) {
+        <p class="text-sm text-text-muted">Nenhuma subcategoria ainda. Os itens desta categoria aparecem juntos.</p>
+      } @else {
+        <ul class="flex flex-col gap-2">
+          @for (s of subcategoriasDaCategoria(); track s.id) {
+            <li class="flex flex-wrap items-center gap-3 rounded-control border border-border p-3">
+              @if (editandoSubId() === s.id) {
+                <form class="flex min-w-0 flex-1 flex-wrap items-center gap-2" (submit)="salvarRenomear(s.id, $event)">
+                  <label class="sr-only" [for]="'renomear-' + s.id">Novo nome da subcategoria {{ s.nome }}</label>
+                  <input
+                    [id]="'renomear-' + s.id"
+                    type="text"
+                    class="input min-w-0 flex-1"
+                    [value]="nomeEdicaoSub()"
+                    (input)="nomeEdicaoSub.set($any($event.target).value); erroLista.set(null)"
+                    maxlength="60"
+                    autocomplete="off"
+                  />
+                  <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="editandoSubId.set(null)">Cancelar</button>
+                </form>
+              } @else {
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium">{{ s.nome }}</p>
+                  <p class="text-xs text-text-muted">{{ s.itens === 1 ? '1 item' : s.itens + ' itens' }}</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" [attr.aria-label]="'Renomear ' + s.nome" (click)="comecarRenomear(s.id, s.nome)">
+                  Renomear
+                </button>
+                <button type="button" class="btn-icon" [attr.aria-label]="'Remover subcategoria ' + s.nome" (click)="removerSubcategoria(s.id)">
+                  <mat-icon class="icon-sm" svgIcon="delete_outline" aria-hidden="true" />
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="flex flex-col gap-2 border-t border-border pt-4" (submit)="incluirSubcategoria($event)">
+        <label for="nova-subcategoria" class="label">Incluir subcategoria</label>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <input
+            id="nova-subcategoria"
+            type="text"
+            class="input min-w-0 flex-1"
+            [class.input-invalid]="erroSub()"
+            [value]="novaSubcategoria()"
+            (input)="novaSubcategoria.set($any($event.target).value); erroSub.set(null)"
+            placeholder="Arduino"
+            maxlength="60"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn btn-secondary">
+            <mat-icon class="icon-sm" svgIcon="add" aria-hidden="true" />
+            Incluir
+          </button>
+        </div>
+        @if (erroSub()) {
+          <p class="field-error" role="alert">{{ erroSub() }}</p>
+        }
+      </form>
+    }
+  </section>
 </div>

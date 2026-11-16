@@ -24,6 +24,9 @@
               @if (cat.descricao) {
                 <p class="mt-0.5 line-clamp-2 text-sm text-text-muted">{{ cat.descricao }}</p>
               }
+              @if (nomesSubcategorias(cat.id); as nomes) {
+                <p class="mt-1.5 text-sm text-text-muted"><span class="font-medium text-text">Subcategorias:</span> {{ nomes }}</p>
+              }
             </div>
           </div>
           <dl class="mt-auto grid grid-cols-3 border-t border-border text-center">

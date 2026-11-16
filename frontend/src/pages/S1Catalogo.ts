@@ -18,6 +18,7 @@ export class S1Catalogo {
 
   readonly termoBusca = signal('');
   readonly categoriaSelecionada = signal<string>('todas');
+  readonly subcategoriaSelecionada = signal<string>('todas');
 
   readonly usuario = computed(() => this.store.usuarioLogado());
 
@@ -36,6 +37,25 @@ export class S1Catalogo {
     ];
   });
 
+  /** Subcategorias da categoria escolhida, com os itens disponíveis em cada uma (só as que têm algo a mostrar ou estão escolhidas). */
+  readonly subfiltros = computed(() => {
+    const catId = this.categoriaSelecionada();
+    if (catId === 'todas') return [];
+    const daCategoria = this.store.itensCatalogo().filter((i) => i.categoriaId === catId);
+    const subs = this.store
+      .subcategorias()
+      .filter((s) => s.categoriaId === catId)
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+      .map((s) => ({id: s.id, nome: s.nome, total: daCategoria.filter((i) => i.subcategoriaId === s.id).length}));
+    if (subs.length === 0) return [];
+    return [{id: 'todas', nome: 'Todas', total: daCategoria.length}, ...subs];
+  });
+
+  escolherCategoria(id: string) {
+    this.categoriaSelecionada.set(id);
+    this.subcategoriaSelecionada.set('todas');
+  }
+
   /**
    * RN09: Somente itens com status "disponivel" aparecem no catálogo.
    */
@@ -48,13 +68,19 @@ export class S1Catalogo {
       lista = lista.filter((i) => i.categoriaId === catId);
     }
 
+    const subId = this.subcategoriaSelecionada();
+    if (subId !== 'todas') {
+      lista = lista.filter((i) => i.subcategoriaId === subId);
+    }
+
     const busca = this.termoBusca().trim().toLowerCase();
     if (busca) {
       lista = lista.filter(
         (i) =>
           i.nome.toLowerCase().includes(busca) ||
           i.descricao.toLowerCase().includes(busca) ||
-          i.patrimonio.toLowerCase().includes(busca),
+          i.patrimonio.toLowerCase().includes(busca) ||
+          (this.getSubcategoria(i.subcategoriaId)?.nome.toLowerCase().includes(busca) ?? false),
       );
     }
 
@@ -65,6 +91,10 @@ export class S1Catalogo {
     return this.store.categorias().find((c) => c.id === categoriaId);
   }
 
+  getSubcategoria(id?: string) {
+    return id ? this.store.subcategorias().find((s) => s.id === id) : undefined;
+  }
+
   getIconeCategoria(categoriaId: string): string {
     return iconeCategoria(categoriaId);
   }
@@ -72,6 +102,7 @@ export class S1Catalogo {
   limparFiltros() {
     this.termoBusca.set('');
     this.categoriaSelecionada.set('todas');
+    this.subcategoriaSelecionada.set('todas');
   }
 
   formatarData(iso?: string) {

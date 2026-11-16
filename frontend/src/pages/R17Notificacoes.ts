@@ -28,7 +28,7 @@ import {ListaNotificacoes} from '../components/lista-notificacoes/lista-notifica
         [notificacoes]="notificacoes()"
         [agora]="store.agora()"
         [rotuloDestino]="rotuloDestino"
-        textoVazio="Novas solicitações, lembretes de análise e alertas de atraso aparecem aqui."
+        textoVazio="Novos pedidos, lembretes de análise e alertas de atraso aparecem aqui."
         (abrir)="abrirNotificacao($event)"
       />
     </div>
@@ -54,7 +54,7 @@ export class R17Notificacoes {
     switch (n.tipo) {
       case 'novo_pedido':
       case 'lembrete':
-        return {rota: '/painel/solicitacoes', label: 'Solicitações'};
+        return {rota: '/painel/pedidos', label: 'Pedidos'};
       case 'nova_conta':
         return {rota: '/painel/contas', label: 'Contas'};
       case 'atraso':

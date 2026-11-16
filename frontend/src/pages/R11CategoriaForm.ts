@@ -24,6 +24,22 @@ export class R11CategoriaForm {
   readonly limitePorPessoa = signal('1');
   readonly erroValidacao = signal<string | null>(null);
 
+  // Subcategorias (só na edição: precisam da categoria já salva)
+  readonly subcategoriasDaCategoria = computed(() =>
+    this.store
+      .subcategorias()
+      .filter((s) => s.categoriaId === this.catId())
+      .map((s) => ({...s, itens: this.store.itens().filter((i) => i.subcategoriaId === s.id).length}))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+  );
+  readonly novaSubcategoria = signal('');
+  readonly editandoSubId = signal<string | null>(null);
+  readonly nomeEdicaoSub = signal('');
+  /** Erro do campo de incluir; remover e renomear têm o seu, acima da lista. */
+  readonly erroSub = signal<string | null>(null);
+  readonly erroLista = signal<string | null>(null);
+  readonly avisoSub = signal<string | null>(null);
+
   constructor() {
     const id = this.catId();
     if (id) {
@@ -75,6 +91,52 @@ export class R11CategoriaForm {
 
     // Salvar e Cancelar voltam a R10
     this.router.navigate(['/painel/categorias']);
+  }
+
+  incluirSubcategoria(event?: Event) {
+    event?.preventDefault();
+    this.avisoSub.set(null);
+    this.erroLista.set(null);
+    const r = this.store.salvarSubcategoria({id: 'sub-' + Date.now(), categoriaId: this.catId(), nome: this.novaSubcategoria()});
+    if (!r.sucesso) {
+      this.erroSub.set(r.mensagem);
+      return;
+    }
+    this.erroSub.set(null);
+    this.novaSubcategoria.set('');
+    this.avisoSub.set('Subcategoria incluída.');
+  }
+
+  comecarRenomear(id: string, nome: string) {
+    this.editandoSubId.set(id);
+    this.nomeEdicaoSub.set(nome);
+    this.erroLista.set(null);
+    this.avisoSub.set(null);
+  }
+
+  salvarRenomear(id: string, event?: Event) {
+    event?.preventDefault();
+    const atual = this.store.subcategorias().find((s) => s.id === id);
+    if (!atual) return;
+    const r = this.store.salvarSubcategoria({...atual, nome: this.nomeEdicaoSub()});
+    if (!r.sucesso) {
+      this.erroLista.set(r.mensagem);
+      return;
+    }
+    this.erroLista.set(null);
+    this.editandoSubId.set(null);
+    this.avisoSub.set('Subcategoria renomeada.');
+  }
+
+  removerSubcategoria(id: string) {
+    this.avisoSub.set(null);
+    const r = this.store.removerSubcategoria(id);
+    if (!r.sucesso) {
+      this.erroLista.set(r.mensagem);
+      return;
+    }
+    this.erroLista.set(null);
+    this.avisoSub.set('Subcategoria removida.');
   }
 
   cancelar() {
