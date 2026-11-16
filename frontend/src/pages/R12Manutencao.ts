@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, inject, signal} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
@@ -23,6 +23,7 @@ interface ItemManutencaoLinha {
 })
 export class R12Manutencao {
   readonly store = inject(ProtemStore);
+  private readonly injector = inject(Injector);
 
   readonly mensagemSucesso = signal<string | null>(null);
   readonly rotuloCategoria = rotuloCategoriaAvaria;
@@ -85,6 +86,17 @@ export class R12Manutencao {
     );
     if (!res.sucesso) {
       this.erroEncaminhamento.set(res.mensagem);
+      // Leva o foco ao campo com problema: o corpo do diálogo rola até ele em tela baixa
+      const campo = /motivo/i.test(res.mensagem) ? '#motivoEncaminhamento' : 'input[name="destino"]';
+      // Só depois de a mensagem aparecer no rodapé, que muda a altura do corpo
+      afterNextRender(
+        () => {
+          const el = document.querySelector<HTMLElement>(campo);
+          el?.focus({preventScroll: true});
+          el?.scrollIntoView({block: 'center'});
+        },
+        {injector: this.injector},
+      );
       return;
     }
     this.encaminhando.set(null);
