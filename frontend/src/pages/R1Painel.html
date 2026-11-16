@@ -3,7 +3,7 @@
     <div>
       <h1 class="page-title">Olá, {{ primeiroNome() }}</h1>
       <p class="page-subtitle first-letter:uppercase">{{ dataHoje() }}</p>
-      <a routerLink="/painel/leitor" class="btn btn-primary mt-5">
+      <a routerLink="/painel/leitor" class="btn btn-secondary mt-5">
         <mat-icon class="icon-sm" svgIcon="qr_code_scanner" />
         Ler QR code
       </a>
@@ -21,136 +21,175 @@
     </div>
   }
 
-  <!-- Três contadores. Os detalhes de cada um estão nas listas abaixo, sempre abertas. -->
-  <div class="grid grid-cols-3 gap-3 lg:gap-4">
-    <a routerLink="/painel/solicitacoes" class="stat group transition-colors hover:border-primary">
-      <span class="stat-label flex items-center justify-between gap-2">
-        Pedidos
-        <mat-icon class="icon-sm text-primary-hover transition-transform group-hover:translate-x-0.5" svgIcon="arrow_forward" />
-      </span>
-      <span class="stat-value">{{ store.solicitacoesPendentesCount() }}</span>
-      <span class="hidden text-sm text-text-muted sm:block">para analisar</span>
-    </a>
-    <div class="stat">
-      <span class="stat-label">Emprestados</span>
-      <span class="stat-value">{{ totalEmprestimosAtivos() }}</span>
-      <span class="hidden text-sm text-text-muted sm:block">com alunos e professores</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Atrasados</span>
-      <span class="stat-value" [class.text-danger]="totalAtrasados() > 0">{{ totalAtrasados() }}</span>
-      <span class="hidden text-sm text-text-muted sm:block">passaram do prazo</span>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-    <!-- Retiradas aprovadas para hoje (RN04) -->
-    <section class="card" aria-labelledby="titulo-retiradas">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+    <!-- O QUE FAZER AGORA: tudo que está esperando o responsável, do mais urgente para o menos -->
+    <section class="card" aria-labelledby="titulo-agora">
       <div class="card-header">
         <div>
-          <h2 id="titulo-retiradas" class="card-title">
-            Retiradas de hoje <span class="font-sans text-sm font-normal text-text-muted">{{ listaAprovadosHoje().length }}</span>
-          </h2>
-          <p class="text-sm text-text-muted">Se não forem retiradas até o fim do dia, os pedidos expiram.</p>
+          <h2 id="titulo-agora" class="card-title">O que fazer agora</h2>
+          <p class="text-sm text-text-muted">Do mais urgente para o menos. Pedidos de retirada que não forem atendidos hoje expiram à noite.</p>
         </div>
       </div>
-      @if (listaAprovadosHoje().length > 0) {
-        <ul class="divide-y divide-border">
-          @for (solic of listaAprovadosHoje(); track solic.id) {
-            @let it = getItem(solic.itemId);
-            @let user = getUsuario(solic.solicitanteId);
-            <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
-              <div class="min-w-0 flex-1">
-                <p class="font-medium sm:truncate">{{ it?.nome }}</p>
-                <p class="text-sm text-text-muted sm:truncate">
-                  {{ user?.nome }} · aprovado às {{ formatarHora(solic.avaliadoEm || solic.criadoEm) }}
-                </p>
-              </div>
-              <a [routerLink]="['/painel/retirada', solic.itemId]" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">Registrar retirada</a>
-            </li>
-          }
-        </ul>
+
+      @if (nadaAFazer()) {
+        <div class="empty">
+          <mat-icon class="icon-xl" svgIcon="task_alt" />
+          <p class="empty-title">Tudo em dia</p>
+          <p class="empty-text">Nenhum pedido esperando, nenhuma devolução atrasada e nenhuma retirada marcada para hoje.</p>
+        </div>
       } @else {
-        <div class="empty py-10">
-          <mat-icon class="icon-lg" svgIcon="event_available" />
-          <p class="empty-text">Nenhuma retirada marcada para hoje.</p>
+        <div class="divide-y divide-border">
+          <!-- Pedidos para analisar: a ação principal da tela -->
+          @if (pedidosParaAnalisar() > 0) {
+            <div class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
+              <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary-strong" aria-hidden="true">
+                <mat-icon svgIcon="inbox" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold">{{ plural(pedidosParaAnalisar(), 'pedido esperando análise', 'pedidos esperando análise') }}</p>
+                <p class="text-sm text-text-muted">O mais antigo chegou {{ pedidoMaisAntigo() }}.</p>
+              </div>
+              <a routerLink="/painel/solicitacoes" class="btn btn-primary shrink-0 self-start sm:self-auto">
+                Analisar pedidos
+                <mat-icon class="icon-sm" svgIcon="arrow_forward" aria-hidden="true" />
+              </a>
+            </div>
+          }
+
+          @for (bloco of blocos(); track bloco.chave) {
+            <div class="px-5 py-4 sm:px-6">
+              <div class="flex items-center gap-3">
+                <span
+                  class="flex size-8 shrink-0 items-center justify-center rounded-full"
+                  [class]="bloco.alerta ? 'bg-atrasado-bg text-atrasado' : 'bg-brand-soft text-primary-strong'"
+                  aria-hidden="true"
+                >
+                  <mat-icon class="icon-sm" [svgIcon]="bloco.icone" />
+                </span>
+                <h3 class="font-semibold">
+                  {{ bloco.titulo }}
+                  <span class="font-normal text-text-muted">{{ bloco.total }}</span>
+                </h3>
+              </div>
+              <ul class="mt-2 divide-y divide-border">
+                @for (linha of estaAberto(bloco.chave) ? bloco.linhas : bloco.linhas.slice(0, limite); track linha.id) {
+                  <li class="flex flex-col gap-1 py-2.5 sm:flex-row sm:items-center sm:gap-4">
+                    <div class="min-w-0 flex-1">
+                      <p class="font-medium sm:truncate">{{ linha.titulo }}</p>
+                      <p class="text-sm text-text-muted sm:truncate">{{ linha.detalhe }}</p>
+                    </div>
+                    <a [routerLink]="linha.rota" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">{{ linha.acao }}</a>
+                  </li>
+                }
+              </ul>
+              @if (bloco.total > limite) {
+                <button type="button" (click)="alternar(bloco.chave)" class="btn btn-ghost btn-sm -ml-3 mt-1">
+                  {{ estaAberto(bloco.chave) ? 'Mostrar menos' : 'Ver todos os ' + bloco.total }}
+                </button>
+              }
+            </div>
+          }
         </div>
       }
     </section>
 
-    <!-- Atrasados (RN06) -->
-    <section class="card" aria-labelledby="titulo-atrasados">
-      <div class="card-header">
-        <div>
-          <h2 id="titulo-atrasados" class="card-title">
-            Atrasados <span class="font-sans text-sm font-normal text-text-muted">{{ listaAtrasados().length }}</span>
-          </h2>
-          <p class="text-sm text-text-muted">Devoluções que passaram do prazo, do maior atraso para o menor.</p>
+    <!-- NÚMERO EM DESTAQUE: quanto do acervo está na rua e como andam os prazos -->
+    <section class="card card-pad flex flex-col gap-5" aria-labelledby="titulo-uso">
+      <div>
+        <h2 id="titulo-uso" class="card-title">Acervo em uso</h2>
+        <p class="mt-3 font-display text-5xl font-semibold tabular-nums tracking-tight text-text-heading">
+          {{ uso().emUso }}<span class="text-2xl font-normal text-text-muted"> de {{ uso().total }}</span>
+        </p>
+        <p class="mt-1 text-sm text-text-muted">itens estão com alguém agora ({{ uso().percentual }}% do acervo).</p>
+        <div
+          class="mt-3 h-2.5 overflow-hidden rounded-full bg-brand-soft"
+          role="img"
+          [attr.aria-label]="uso().emUso + ' de ' + uso().total + ' itens em uso'"
+        >
+          <div class="h-full rounded-full bg-primary" [style.width.%]="uso().percentual"></div>
         </div>
       </div>
-      @if (listaAtrasados().length > 0) {
+
+      <div class="divider pt-5">
+        <p class="text-sm font-medium text-text-muted">Atrasos nos últimos {{ diasDoResumo }} dias</p>
+        @if (taxaAtraso().percentual !== null) {
+          <p class="mt-1 font-display text-3xl font-semibold tabular-nums text-text-heading">{{ taxaAtraso().percentual }}%</p>
+          <p class="text-sm text-text-muted">
+            {{ taxaAtraso().atrasados }} de {{ plural(taxaAtraso().total, 'empréstimo') }} passaram do prazo.
+          </p>
+        } @else {
+          <p class="mt-1 text-sm text-text-muted">Nenhum empréstimo nesse período, então ainda não há taxa para mostrar.</p>
+        }
+      </div>
+    </section>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <!-- GRÁFICO: o que mais saiu. Os números ficam escritos; a barra é só reforço visual -->
+    <section class="card" aria-labelledby="titulo-mais-pedidos">
+      <div class="card-header">
+        <div>
+          <h2 id="titulo-mais-pedidos" class="card-title">Mais pedidos</h2>
+          <p class="text-sm text-text-muted">Pedidos feitos nos últimos {{ diasDoResumo }} dias, por tipo de item.</p>
+        </div>
+      </div>
+      @if (maisPedidos().length > 0) {
+        <ol class="flex flex-col gap-4 px-5 py-5 sm:px-6">
+          @for (linha of maisPedidos(); track linha.nome) {
+            <li>
+              <div class="flex items-baseline justify-between gap-3 text-sm">
+                <span class="min-w-0 truncate font-medium">{{ linha.nome }}</span>
+                <span class="shrink-0 tabular-nums text-text-muted">{{ plural(linha.pedidos, 'pedido') }}</span>
+              </div>
+              <div class="mt-1.5 h-2.5 overflow-hidden rounded-full bg-brand-soft" aria-hidden="true">
+                <div class="h-full rounded-full bg-primary" [style.width.%]="(linha.pedidos / maximoPedidos()) * 100"></div>
+              </div>
+            </li>
+          }
+        </ol>
+      } @else {
+        <div class="empty py-10">
+          <mat-icon class="icon-lg" svgIcon="bar_chart" />
+          <p class="empty-text">Ainda não há pedidos nos últimos {{ diasDoResumo }} dias.</p>
+        </div>
+      }
+    </section>
+
+    <!-- EMPRESTADOS NO PRAZO: quem está com cada item e quando devolve -->
+    <section class="card" aria-labelledby="titulo-no-prazo">
+      <div class="card-header">
+        <div>
+          <h2 id="titulo-no-prazo" class="card-title">
+            Emprestados no prazo <span class="font-sans text-sm font-normal text-text-muted">{{ listaNoPrazo().length }}</span>
+          </h2>
+          <p class="text-sm text-text-muted">Quem está com cada item e quando devolve.</p>
+        </div>
+      </div>
+      @if (listaNoPrazo().length > 0) {
         <ul class="divide-y divide-border">
-          @for (emp of verTodosAtrasados() ? listaAtrasados() : listaAtrasados().slice(0, limite); track emp.id) {
+          @for (emp of estaAberto('no-prazo') ? listaNoPrazo() : listaNoPrazo().slice(0, limiteNoPrazo); track emp.id) {
             @let it = getItem(emp.itemId);
             @let user = getUsuario(emp.usuarioId);
             <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
               <div class="min-w-0 flex-1">
                 <p class="font-medium sm:truncate">{{ it?.nome }}</p>
-                <p class="text-sm text-text-muted sm:truncate">{{ user?.nome }} · {{ plural(emp.diasAtraso, 'dia') }} de atraso</p>
+                <p class="text-sm text-text-muted sm:truncate">{{ user?.nome }} · {{ prazo(emp.devolucaoPrevista) }}</p>
               </div>
-              <a [routerLink]="['/painel/devolucao', emp.itemId]" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">Registrar devolução</a>
+              <app-status-badge status="emprestado" class="hidden shrink-0 sm:inline-flex" />
             </li>
           }
         </ul>
-        @if (listaAtrasados().length > limite) {
-          <button type="button" (click)="verTodosAtrasados.set(!verTodosAtrasados())" class="btn btn-ghost btn-sm m-3">
-            {{ verTodosAtrasados() ? 'Mostrar menos' : 'Ver todos os ' + listaAtrasados().length }}
+        @if (listaNoPrazo().length > limiteNoPrazo) {
+          <button type="button" (click)="alternar('no-prazo')" class="btn btn-ghost btn-sm m-3">
+            {{ estaAberto('no-prazo') ? 'Mostrar menos' : 'Ver todos os ' + listaNoPrazo().length }}
           </button>
         }
       } @else {
         <div class="empty py-10">
-          <mat-icon class="icon-lg" svgIcon="task_alt" />
-          <p class="empty-text">Nenhuma devolução atrasada.</p>
+          <mat-icon class="icon-lg" svgIcon="inventory_2" />
+          <p class="empty-text">Nenhum item emprestado no prazo agora.</p>
         </div>
       }
     </section>
   </div>
-
-  <!-- Emprestados no prazo: sempre visíveis, da devolução mais próxima para a mais distante -->
-  <section class="card" aria-labelledby="titulo-no-prazo">
-    <div class="card-header">
-      <div>
-        <h2 id="titulo-no-prazo" class="card-title">
-          Emprestados no prazo <span class="font-sans text-sm font-normal text-text-muted">{{ listaNoPrazo().length }}</span>
-        </h2>
-        <p class="text-sm text-text-muted">Quem está com cada item e quando devolve.</p>
-      </div>
-    </div>
-    @if (listaNoPrazo().length > 0) {
-      <ul class="divide-y divide-border">
-        @for (emp of verTodosNoPrazo() ? listaNoPrazo() : listaNoPrazo().slice(0, limite); track emp.id) {
-          @let it = getItem(emp.itemId);
-          @let user = getUsuario(emp.usuarioId);
-          <li class="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
-            <div class="min-w-0 flex-1">
-              <p class="font-medium sm:truncate">{{ it?.nome }}</p>
-              <p class="text-sm text-text-muted sm:truncate">{{ user?.nome }} · {{ prazo(emp.devolucaoPrevista) }}</p>
-            </div>
-            <app-status-badge status="emprestado" class="hidden shrink-0 sm:inline-flex" />
-            <a [routerLink]="['/painel/devolucao', emp.itemId]" class="btn btn-ghost btn-sm -ml-3 shrink-0 self-start sm:ml-0 sm:self-auto">Registrar devolução</a>
-          </li>
-        }
-      </ul>
-      @if (listaNoPrazo().length > limite) {
-        <button type="button" (click)="verTodosNoPrazo.set(!verTodosNoPrazo())" class="btn btn-ghost btn-sm m-3">
-          {{ verTodosNoPrazo() ? 'Mostrar menos' : 'Ver todos os ' + listaNoPrazo().length }}
-        </button>
-      }
-    } @else {
-      <div class="empty py-10">
-        <mat-icon class="icon-lg" svgIcon="inventory_2" />
-        <p class="empty-text">Nenhum item emprestado no momento.</p>
-      </div>
-    }
-  </section>
 </div>
