@@ -31,7 +31,7 @@ O app tem uma camada de dados com duas implementações ([frontend/src/store/fon
 
 | Modo | Onde ficam os dados | Como rodar |
 |------|---------------------|------------|
-| **`local`** (padrão) | Tudo no navegador (`localStorage`, chave `protem:v2`). Nenhuma requisição de rede. | `npm start` ou `npm run dev` |
+| **`local`** (padrão) | Tudo no navegador (`localStorage`, chave `protem:v3`). Nenhuma requisição de rede. | `npm start` ou `npm run dev` |
 | **`api`** | Itens do acervo no MySQL, via back-end; o resto no navegador. | `npm run dev:api` (veja abaixo) |
 
 - Nos dois modos, as regras de negócio rodam no navegador, em funções puras ([frontend/src/store/regras](frontend/src/store/regras)), cobertas por testes.
@@ -210,7 +210,7 @@ frontend/src/
 │   ├── fonte-de-dados/  FonteLocal (só navegador) e FonteApi (itens no back-end)
 │   ├── regras/          regras de negócio em funções puras, por assunto, com testes
 │   ├── demo-data.ts     dados iniciais de demonstração
-│   └── persistencia.ts  leitura e gravação no localStorage (chave protem:v2)
+│   └── persistencia.ts  leitura e gravação no localStorage (chave protem:v3)
 ├── services/       chamadas HTTP do modo api (itens-api.service.ts)
 ├── lib/            utilitários de data, texto, imagem e categoria
 └── styles.css      sistema visual: cores, fontes e classes (.btn, .card, .input, .table...)

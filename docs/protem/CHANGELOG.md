@@ -261,12 +261,11 @@ Princípio pedido pela equipe: nada importante depende de "descobrir" um clique.
 
 **Verificação:** 203 testes no front-end (7 no back-end), lint limpo, build de produção. Verificações no Edge (1366×768 e 390×844) com nenhuma requisição externa e nenhum erro de console: códigos, avarias e encaminhamento, os 3 PDFs (renderizados em imagem para conferir), o painel de acessibilidade (inclui tema escuro e texto a 150% sem rolagem horizontal), o retorno do leitor (som, vibração e silêncio quando desligado), o painel resumido e a linha do tempo.
 
-**Não alterado:** RN01 a RN10, o back-end e o Docker (além da migration do estado "encaminhado"). Chave do navegador segue `protem:v2` (os campos novos são opcionais).
+**Não alterado:** RN01 a RN10, o back-end e o Docker (além da migration do estado "encaminhado"). Chave do navegador sobe para `protem:v3` (seed com códigos de devolução e tipo de avaria): quem abrir o app começa do seed novo, e os dados antigos são apagados na primeira gravação. As preferências de acessibilidade ficam em outra chave e não são afetadas.
 
 **Proposta, sem código:** [Score Protem](PROPOSTA-SCORE.md), um índice só informativo de histórico de uso, opt-in e com cuidados de LGPD.
 
 **Pendências:**
-- [ ] Migration `ItemEncaminhado` não foi rodada contra um MySQL real (Docker desligado nesta máquina).
-- [ ] Dados antigos no navegador mantêm avisos com o código escrito; os dados novos e o seed estão limpos.
+- [x] Migration `ItemEncaminhado` testada em MySQL 8.4 real: sobe, desce e sobe de novo; o app no modo api envia o item encaminhado ao banco e "Reiniciar dados" devolve o seed.
 - [ ] Não há teste com leitores de tela (NVDA, VoiceOver), VLibras nem leitura em voz alta; a página `/acessibilidade` diz isso.
 - [ ] Relatório com números de Lighthouse/axe e PWA: não feitos, a decidir.

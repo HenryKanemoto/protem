@@ -1,13 +1,13 @@
 import {ProtemState} from './estado';
 import {getInitialDemoState} from './demo-data';
 
-/** v2: entrou a auditoria e o seed passou a ter as personas. */
-const CHAVE = 'protem:v2';
+/** v3: códigos de devolução, tipo de avaria e encaminhamento de itens entraram no estado e no seed. */
+const CHAVE = 'protem:v3';
 /**
- * Chaves de versões anteriores. Não são aproveitadas (falta a auditoria e o seed mudou):
+ * Chaves de versões anteriores. Não são aproveitadas (falta algum campo novo e o seed mudou):
  * o navegador começa do seed novo e elas são apagadas na primeira gravação, para liberar espaço.
  */
-const CHAVES_ANTIGAS = ['protem:v1', 'nexus_app_state_v2', 'nexus_app_state_v1'];
+const CHAVES_ANTIGAS = ['protem:v2', 'protem:v1', 'nexus_app_state_v2', 'nexus_app_state_v1'];
 
 const LISTAS = ['usuarios', 'categorias', 'itens', 'solicitacoes', 'emprestimos', 'ocorrencias', 'notificacoes', 'auditoria'];
 const POLITICAS = ['simples', 'intermediaria', 'rigida'];
