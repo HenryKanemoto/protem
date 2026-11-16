@@ -15,7 +15,13 @@
   }
 
   <!-- Câmera -->
-  <div class="relative aspect-square overflow-hidden rounded-card bg-brand-navy sm:aspect-[4/3]">
+  <!-- Retorno da leitura para leitor de tela: só o que foi lido e para onde vai (avisos já são role="alert") -->
+  <p class="sr-only" role="status" aria-live="polite">{{ anuncio() }}</p>
+
+  <div
+    class="relative aspect-square overflow-hidden rounded-card bg-brand-navy outline-offset-4 transition-shadow sm:aspect-[4/3]"
+    [class]="piscar() === 'ok' ? 'ring-4 ring-brand-gold' : piscar() ? 'ring-4 ring-danger' : ''"
+  >
     <div id="qr-camera-stream" class="size-full"></div>
 
     <!-- Moldura de leitura; com a câmera ligada, quem desenha a área de leitura é o html5-qrcode -->

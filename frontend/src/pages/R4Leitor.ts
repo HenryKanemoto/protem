@@ -14,6 +14,8 @@ import { ProtemStore } from '../store/protem.store';
 import { MatIconModule } from '@angular/material/icon';
 import { Html5Qrcode } from 'html5-qrcode';
 import { StatusItem } from '../types/models';
+import { RetornoLeitor } from '../services/retorno-leitor.service';
+import { ResultadoLeitura } from '../lib/acessibilidade';
 
 @Component({
   selector: 'app-r4-leitor',
@@ -25,14 +27,21 @@ export class R4Leitor {
   readonly store = inject(ProtemStore);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly retorno = inject(RetornoLeitor);
 
   readonly codigoDigitado = signal('');
   readonly mensagemAviso = signal<string | null>(null);
+  /** Texto lido por leitores de tela (aria-live): o que foi lido e para onde vai. */
+  readonly anuncio = signal('');
+  /** Pisca a moldura da câmera ao ler, para quem não ouve o som. */
+  readonly piscar = signal<ResultadoLeitura | null>(null);
   readonly cameraAtiva = signal(false);
   readonly cameraStatusTexto = signal('Ligando a câmera...');
   private readonly campoCodigo = viewChild.required<ElementRef<HTMLInputElement>>('campoCodigo');
 
   private html5QrCode: Html5Qrcode | null = null;
+  /** A câmera relê o mesmo QR várias vezes por segundo; o retorno toca uma vez a cada 3 s por código. */
+  private ultimaLeitura: { codigo: string; em: number } | null = null;
 
   /**
    * Atalhos para testar sem câmera: um item de cada situação que o leitor trata
@@ -94,7 +103,7 @@ export class R4Leitor {
           },
         },
         (decodedText) => {
-          this.rotearCodigo(decodedText);
+          this.rotearCodigo(decodedText, true);
         },
         () => {
           // Frame sem leitura
@@ -130,6 +139,23 @@ export class R4Leitor {
     }
   }
 
+  /** Leitura que abre uma tela: som, vibração, piscada e aviso falado. */
+  private confirmarLeitura(texto: string) {
+    this.mensagemAviso.set(null);
+    this.anuncio.set(texto);
+    this.retorno.avisar('ok');
+    this.piscar.set('ok');
+  }
+
+  /** Leitura que não abre nada: o aviso aparece na tela (e é falado) e o som é diferente do "ok". */
+  private avisar(resultado: ResultadoLeitura, mensagem: string) {
+    // O aviso na tela já é role="alert": o leitor de tela fala sozinho, sem precisar do anúncio
+    this.mensagemAviso.set(mensagem);
+    this.retorno.avisar(resultado);
+    this.piscar.set(resultado);
+    setTimeout(() => this.piscar.set(null), 600);
+  }
+
   processarBuscaManual(event: Event) {
     event.preventDefault();
     this.rotearCodigo(this.codigoDigitado());
@@ -141,11 +167,17 @@ export class R4Leitor {
    * - item "emprestado" ou "atrasado" -> leva a /painel/devolucao/:itemId (R6)
    * - qualquer outro estado, ou código inexistente -> mostra um aviso claro
    */
-  private rotearCodigo(codigo: string) {
+  private rotearCodigo(codigo: string, daCamera = false) {
     const trimmed = (codigo || '').trim().toUpperCase();
     if (!trimmed) {
-      this.mensagemAviso.set('Digite o código QR ou o patrimônio do item.');
+      this.avisar('erro', 'Digite o código QR ou o patrimônio do item.');
       return;
+    }
+
+    if (daCamera) {
+      const agora = Date.now();
+      if (this.ultimaLeitura?.codigo === trimmed && agora - this.ultimaLeitura.em < 3000) return;
+      this.ultimaLeitura = { codigo: trimmed, em: agora };
     }
 
     const item = this.store.itens().find(
@@ -153,28 +185,30 @@ export class R4Leitor {
     );
 
     if (!item) {
-      this.mensagemAviso.set(`Nenhum item com o código "${codigo}". Confira o patrimônio na etiqueta.`);
+      this.avisar('erro', `Nenhum item com o código "${codigo.trim()}". Confira o patrimônio na etiqueta.`);
       return;
     }
 
     if (item.status === 'reservado') {
       // Item reservado por pedido aprovado -> Confirmação de Retirada (R5)
+      this.confirmarLeitura(`Lido: ${item.nome}. Abrindo a retirada.`);
       this.pararCamera();
       this.router.navigate(['/painel/retirada', item.id]);
     } else if (item.status === 'emprestado' || item.status === 'atrasado') {
       // Item em posse de usuário -> Registro de Devolução (R6)
+      this.confirmarLeitura(`Lido: ${item.nome}. Abrindo a devolução.`);
       this.pararCamera();
       this.router.navigate(['/painel/devolucao', item.id]);
     } else if (item.status === 'disponivel') {
-      this.mensagemAviso.set(`"${item.nome}" está disponível: não há retirada nem devolução para registrar.`);
+      this.avisar('aviso', `"${item.nome}" está disponível: não há retirada nem devolução para registrar.`);
     } else if (item.status === 'solicitado') {
-      this.mensagemAviso.set(`"${item.nome}" tem um pedido em análise. Aprove-o em Solicitações antes da retirada.`);
+      this.avisar('aviso', `"${item.nome}" tem um pedido em análise. Aprove-o em Solicitações antes da retirada.`);
     } else if (item.status === 'manutencao') {
-      this.mensagemAviso.set(`"${item.nome}" está em manutenção e não pode ser retirado.`);
+      this.avisar('aviso', `"${item.nome}" está em manutenção e não pode ser retirado.`);
     } else if (item.status === 'encaminhado') {
-      this.mensagemAviso.set(`"${item.nome}" foi encaminhado para ${item.encaminhamento?.destinoNome ?? 'outro destino'} e saiu do acervo.`);
+      this.avisar('aviso', `"${item.nome}" foi encaminhado para ${item.encaminhamento?.destinoNome ?? 'outro destino'} e saiu do acervo.`);
     } else {
-      this.mensagemAviso.set(`"${item.nome}" está com a situação "${item.status}".`);
+      this.avisar('aviso', `"${item.nome}" está com a situação "${item.status}".`);
     }
   }
 }
