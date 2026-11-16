@@ -1,6 +1,6 @@
-import {Categoria, DestinoEncaminhamento, Item, PoliticaAtraso, StatusItem, Subcategoria, TipoDestino} from '../../types/models';
-import {ProtemState, ResultadoAcao, Transicao, novoEvento} from '../estado';
-import {destinosDe} from './avaria';
+import { Categoria, DestinoEncaminhamento, Item, PoliticaAtraso, StatusItem, Subcategoria, TipoDestino } from '../../types/models';
+import { ProtemState, ResultadoAcao, Transicao, novoEvento } from '../estado';
+import { destinosDe } from './avaria';
 
 function upsert<T extends {id: string}>(lista: T[], registro: T): T[] {
   return lista.some((r) => r.id === registro.id)
@@ -55,6 +55,23 @@ export function removerSubcategoria(s: ProtemState, subcategoriaId: string): Tra
     estado: {...s, subcategorias: s.subcategorias.filter((x) => x.id !== subcategoriaId)},
     resultado: {sucesso: true, mensagem: 'Subcategoria removida.'},
   };
+}
+
+export function removerCategoria(s: ProtemState, categoriaId: string): Transicao<ResultadoAcao> {
+  const falha = (mensagem: string) => ({estado: s, resultado: {sucesso: false, mensagem}});
+  if (!s.categorias.some((x) => x.id === categoriaId)) return falha('Categoria não encontrada.');
+  const emUso = s.itens.filter((i) => i.categoriaId === categoriaId).length;
+  if (emUso > 0) {
+    return falha(`${emUso === 1 ? '1 item usa' : emUso + ' itens usam'} essa categoria. Mude ${emUso === 1 ? 'o item' : 'os itens'} antes de remover.`);
+  }
+  return {
+    estado: {
+      ...s,
+      categorias: s.categorias.filter((x) => x.id !== categoriaId),
+      subcategorias: s.subcategorias.filter((x) => x.categoriaId !== categoriaId),
+    },
+    resultado: {sucesso: true, mensagem: 'Categoria removida.'}
+  }
 }
 
 export function removerItem(s: ProtemState, itemId: string): ProtemState {

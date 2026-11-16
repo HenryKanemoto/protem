@@ -1,21 +1,21 @@
-import {Injectable, computed, inject, signal} from '@angular/core';
-import {addHours, parseDate} from '../lib/date-utils';
-import {pendenciasDePedidos} from '../lib/resumo-painel';
-import {Categoria, Item, PoliticaAtraso, Solicitacao, Subcategoria, TipoDestino} from '../types/models';
-import {getInitialDemoState} from './demo-data';
-import {ProtemState, Transicao} from './estado';
-import {FONTE_DE_DADOS} from './fonte-de-dados';
-import {observarOutrasAbas} from './persistencia';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { addHours, parseDate } from '../lib/date-utils';
+import { pendenciasDePedidos } from '../lib/resumo-painel';
+import { Categoria, Item, PoliticaAtraso, Solicitacao, Subcategoria, TipoDestino } from '../types/models';
+import { getInitialDemoState } from './demo-data';
+import { ProtemState, Transicao } from './estado';
+import { FONTE_DE_DADOS } from './fonte-de-dados';
+import { observarOutrasAbas } from './persistencia';
 import * as acervo from './regras/acervo';
-import {destinosDe} from './regras/avaria';
+import { destinosDe } from './regras/avaria';
+import { garantirCodigos } from './regras/codigos';
 import * as contas from './regras/contas';
 import * as emprestimos from './regras/emprestimos';
-import {garantirCodigos} from './regras/codigos';
-import {executarRotinaAutomatica} from './regras/rotina';
+import { executarRotinaAutomatica } from './regras/rotina';
 import * as solicitacoes from './regras/solicitacoes';
 
-export type {ProtemState} from './estado';
-export type {StatusConexao} from './fonte-de-dados';
+export type { ProtemState } from './estado';
+export type { StatusConexao } from './fonte-de-dados';
 
 /**
  * Fachada única usada pelas telas. Guarda o estado em um signal e delega as regras
@@ -319,6 +319,10 @@ export class ProtemStore {
 
   removerSubcategoria(subcategoriaId: string) {
     return this.executar((s) => acervo.removerSubcategoria(s, subcategoriaId));
+  }
+
+  removerCategoria(categoriaId: string) {
+    return this.executar((s) => acervo.removerCategoria(s, categoriaId));
   }
 
   resolverOcorrencia(ocorrenciaId: string, itemRetornarDisponivel = true, responsavelId?: string) {

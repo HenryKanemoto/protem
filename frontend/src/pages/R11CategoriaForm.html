@@ -19,6 +19,18 @@
     </div>
   }
 
+  @if (modoEdicao()) {
+    @if (erroCategoria()) {
+      <div role="alert" class="alert alert-danger">
+        <mat-icon class="icon-sm" svgIcon="error_outline" />
+        <p class="flex-1">{{ erroCategoria() }}</p>
+        <button type="button" (click)="erroCategoria.set(null)" class="btn-icon size-8" aria-label="Fechar aviso">
+          <mat-icon class="icon-sm" svgIcon="close" />
+        </button>
+      </div>
+    }
+  }
+
   <form (submit)="salvar($event)" class="card card-pad flex flex-col gap-5" novalidate>
     <div class="field">
       <label for="nome" class="label">Nome</label>
@@ -76,6 +88,12 @@
     </div>
 
     <div class="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+      @if (modoEdicao()) {
+        <button type="button" (click)="removerCategoria(catId())" class="btn btn-secondary sm:mr-auto">
+          <mat-icon class="icon-sm" svgIcon="delete_outline" aria-hidden="true" />
+          Remover categoria
+        </button>
+      }
       <button type="button" (click)="cancelar()" class="btn btn-secondary">Cancelar</button>
       <button type="submit" class="btn btn-primary">
         <mat-icon class="icon-sm" svgIcon="save" />

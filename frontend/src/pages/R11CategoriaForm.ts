@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProtemStore } from '../store/protem.store';
-import { MatIconModule } from '@angular/material/icon';
 import { Categoria } from '../types/models';
 
 @Component({
@@ -23,6 +23,7 @@ export class R11CategoriaForm {
   readonly prazoMaxDias = signal('1');
   readonly limitePorPessoa = signal('1');
   readonly erroValidacao = signal<string | null>(null);
+  readonly erroCategoria = signal<string | null>(null);
 
   // Subcategorias (só na edição: precisam da categoria já salva)
   readonly subcategoriasDaCategoria = computed(() =>
@@ -137,6 +138,18 @@ export class R11CategoriaForm {
     }
     this.erroLista.set(null);
     this.avisoSub.set('Subcategoria removida.');
+  }
+
+  removerCategoria(id: string) {
+    if (!window.confirm(`Remover a categoria "${this.nome()}" e suas subcategorias? Esta ação não pode ser desfeita.`)) return;
+
+    this.erroCategoria.set(null);
+    const r = this.store.removerCategoria(id);
+    if (!r.sucesso) {
+      this.erroCategoria.set(r.mensagem);
+      return;
+    }
+    this.router.navigate(['/painel/categorias']);
   }
 
   cancelar() {
