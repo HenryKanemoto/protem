@@ -1,3 +1,8 @@
-# Ferramentas locais (Claude Code e grafo do graphify)
+# Claude Code (instruções, configurações locais e servidores MCP)
+CLAUDE.md
+CLAUDE.local.md
 .claude/
+.mcp.json
+
+# Grafo do graphify
 graphify-out/
