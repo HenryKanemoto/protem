@@ -6,6 +6,8 @@ import {StatusBadge} from '../components/status-badge/status-badge';
 import {formatDateShort, parseDate} from '../lib/date-utils';
 import {GrupoHistorico, montarHistorico} from '../lib/historico';
 import {PERIODOS, Periodo, inicioDoPeriodo} from '../lib/periodo';
+import {baixarPdf} from '../lib/pdf';
+import {documentoHistorico} from '../lib/relatorio-documento';
 
 /**
  * Histórico: o que aconteceu com cada pedido, do pedido à devolução.
@@ -91,5 +93,33 @@ export class R18Historico {
     this.pessoaId.set('');
     this.busca.set('');
     this.grupo.set('todos');
+  }
+
+  readonly gerandoPdf = signal(false);
+  readonly erroPdf = signal<string | null>(null);
+
+  /** Baixa em PDF tudo o que está na lista com os filtros de agora (não só as linhas visíveis). */
+  async baixarPdf() {
+    if (this.gerandoPdf()) return;
+    this.gerandoPdf.set(true);
+    this.erroPdf.set(null);
+    try {
+      const pessoa = this.pessoas().find((p) => p.id === this.pessoaId())?.nome ?? '';
+      const documento = documentoHistorico(
+        this.filtradas(),
+        {
+          periodo: this.periodos.find((p) => p.valor === this.periodo())?.rotulo ?? '',
+          pessoa,
+          busca: this.busca().trim(),
+          situacao: this.grupo() === 'todos' ? '' : (this.grupos().find((g) => g.valor === this.grupo())?.rotulo ?? ''),
+        },
+        {agora: this.store.agora(), geradoPor: this.store.usuarioLogado()?.nome ?? 'Responsável'},
+      );
+      await baixarPdf(documento);
+    } catch {
+      this.erroPdf.set('Não deu para gerar o PDF. Tente de novo.');
+    } finally {
+      this.gerandoPdf.set(false);
+    }
   }
 }

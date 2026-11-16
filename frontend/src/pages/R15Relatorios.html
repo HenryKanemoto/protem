@@ -24,13 +24,17 @@
       <mat-icon class="icon-sm" svgIcon="insights" />
       Visão geral
     </button>
+    <button type="button" role="tab" id="aba-avarias" class="tab" [class.tab-active]="aba() === 'avarias'" [attr.aria-selected]="aba() === 'avarias'" aria-controls="painel-relatorio" (click)="abrirAba('avarias')">
+      <mat-icon class="icon-sm" svgIcon="build" />
+      Avarias
+    </button>
     <button type="button" role="tab" id="aba-auditoria" class="tab" [class.tab-active]="aba() === 'auditoria'" [attr.aria-selected]="aba() === 'auditoria'" aria-controls="painel-relatorio" (click)="abrirAba('auditoria')">
       <mat-icon class="icon-sm" svgIcon="fact_check" />
       Auditoria
     </button>
   </div>
 
-  <div id="painel-relatorio" role="tabpanel" [attr.aria-labelledby]="aba() === 'geral' ? 'aba-geral' : 'aba-auditoria'" class="flex flex-col gap-8">
+  <div id="painel-relatorio" role="tabpanel" [attr.aria-labelledby]="'aba-' + aba()" class="flex flex-col gap-8">
   @if (aba() === 'geral') {
   <!-- Números do período -->
   <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -145,6 +149,78 @@
       <p class="px-6 py-10 text-center text-sm text-text-muted">Nenhuma avaria registrada no período.</p>
     }
   </section>
+  } @else if (aba() === 'avarias') {
+    <!-- Filtros sempre visíveis: tipo e situação em chips com a quantidade -->
+    <section class="flex flex-col gap-3" aria-label="Filtros das avarias">
+      <div class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Tipo de avaria">
+        @for (c of chipsTipoAvaria(); track c.valor) {
+          <button type="button" (click)="tipoAvaria.set(c.valor)" class="chip shrink-0" [class.chip-active]="tipoAvaria() === c.valor" [attr.aria-pressed]="tipoAvaria() === c.valor">
+            {{ c.rotulo }}
+            <span class="font-mono text-xs">{{ c.total }}</span>
+          </button>
+        }
+      </div>
+      <div class="sem-rolagem -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Situação do item">
+        @for (c of chipsSituacaoAvaria(); track c.valor) {
+          <button type="button" (click)="situacaoAvaria.set(c.valor)" class="chip shrink-0" [class.chip-active]="situacaoAvaria() === c.valor" [attr.aria-pressed]="situacaoAvaria() === c.valor">
+            {{ c.rotulo }}
+            <span class="font-mono text-xs">{{ c.total }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="card overflow-hidden" aria-labelledby="titulo-avarias">
+      <div class="card-header">
+        <h2 id="titulo-avarias" class="card-title">Avarias e encaminhamentos</h2>
+        <span class="flex items-center gap-3 text-sm text-text-muted">
+          {{ avariasFiltradas().length }} {{ avariasFiltradas().length === 1 ? 'avaria' : 'avarias' }}
+          <button type="button" (click)="baixarPdfAvarias()" class="btn btn-secondary btn-sm" [disabled]="gerandoPdf() || avariasFiltradas().length === 0">
+            <mat-icon class="icon-sm" svgIcon="picture_as_pdf" aria-hidden="true" />
+            {{ gerandoPdf() ? 'Gerando PDF...' : 'Baixar PDF' }}
+          </button>
+        </span>
+      </div>
+      @if (erroPdf()) {
+        <p class="alert alert-danger m-4" role="alert">{{ erroPdf() }}</p>
+      }
+      @if (avariasVisiveis().length > 0) {
+        <ul class="divide-y divide-border">
+          @for (o of avariasVisiveis(); track o.id) {
+            @let it = getItem(o.itemId);
+            <li class="flex flex-col gap-1 px-5 py-4 sm:px-6">
+              <p class="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span class="font-medium">
+                  @if (it) {
+                    <a [routerLink]="['/painel/itens', it.id]" class="hover:underline">{{ it.nome }}</a>
+                    <span class="font-mono text-xs text-text-muted"> {{ it.patrimonio }}</span>
+                  } @else {
+                    Item removido
+                  }
+                </span>
+                <span class="text-sm tabular-nums text-text-muted">{{ formatarDataHora(o.criadoEm) }}</span>
+              </p>
+              <p class="text-xs font-medium text-text-muted">{{ rotuloCategoria(o.categoria) }} · devolvido por {{ nomePessoa(o.usuarioId) }}</p>
+              <p class="text-sm">{{ o.descricao }}</p>
+              <p class="text-sm text-text-muted">{{ situacaoAvariaTexto(o) }}</p>
+            </li>
+          }
+        </ul>
+        @if (avariasFiltradas().length > avariasVisiveis().length) {
+          <div class="border-t border-border px-5 py-3 sm:px-6">
+            <button type="button" (click)="limiteAvarias.set(limiteAvarias() + 20)" class="btn btn-ghost btn-sm">
+              Mostrar mais ({{ avariasFiltradas().length - avariasVisiveis().length }})
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="empty">
+          <mat-icon class="icon-xl" svgIcon="task_alt" />
+          <p class="empty-title">Nenhuma avaria encontrada</p>
+          <p class="empty-text">Tente outro período, tipo ou situação.</p>
+        </div>
+      }
+    </section>
   } @else {
     <!-- Filtros sempre visíveis: pessoa e busca; tipo de evento em chips com a quantidade -->
     <section class="flex flex-col gap-3" aria-label="Filtros da auditoria">
@@ -179,8 +255,17 @@
     <section class="card overflow-hidden" aria-labelledby="titulo-auditoria">
       <div class="card-header">
         <h2 id="titulo-auditoria" class="card-title">Eventos</h2>
-        <span class="text-sm text-text-muted">{{ eventosFiltrados().length }} {{ eventosFiltrados().length === 1 ? 'evento' : 'eventos' }}</span>
+        <span class="flex items-center gap-3 text-sm text-text-muted">
+          {{ eventosFiltrados().length }} {{ eventosFiltrados().length === 1 ? 'evento' : 'eventos' }}
+          <button type="button" (click)="baixarPdfAuditoria()" class="btn btn-secondary btn-sm" [disabled]="gerandoPdf() || eventosFiltrados().length === 0">
+            <mat-icon class="icon-sm" svgIcon="picture_as_pdf" aria-hidden="true" />
+            {{ gerandoPdf() ? 'Gerando PDF...' : 'Baixar PDF' }}
+          </button>
+        </span>
       </div>
+      @if (erroPdf()) {
+        <p class="alert alert-danger m-4" role="alert">{{ erroPdf() }}</p>
+      }
       @if (eventosVisiveis().length > 0) {
         <ul class="divide-y divide-border">
           @for (e of eventosVisiveis(); track e.id) {

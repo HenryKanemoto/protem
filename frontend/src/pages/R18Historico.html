@@ -3,7 +3,7 @@
     <div>
       <h1 class="page-title">Histórico</h1>
       <p class="page-subtitle">
-        O caminho de cada pedido: pedido, aprovação, retirada e devolução. Quem fez cada ação fica em
+        O caminho de cada pedido: pedido, aprovação, retirada, devolução e o que houve com o item. O PDF leva os filtros que estão na tela. Quem fez cada ação fica em
         <a routerLink="/painel/relatorios" [queryParams]="{aba: 'auditoria'}" class="font-medium text-primary-hover hover:underline">Relatórios › Auditoria</a>.
       </p>
     </div>
@@ -64,8 +64,15 @@
         @if (filtrosAtivos()) {
           <button type="button" (click)="limparFiltros()" class="font-medium text-primary-hover hover:underline">Limpar filtros</button>
         }
+        <button type="button" (click)="baixarPdf()" class="btn btn-secondary btn-sm" [disabled]="gerandoPdf() || filtradas().length === 0">
+          <mat-icon class="icon-sm" svgIcon="picture_as_pdf" aria-hidden="true" />
+          {{ gerandoPdf() ? 'Gerando PDF...' : 'Baixar PDF' }}
+        </button>
       </span>
     </div>
+    @if (erroPdf()) {
+      <p class="alert alert-danger m-4" role="alert">{{ erroPdf() }}</p>
+    }
     @if (visiveis().length > 0) {
       <ul class="divide-y divide-border">
         @for (l of visiveis(); track l.id) {
