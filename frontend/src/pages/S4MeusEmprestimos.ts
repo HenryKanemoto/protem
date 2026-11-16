@@ -2,9 +2,11 @@ import {ChangeDetectionStrategy, Component, afterNextRender, computed, inject, s
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
-import {Item} from '../types/models';
+import {Emprestimo, Item, Solicitacao} from '../types/models';
 import {iconeCategoria, plural} from '../lib/categoria-utils';
 import {ItemThumb} from '../components/item-thumb/item-thumb';
+import {LinhaDoTempo} from '../components/linha-do-tempo/linha-do-tempo';
+import {etapasDoPedido} from '../lib/linha-do-tempo';
 import {
   differenceInHours,
   formatDateShort,
@@ -28,7 +30,7 @@ interface ItemHistorico {
 @Component({
   selector: 'app-s4-meus-emprestimos',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule, ItemThumb],
+  imports: [RouterLink, MatIconModule, ItemThumb, LinhaDoTempo],
   templateUrl: './S4MeusEmprestimos.html',
 })
 export class S4MeusEmprestimos {
@@ -152,6 +154,12 @@ export class S4MeusEmprestimos {
     // Ordenar pelo evento mais recente primeiro
     return lista.sort((a, b) => new Date(b.dataEvento).getTime() - new Date(a.dataEvento).getTime());
   });
+
+  /** Andamento do pedido: de um empréstimo (acha o pedido de origem) ou de um pedido ainda sem empréstimo. */
+  etapasDe(emprestimo?: Emprestimo, solicitacao?: Solicitacao) {
+    const pedido = solicitacao ?? this.store.solicitacoes().find((s) => s.id === emprestimo?.solicitacaoId);
+    return pedido ? etapasDoPedido(pedido, emprestimo) : [];
+  }
 
   getItem(itemId?: string) {
     if (!itemId) return undefined;

@@ -30,7 +30,8 @@
         @for (emp of listaEmprestimosAtivos(); track emp.id) {
           @let item = getItem(emp.itemId);
           @let estaAtrasado = emp.diasAtraso > 0;
-          <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5" [class.border-danger]="estaAtrasado">
+          <li class="card p-4 sm:p-5" [class.border-danger]="estaAtrasado">
+           <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
             @if (item) {
               <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
             }
@@ -52,11 +53,15 @@
               }
               <a routerLink="/codigos" class="mt-1 inline-block text-sm font-medium text-primary-hover hover:underline">Código de devolução</a>
             </div>
+           </div>
+           <app-linha-do-tempo class="mt-4 border-t border-border pt-4" [etapas]="etapasDe(emp)" />
           </li>
         }
       </ul>
     } @else {
-      <p class="card px-5 py-4 text-text-muted">Você não está com nenhum item agora.</p>
+      <p class="card px-5 py-4 text-text-muted">
+        Você não está com nenhum item agora. <a routerLink="/catalogo" class="font-medium text-primary-hover hover:underline">Ver o catálogo</a>
+      </p>
     }
   </section>
 
@@ -69,7 +74,8 @@
       <ul class="flex flex-col gap-3">
         @for (solic of pedidosAprovados(); track solic.id) {
           @let item = getItem(solic.itemId);
-          <li class="card flex flex-col gap-4 border-primary p-4 sm:flex-row sm:items-center sm:p-5">
+          <li class="card border-primary p-4 sm:p-5">
+           <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
             @if (item) {
               <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control bg-brand-soft" />
             }
@@ -89,13 +95,16 @@
                 Ver meu código
               </a>
             </div>
+           </div>
+           <app-linha-do-tempo class="mt-4 border-t border-border pt-4" [etapas]="etapasDe(undefined, solic)" />
           </li>
         }
 
         @for (solic of pedidosAguardandoAnalise(); track solic.id) {
           @let item = getItem(solic.itemId);
           @let podeLembrar = store.podeEnviarLembrete(solic);
-          <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+          <li class="card p-4 sm:p-5">
+           <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
             @if (item) {
               <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
             }
@@ -115,11 +124,16 @@
                 <span class="text-sm text-text-muted">Você poderá lembrar o responsável em {{ getHorasRestantesParaLembrete(solic.criadoEm) }}</span>
               }
             </div>
+           </div>
+           <app-linha-do-tempo class="mt-4 border-t border-border pt-4" [etapas]="etapasDe(undefined, solic)" />
           </li>
         }
       </ul>
     } @else {
-      <p class="card px-5 py-4 text-text-muted">Nenhum pedido em análise nem retirada marcada para hoje.</p>
+      <p class="card px-5 py-4 text-text-muted">
+        Nenhum pedido em análise nem retirada marcada para hoje. Escolha um item no
+        <a routerLink="/catalogo" class="font-medium text-primary-hover hover:underline">catálogo</a> para fazer um pedido.
+      </p>
     }
   </section>
 
