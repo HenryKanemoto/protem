@@ -50,6 +50,7 @@
               } @else {
                 <p class="text-sm text-text-muted">{{ getDiasRestantes(emp.devolucaoPrevista) }}</p>
               }
+              <a routerLink="/codigos" class="mt-1 inline-block text-sm font-medium text-primary-hover hover:underline">Código de devolução</a>
             </div>
           </li>
         }
@@ -79,13 +80,14 @@
               </p>
               <p class="mt-0.5 text-sm text-text-muted">
                 Aprovado às {{ formatarHora(solic.avaliadoEm || solic.criadoEm) }}. Retire no setor de materiais até o fim do dia,
-                senão o pedido expira. Mostre o código ao responsável.
+                senão o pedido expira. O código de retirada está em Meus códigos.
               </p>
             </div>
             <div class="shrink-0 sm:text-right">
-              <p class="text-sm text-text-muted">Código de retirada</p>
-              <p class="font-mono text-2xl font-semibold tracking-[0.2em] text-text-heading">{{ solic.codigoRetirada }}</p>
-              <a routerLink="/codigos" class="text-sm font-medium text-primary-hover hover:underline">Meus códigos</a>
+              <a routerLink="/codigos" class="btn btn-primary btn-sm">
+                <mat-icon class="icon-sm" svgIcon="visibility" aria-hidden="true" />
+                Ver meu código
+              </a>
             </div>
           </li>
         }

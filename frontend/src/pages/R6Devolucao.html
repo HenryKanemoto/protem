@@ -40,6 +40,68 @@
           </div>
         }
 
+        <!-- Código de devolução: só quem retirou tem; o responsável digita o que a pessoa mostrar -->
+        @if (emp.codigoDevolucao) {
+          <div class="flex flex-col gap-3 border-t border-border p-5 sm:p-6">
+            @if (!semCodigo()) {
+              <div class="field">
+                <label for="codigoDevolucao" class="label">Código de devolução</label>
+                <p id="dica-codigo-devolucao" class="hint">A pessoa vê o código no app, em Meus códigos.</p>
+                <input
+                  id="codigoDevolucao"
+                  type="text"
+                  class="input h-12 max-w-56 font-mono text-lg uppercase tracking-[0.2em]"
+                  [class.input-invalid]="erroCodigo()"
+                  [value]="codigoDigitado()"
+                  (input)="codigoDigitado.set($any($event.target).value); erroCodigo.set(null)"
+                  maxlength="8"
+                  autocomplete="off"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                  [attr.aria-describedby]="erroCodigo() ? 'dica-codigo-devolucao erro-codigo-devolucao' : 'dica-codigo-devolucao'"
+                  [attr.aria-invalid]="!!erroCodigo()"
+                />
+                @if (erroCodigo()) {
+                  <p id="erro-codigo-devolucao" class="field-error" role="alert">{{ erroCodigo() }}</p>
+                }
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm self-start -ml-3"
+                (click)="semCodigo.set(true); erroCodigo.set(null)"
+              >
+                A pessoa não tem o código
+              </button>
+            } @else {
+              <div class="field">
+                <label for="motivoSemCodigo" class="label">Por que devolver sem o código?</label>
+                <p id="dica-sem-codigo" class="hint">O motivo fica registrado na auditoria.</p>
+                <textarea
+                  id="motivoSemCodigo"
+                  rows="2"
+                  class="textarea"
+                  [class.input-invalid]="erroCodigo()"
+                  [value]="motivoSemCodigo()"
+                  (input)="motivoSemCodigo.set($any($event.target).value); erroCodigo.set(null)"
+                  placeholder="Celular sem bateria, sem acesso à conta..."
+                  [attr.aria-describedby]="erroCodigo() ? 'dica-sem-codigo erro-sem-codigo' : 'dica-sem-codigo'"
+                  [attr.aria-invalid]="!!erroCodigo()"
+                ></textarea>
+                @if (erroCodigo()) {
+                  <p id="erro-sem-codigo" class="field-error" role="alert">{{ erroCodigo() }}</p>
+                }
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm self-start -ml-3"
+                (click)="semCodigo.set(false); erroCodigo.set(null)"
+              >
+                Voltar para o código
+              </button>
+            }
+          </div>
+        }
+
         <!-- Avaria (RN07) -->
         <div class="flex flex-col gap-4 border-t border-border p-5 sm:p-6">
           <label class="flex cursor-pointer items-start gap-3">

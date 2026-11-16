@@ -3,7 +3,7 @@
     <div>
       <h1 class="page-title">Meus códigos</h1>
       <p class="page-subtitle">
-        Mostre o código ao responsável na hora de retirar. Ele vale só para você, uma vez, até o fim do dia da aprovação.
+        Mostre o código ao responsável na retirada e na devolução. Só você vê os códigos, e eles ficam escondidos até você tocar no olho.
       </p>
     </div>
     <a routerLink="/catalogo" class="btn btn-primary self-start sm:self-auto">
@@ -12,33 +12,80 @@
     </a>
   </header>
 
-  <ul class="flex flex-col gap-3">
-    @for (sol of listarSolicitacoes(); track sol.id) {
-      @let item = getItem(sol.itemId);
-      <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5" [class.border-primary]="sol.status === 'aprovada'">
-        @if (item) {
-          <app-item-thumb [item]="item" class="size-14 shrink-0 rounded-control" />
+  @if (semNada()) {
+    <div class="card empty">
+      <mat-icon class="icon-xl" svgIcon="check_circle_outline" />
+      <p class="empty-title">Nenhum código por aqui</p>
+      <p class="empty-text">
+        Quando um pedido seu for aprovado, o código de retirada aparece aqui. Depois da retirada, aparece o código de devolução.
+      </p>
+    </div>
+  }
+
+  @if (codigos().retiradas.length > 0) {
+    <section class="flex flex-col gap-3" aria-labelledby="titulo-retirar">
+      <h2 id="titulo-retirar" class="section-title">Para retirar</h2>
+      <ul class="flex flex-col gap-3">
+        @for (r of codigos().retiradas; track r.id) {
+          <li class="card flex flex-col gap-4 border-primary p-4 sm:flex-row sm:items-center sm:p-5">
+            @if (r.item) {
+              <app-item-thumb [item]="r.item" class="size-14 shrink-0 rounded-control" />
+            }
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ r.item?.nome }}</p>
+              <p class="mt-0.5 text-sm text-text-muted">Retire hoje no setor responsável. Vale uma vez, até o fim do dia.</p>
+            </div>
+            <app-codigo-oculto class="shrink-0" [codigo]="r.codigo" rotulo="Código de retirada" />
+          </li>
         }
-        <div class="min-w-0 flex-1">
-          <p class="font-semibold">{{ item?.nome }}</p>
-          <p class="mt-0.5 text-sm text-text-muted">Pedido em {{ formatarData(sol.criadoEm) }}</p>
-        </div>
-        <div class="shrink-0 sm:text-right">
-          @if (sol.status === 'aprovada') {
-            <p class="text-xs text-text-muted">Código de retirada</p>
-            <p class="font-mono text-2xl font-semibold tracking-[0.2em] text-text-heading">{{ sol.codigoRetirada }}</p>
-            <span class="mt-1 inline-flex rounded-full bg-reservado-bg px-2.5 py-0.5 text-xs font-medium text-reservado">Retire hoje</span>
-          } @else {
-            <p class="text-sm text-text-muted">{{ situacao(sol.status) }}</p>
-          }
-        </div>
-      </li>
-    } @empty {
-      <li class="card empty">
-        <mat-icon class="icon-xl" svgIcon="check_circle_outline" />
-        <p class="empty-title">Nenhum código por aqui</p>
-        <p class="empty-text">Quando um pedido seu for aprovado, o código de retirada aparece nesta tela.</p>
-      </li>
-    }
-  </ul>
+      </ul>
+    </section>
+  }
+
+  @if (codigos().devolucoes.length > 0) {
+    <section class="flex flex-col gap-3" aria-labelledby="titulo-devolver">
+      <h2 id="titulo-devolver" class="section-title">Para devolver</h2>
+      <ul class="flex flex-col gap-3">
+        @for (d of codigos().devolucoes; track d.id) {
+          <li class="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5" [class.border-danger]="d.atrasado">
+            @if (d.item) {
+              <app-item-thumb [item]="d.item" class="size-14 shrink-0 rounded-control" />
+            }
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ d.item?.nome }}</p>
+              <p class="mt-0.5 text-sm" [class.text-atrasado]="d.atrasado" [class.text-text-muted]="!d.atrasado">
+                @if (d.atrasado) {
+                  Em atraso. Devolução era até {{ formatarData(d.devolucaoPrevista) }}.
+                } @else {
+                  Devolva até {{ formatarData(d.devolucaoPrevista) }}. Mostre o código ao responsável.
+                }
+              </p>
+            </div>
+            <app-codigo-oculto class="shrink-0" [codigo]="d.codigo" rotulo="Código de devolução" />
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (outrosPedidos().length > 0) {
+    <section class="flex flex-col gap-3" aria-labelledby="titulo-outros">
+      <h2 id="titulo-outros" class="section-title">Outros pedidos</h2>
+      <ul class="flex flex-col gap-3">
+        @for (sol of outrosPedidos(); track sol.id) {
+          @let item = getItem(sol.itemId);
+          <li class="card flex items-center gap-4 p-4">
+            @if (item) {
+              <app-item-thumb [item]="item" class="size-12 shrink-0 rounded-control" />
+            }
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ item?.nome }}</p>
+              <p class="mt-0.5 text-sm text-text-muted">Pedido em {{ formatarData(sol.criadoEm) }}</p>
+            </div>
+            <p class="shrink-0 text-sm text-text-muted">{{ situacao(sol.status) }}</p>
+          </li>
+        }
+      </ul>
+    </section>
+  }
 </div>

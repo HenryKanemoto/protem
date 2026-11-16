@@ -23,6 +23,13 @@ export class R6Devolucao {
   /** Erro da regra de devolução (ex.: o item já tinha sido devolvido em outra aba). */
   readonly erroDevolucao = signal<string | null>(null);
 
+  /** Código de devolução que a pessoa mostra no app, em Meus códigos. */
+  readonly codigoDigitado = signal('');
+  /** A pessoa não tem o código: devolve sem ele, com motivo. Fica na auditoria. */
+  readonly semCodigo = signal(false);
+  readonly motivoSemCodigo = signal('');
+  readonly erroCodigo = signal<string | null>(null);
+
   readonly plural = plural;
 
   readonly itemId = computed(() => this.route.snapshot.paramMap.get('itemId') || '');
@@ -64,6 +71,26 @@ export class R6Devolucao {
 
     this.erroValidacao.set(null);
     this.erroDevolucao.set(null);
+    this.erroCodigo.set(null);
+
+    // Empréstimos com código pedem o código ou, sem ele, um motivo
+    let confirmacao: {codigo?: string; semCodigoMotivo?: string} = {};
+    if (emp.codigoDevolucao) {
+      if (this.semCodigo()) {
+        if (!this.motivoSemCodigo().trim()) {
+          this.erroCodigo.set('Informe por que a devolução será registrada sem o código.');
+          return;
+        }
+        confirmacao = {semCodigoMotivo: this.motivoSemCodigo().trim()};
+      } else {
+        if (!this.codigoDigitado().trim()) {
+          this.erroCodigo.set('Digite o código de devolução que a pessoa mostrar no app.');
+          return;
+        }
+        confirmacao = {codigo: this.codigoDigitado()};
+      }
+    }
+
     if (this.comDefeito() && !this.descricaoDefeito().trim()) {
       this.erroValidacao.set('Descreva a avaria para registrar a ocorrência.');
       return;
@@ -73,12 +100,14 @@ export class R6Devolucao {
       emp.id,
       resp?.id || '',
       this.comDefeito(),
-      this.comDefeito() ? this.descricaoDefeito().trim() : undefined
+      this.comDefeito() ? this.descricaoDefeito().trim() : undefined,
+      confirmacao,
     );
 
     if (!res.sucesso) {
       // Antes a falha era silenciosa: o botão parecia não fazer nada
-      this.erroDevolucao.set(res.mensagem);
+      this.erroCodigo.set(res.mensagem.includes('ódigo') ? res.mensagem : null);
+      this.erroDevolucao.set(res.mensagem.includes('ódigo') ? null : res.mensagem);
       return;
     }
     // Volta ao painel com mensagem de sucesso
