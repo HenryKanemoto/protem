@@ -5,6 +5,9 @@ import {ProtemStore} from '../store/protem.store';
 import {MatIconModule} from '@angular/material/icon';
 import {calculateDiasAtraso, formatDateShort} from '../lib/date-utils';
 import {ItemThumb} from '../components/item-thumb/item-thumb';
+import {CATEGORIAS_AVARIA} from '../store/regras/avaria';
+import {OpcoesDevolucao} from '../store/regras/emprestimos';
+import {CategoriaAvaria} from '../types/models';
 
 @Component({
   selector: 'app-r6-devolucao',
@@ -20,6 +23,10 @@ export class R6Devolucao {
   readonly comDefeito = signal(false);
   readonly descricaoDefeito = signal('');
   readonly erroValidacao = signal<string | null>(null);
+  /** Tipo da avaria (obrigatório quando o item voltou com avaria). */
+  readonly categoriaAvaria = signal<CategoriaAvaria | null>(null);
+  readonly erroCategoria = signal<string | null>(null);
+  readonly categoriasAvaria = CATEGORIAS_AVARIA;
   /** Erro da regra de devolução (ex.: o item já tinha sido devolvido em outra aba). */
   readonly erroDevolucao = signal<string | null>(null);
 
@@ -72,9 +79,10 @@ export class R6Devolucao {
     this.erroValidacao.set(null);
     this.erroDevolucao.set(null);
     this.erroCodigo.set(null);
+    this.erroCategoria.set(null);
 
     // Empréstimos com código pedem o código ou, sem ele, um motivo
-    let confirmacao: {codigo?: string; semCodigoMotivo?: string} = {};
+    let confirmacao: OpcoesDevolucao = {};
     if (emp.codigoDevolucao) {
       if (this.semCodigo()) {
         if (!this.motivoSemCodigo().trim()) {
@@ -91,6 +99,10 @@ export class R6Devolucao {
       }
     }
 
+    if (this.comDefeito() && !this.categoriaAvaria()) {
+      this.erroCategoria.set('Escolha o tipo de avaria.');
+      return;
+    }
     if (this.comDefeito() && !this.descricaoDefeito().trim()) {
       this.erroValidacao.set('Descreva a avaria para registrar a ocorrência.');
       return;
@@ -101,7 +113,7 @@ export class R6Devolucao {
       resp?.id || '',
       this.comDefeito(),
       this.comDefeito() ? this.descricaoDefeito().trim() : undefined,
-      confirmacao,
+      {...confirmacao, categoriaAvaria: this.comDefeito() ? this.categoriaAvaria() ?? undefined : undefined},
     );
 
     if (!res.sucesso) {

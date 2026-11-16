@@ -171,6 +171,8 @@ export class R4Leitor {
       this.mensagemAviso.set(`"${item.nome}" tem um pedido em análise. Aprove-o em Solicitações antes da retirada.`);
     } else if (item.status === 'manutencao') {
       this.mensagemAviso.set(`"${item.nome}" está em manutenção e não pode ser retirado.`);
+    } else if (item.status === 'encaminhado') {
+      this.mensagemAviso.set(`"${item.nome}" foi encaminhado para ${item.encaminhamento?.destinoNome ?? 'outro destino'} e saiu do acervo.`);
     } else {
       this.mensagemAviso.set(`"${item.nome}" está com a situação "${item.status}".`);
     }

@@ -32,6 +32,7 @@ export class R7Itens {
     {valor: 'emprestado', rotulo: 'Emprestado'},
     {valor: 'atrasado', rotulo: 'Atrasado'},
     {valor: 'manutencao', rotulo: 'Manutenção'},
+    {valor: 'encaminhado', rotulo: 'Encaminhado'},
   ];
 
   readonly itensFiltrados = computed(() => {

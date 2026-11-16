@@ -57,4 +57,77 @@
       </button>
     </div>
   </section>
+  <section class="card card-pad flex flex-col gap-5" aria-labelledby="titulo-destinos">
+    <div>
+      <h2 id="titulo-destinos" class="font-display text-lg font-semibold">Para onde vão os itens sem conserto?</h2>
+      <p class="mt-0.5 text-sm text-text-muted">
+        Em Manutenção, o responsável pode encaminhar um item a um destes lugares. Confirme com cada instituição o que ela aceita.
+      </p>
+    </div>
+
+    <ul class="flex flex-col gap-2">
+      @for (d of store.destinosEncaminhamento(); track d.id) {
+        <li class="flex items-start gap-3 rounded-control border border-border p-3">
+          <div class="min-w-0 flex-1">
+            <p class="font-medium">{{ d.nome }}</p>
+            <p class="text-xs text-text-muted">{{ rotulosTipo[d.tipo] }}</p>
+            @if (d.descricao) {
+              <p class="mt-0.5 text-sm text-text-muted">{{ d.descricao }}</p>
+            }
+          </div>
+          <button type="button" class="btn-icon" [attr.aria-label]="'Remover destino ' + d.nome" (click)="removerDestino(d.id)">
+            <mat-icon class="icon-sm" svgIcon="delete_outline" aria-hidden="true" />
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div class="flex flex-col gap-3 border-t border-border pt-5">
+      <p class="font-medium">Incluir destino</p>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="field">
+          <label for="nomeDestino" class="label">Nome</label>
+          <input
+            id="nomeDestino"
+            type="text"
+            class="input"
+            [class.input-invalid]="erroDestino()"
+            [value]="nomeDestino()"
+            (input)="nomeDestino.set($any($event.target).value); erroDestino.set(null)"
+            maxlength="80"
+            autocomplete="off"
+          />
+        </div>
+        <div class="field">
+          <label for="tipoDestino" class="label">Tipo</label>
+          <select id="tipoDestino" class="select" [value]="tipoDestino()" (change)="tipoDestino.set($any($event.target).value)">
+            @for (tipo of tiposDestino; track tipo) {
+              <option [value]="tipo" [selected]="tipo === tipoDestino()">{{ rotulosTipo[tipo] }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="descricaoDestino" class="label">O que o destino faz com o item</label>
+        <input
+          id="descricaoDestino"
+          type="text"
+          class="input"
+          [value]="descricaoDestino()"
+          (input)="descricaoDestino.set($any($event.target).value)"
+          maxlength="160"
+          autocomplete="off"
+        />
+      </div>
+      @if (erroDestino()) {
+        <p class="field-error" role="alert">{{ erroDestino() }}</p>
+      }
+      <div class="flex justify-end">
+        <button type="button" class="btn btn-secondary" (click)="incluirDestino()">
+          <mat-icon class="icon-sm" svgIcon="add" aria-hidden="true" />
+          Incluir destino
+        </button>
+      </div>
+    </div>
+  </section>
 </div>

@@ -47,6 +47,13 @@
             <dt class="text-xs text-text-muted">Patrimônio e código QR</dt>
             <dd class="mt-0.5 font-mono text-sm">{{ i.patrimonio }} · {{ i.codigoQr }}</dd>
           </div>
+          @if (i.encaminhamento; as enc) {
+            <div class="rounded-control bg-brand-soft p-3">
+              <dt class="text-xs text-text-muted">Encaminhado em {{ formatarData(enc.em) }}</dt>
+              <dd class="mt-0.5 font-medium">{{ enc.destinoNome }}</dd>
+              <dd class="mt-0.5 text-sm text-text-muted">{{ enc.motivo }}</dd>
+            </div>
+          }
           <div>
             <dt class="text-xs text-text-muted">Descrição</dt>
             <dd class="mt-0.5 text-text-muted">{{ i.descricao || 'Nenhuma descrição informada.' }}</dd>
@@ -115,7 +122,13 @@
                     {{ oc.status }}
                   </span>
                 </div>
-                <p class="mt-1.5 text-sm">{{ oc.descricao }}</p>
+                @if (oc.categoria) {
+                  <p class="mt-1.5 text-xs font-medium text-text-muted">{{ rotuloCategoria(oc.categoria) }}</p>
+                }
+                <p class="mt-1 text-sm">{{ oc.descricao }}</p>
+                @if (oc.desfecho) {
+                  <p class="mt-1 text-xs text-text-muted">{{ oc.desfecho === 'encaminhado' ? 'Item encaminhado' : 'Item consertado' }}</p>
+                }
               </li>
             }
           </ul>

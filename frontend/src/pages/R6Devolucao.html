@@ -118,6 +118,34 @@
           </label>
 
           @if (comDefeito()) {
+            <fieldset class="field" [attr.aria-describedby]="erroCategoria() ? 'erro-categoria' : null">
+              <legend class="label">Que tipo de avaria?</legend>
+              <div class="mt-1 grid gap-2 sm:grid-cols-2">
+                @for (c of categoriasAvaria; track c.valor) {
+                  <label
+                    class="flex cursor-pointer items-start gap-3 rounded-control border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary"
+                    [class]="categoriaAvaria() === c.valor ? 'border-primary bg-brand-soft' : 'border-border-input hover:border-primary'"
+                  >
+                    <input
+                      type="radio"
+                      name="categoriaAvaria"
+                      class="mt-1 size-4 shrink-0 accent-primary"
+                      [value]="c.valor"
+                      [checked]="categoriaAvaria() === c.valor"
+                      (change)="categoriaAvaria.set(c.valor); erroCategoria.set(null)"
+                    />
+                    <span>
+                      <span class="block font-medium">{{ c.rotulo }}</span>
+                      <span class="block text-sm text-text-muted">{{ c.descricao }}</span>
+                    </span>
+                  </label>
+                }
+              </div>
+              @if (erroCategoria()) {
+                <p id="erro-categoria" class="field-error" role="alert">{{ erroCategoria() }}</p>
+              }
+            </fieldset>
+
             <div class="field">
               <label for="descricaoDefeito" class="label">Descreva a avaria</label>
               <textarea

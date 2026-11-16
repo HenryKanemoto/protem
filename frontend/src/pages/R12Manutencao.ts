@@ -5,6 +5,8 @@ import {MatIconModule} from '@angular/material/icon';
 import {formatDateShort} from '../lib/date-utils';
 import {Item, Ocorrencia} from '../types/models';
 import {ItemThumb} from '../components/item-thumb/item-thumb';
+import {Modal} from '../components/modal/modal';
+import {rotuloCategoriaAvaria} from '../store/regras/avaria';
 
 interface ItemManutencaoLinha {
   item: Item;
@@ -16,13 +18,20 @@ interface ItemManutencaoLinha {
 @Component({
   selector: 'app-r12-manutencao',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule, ItemThumb],
+  imports: [RouterLink, MatIconModule, ItemThumb, Modal],
   templateUrl: './R12Manutencao.html',
 })
 export class R12Manutencao {
   readonly store = inject(ProtemStore);
 
   readonly mensagemSucesso = signal<string | null>(null);
+  readonly rotuloCategoria = rotuloCategoriaAvaria;
+
+  /** Item que está sendo encaminhado (diálogo aberto), com o destino e o motivo digitados. */
+  readonly encaminhando = signal<ItemManutencaoLinha | null>(null);
+  readonly destinoEscolhido = signal('');
+  readonly motivoEncaminhamento = signal('');
+  readonly erroEncaminhamento = signal<string | null>(null);
 
   readonly itensEmManutencao = computed<ItemManutencaoLinha[]>(() => {
     const todosItens = this.store.itens();
@@ -58,9 +67,33 @@ export class R12Manutencao {
     return formatDateShort(iso);
   }
 
+  abrirEncaminhamento(linha: ItemManutencaoLinha) {
+    this.destinoEscolhido.set('');
+    this.motivoEncaminhamento.set('');
+    this.erroEncaminhamento.set(null);
+    this.encaminhando.set(linha);
+  }
+
+  confirmarEncaminhamento() {
+    const linha = this.encaminhando();
+    if (!linha) return;
+    const res = this.store.encaminharItem(
+      linha.item.id,
+      this.store.usuarioLogado()?.id ?? '',
+      this.destinoEscolhido(),
+      this.motivoEncaminhamento(),
+    );
+    if (!res.sucesso) {
+      this.erroEncaminhamento.set(res.mensagem);
+      return;
+    }
+    this.encaminhando.set(null);
+    this.mensagemSucesso.set(res.mensagem);
+  }
+
   marcarConsertado(linha: ItemManutencaoLinha) {
     if (linha.ocorrencia) {
-      this.store.resolverOcorrencia(linha.ocorrencia.id, true);
+      this.store.resolverOcorrencia(linha.ocorrencia.id, true, this.store.usuarioLogado()?.id);
     } else {
       this.store.salvarItem({
         ...linha.item,

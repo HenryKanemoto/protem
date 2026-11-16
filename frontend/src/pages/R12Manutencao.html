@@ -1,7 +1,7 @@
 <div class="page">
   <header>
     <h1 class="page-title">Manutenção</h1>
-    <p class="page-subtitle">Equipamentos que voltaram com defeito. Eles ficam fora do catálogo até serem consertados.</p>
+    <p class="page-subtitle">Equipamentos que voltaram com avaria. Ficam fora do catálogo até serem consertados ou encaminhados a um destino.</p>
   </header>
 
   @if (mensagemSucesso()) {
@@ -26,22 +26,90 @@
             </span>
           </a>
           <div class="min-w-0 flex-1">
-            <p class="text-sm">{{ linha.ocorrencia?.descricao || 'Defeito informado na devolução.' }}</p>
+            @if (linha.ocorrencia?.categoria) {
+              <p class="text-xs font-medium text-text-muted">{{ rotuloCategoria(linha.ocorrencia?.categoria) }}</p>
+            }
+            <p class="text-sm">{{ linha.ocorrencia?.descricao || 'Avaria informada na devolução.' }}</p>
             <p class="mt-1 text-xs text-text-muted">Devolvido por {{ linha.devolvidoPorNome }} · {{ formatarData(linha.dataRegistro) }}</p>
           </div>
-          <button type="button" (click)="marcarConsertado(linha)" class="btn btn-secondary btn-sm shrink-0">
-            <mat-icon class="icon-sm" svgIcon="handyman" />
-            Marcar como consertado
-          </button>
+          <div class="flex shrink-0 flex-col gap-2 sm:flex-row md:items-center">
+            <button type="button" (click)="abrirEncaminhamento(linha)" class="btn btn-ghost btn-sm">
+              <mat-icon class="icon-sm" svgIcon="local_shipping" aria-hidden="true" />
+              Encaminhar
+            </button>
+            <button type="button" (click)="marcarConsertado(linha)" class="btn btn-secondary btn-sm">
+              <mat-icon class="icon-sm" svgIcon="handyman" aria-hidden="true" />
+              Marcar como consertado
+            </button>
+          </div>
         </li>
       }
     </ul>
-    <p class="text-xs text-text-muted">Ao marcar como consertado, o item volta ao catálogo como disponível.</p>
+    <p class="text-sm text-text-muted">
+      Consertado: o item volta ao catálogo como disponível. Encaminhado: o item sai do acervo e vai para um destino, como o CRC da Unifap ou um SENAI Lab.
+    </p>
   } @else {
     <div class="card empty">
       <mat-icon class="icon-xl" svgIcon="task_alt" />
       <p class="empty-title">Nada em manutenção</p>
       <p class="empty-text">Quando um item voltar com avaria, ele aparece aqui com a ocorrência.</p>
     </div>
+  }
+  @if (encaminhando(); as linha) {
+    <app-modal rotulo="titulo-encaminhar" (fechar)="encaminhando.set(null)">
+      <div>
+        <h3 id="titulo-encaminhar" class="modal-title">Encaminhar item</h3>
+        <p class="mt-1 text-sm text-text-muted">O item sai do acervo e não volta ao catálogo. O destino e o motivo ficam registrados.</p>
+      </div>
+
+      <p class="rounded-control bg-bg p-4 text-sm"><span class="text-text-muted">Item:</span> {{ linha.item.nome }} ({{ linha.item.patrimonio }})</p>
+
+      <fieldset class="field">
+        <legend class="label">Para onde vai?</legend>
+        <div class="mt-1 flex flex-col gap-2">
+          @for (d of store.destinosEncaminhamento(); track d.id) {
+            <label
+              class="flex cursor-pointer items-start gap-3 rounded-control border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary"
+              [class]="destinoEscolhido() === d.id ? 'border-primary bg-brand-soft' : 'border-border-input hover:border-primary'"
+            >
+              <input
+                type="radio"
+                name="destino"
+                class="mt-1 size-4 shrink-0 accent-primary"
+                [value]="d.id"
+                [checked]="destinoEscolhido() === d.id"
+                (change)="destinoEscolhido.set(d.id); erroEncaminhamento.set(null)"
+              />
+              <span>
+                <span class="block font-medium">{{ d.nome }}</span>
+                <span class="block text-sm text-text-muted">{{ d.descricao }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="motivoEncaminhamento" class="label">Motivo</label>
+        <textarea
+          id="motivoEncaminhamento"
+          class="textarea"
+          [class.input-invalid]="erroEncaminhamento()"
+          [value]="motivoEncaminhamento()"
+          (input)="motivoEncaminhamento.set($any($event.target).value); erroEncaminhamento.set(null)"
+          placeholder="Placa-mãe queimada, sem conserto no acervo..."
+          [attr.aria-describedby]="erroEncaminhamento() ? 'erro-encaminhamento' : null"
+        ></textarea>
+        @if (erroEncaminhamento()) {
+          <p id="erro-encaminhamento" class="field-error" role="alert">{{ erroEncaminhamento() }}</p>
+        }
+      </div>
+
+      <!-- Botões presos ao rodapé do diálogo: em tela baixa a lista de destinos rola e eles continuam à vista -->
+      <div class="sticky bottom-0 -mx-6 -mb-6 flex flex-col-reverse gap-2 border-t border-border bg-surface px-6 py-4 sm:flex-row sm:justify-end">
+        <button type="button" (click)="encaminhando.set(null)" class="btn btn-secondary">Cancelar</button>
+        <button type="button" (click)="confirmarEncaminhamento()" class="btn btn-primary">Encaminhar item</button>
+      </div>
+    </app-modal>
   }
 </div>

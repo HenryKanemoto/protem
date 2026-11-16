@@ -1,3 +1,4 @@
+import {rotuloCategoriaAvaria} from '../store/regras/avaria';
 import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {ProtemStore} from '../store/protem.store';
@@ -47,6 +48,8 @@ export class R9ItemDetalhes {
     if (!it) return [];
     return this.store.ocorrencias().filter((o) => o.itemId === it.id);
   });
+
+  readonly rotuloCategoria = rotuloCategoriaAvaria;
 
   /** Só dá para remover item que não está pedido, reservado nem com alguém. */
   readonly podeRemover = computed(() => {
