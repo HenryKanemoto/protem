@@ -45,7 +45,7 @@
                 {{ formatarData(emp.devolucaoPrevista) }}
               </p>
               @if (estaAtrasado) {
-                <p class="mt-1 inline-flex rounded-full bg-atrasado-bg px-2.5 py-0.5 text-xs font-medium text-atrasado">
+                <p class="mr-2 mt-1 inline-flex rounded-full bg-atrasado-bg px-2.5 py-0.5 text-xs font-medium text-atrasado">
                   Atrasado há {{ plural(emp.diasAtraso, 'dia') }}
                 </p>
               } @else {
