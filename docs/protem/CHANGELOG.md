@@ -322,3 +322,17 @@ Os endereços antigos (`/painel/itens...` e `/painel/solicitacoes`) continuam fu
 **Decisões que tomei sem consultar (revisem):**
 - O interruptor volta sozinho para desligado quando a rede bloqueia, em vez de ficar ligado sem funcionar.
 - Os textos do "Como usar" são meus; vale conferir o tom com a equipe.
+
+### Rodada 7b: "Como funciona" sai do login e vai para a landing
+
+- **Login mais enxuto.** A seção "Como funciona" (3 passos) saiu da tela de entrada. Ficam o formulário, o cartão "Primeira vez por aqui?" (que leva ao `/como-usar`) e o acesso rápido de demonstração.
+- **Landing (`/`) ganhou "Como funciona".** Quatro passos (Pedido, Aprovação, Retirada, Devolução) entre a apresentação e os planos. Conforme a pessoa rola, cada passo entra com um leve deslizar e o traço que liga um passo ao seguinte se preenche (horizontal no computador, vertical no celular). Ao fim, o link "Ver o passo a passo completo" leva ao `/como-usar`. O cabeçalho da landing ganhou o botão "Como funciona", que rola até a seção e põe o foco no título.
+- **Acessibilidade:** com "menos animação" (painel) ou a preferência do sistema, nenhum passo fica escondido: tudo aparece de uma vez, sem movimento. Sem `IntersectionObserver` também. Os passos são uma lista ordenada com "Passo N" para leitor de tela, e os ícones são decorativos. Sem rolagem horizontal em 390 px nem com texto a 150%.
+- **Sem requisição externa** e sem erro de console na landing.
+
+**Verificação:** 219 testes, lint limpo, build local. No Edge: revelação ao rolar (nenhum passo à vista no topo; os quatro depois de rolar), botão do cabeçalho, modos de menos animação, celular a 390 px, login sem a seção; regressão de painel, acessibilidade, fluxo completo e VLibras sem alteração.
+
+**Observação:** o aviso do orçamento do bundle inicial (500 kB) já existia antes desta rodada (507,74 kB; agora 508,48 kB). Não é erro de build.
+
+**Não alterado:** regras de negócio, estados, Docker, modo demonstração e `protem:v4`.
+
