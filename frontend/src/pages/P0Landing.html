@@ -2,7 +2,10 @@
   <header class="border-b border-border bg-surface">
     <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
       <app-brand-logo variante="horizontal" [tamanho]="44" />
-      <a routerLink="/login" class="btn btn-secondary shrink-0">Acessar plataforma</a>
+      <div class="flex shrink-0 items-center gap-2">
+        <button type="button" (click)="irParaComoFunciona()" class="btn btn-ghost hidden sm:inline-flex">Como funciona</button>
+        <a routerLink="/login" class="btn btn-secondary">Acessar plataforma</a>
+      </div>
     </div>
   </header>
 
@@ -17,6 +20,48 @@
         Alunos e professores pedem pelo catálogo; o responsável pelo acervo aprova e registra a retirada e a devolução pelo QR code.
       </p>
       <a routerLink="/login" class="btn btn-primary btn-lg">Acessar plataforma</a>
+    </section>
+
+    <!-- Como funciona: cada passo aparece conforme a pessoa rola a página -->
+    <section id="como-funciona" class="border-t border-border" aria-labelledby="titulo-como">
+      <div class="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-16 sm:px-6 sm:py-20">
+        <div>
+          <h2 #titulo id="titulo-como" tabindex="-1" class="font-display text-3xl font-semibold tracking-tight outline-none">Como funciona</h2>
+          <p class="mt-2 max-w-xl text-text-muted">Quatro passos, do pedido à devolução. Tudo registrado, sem papel.</p>
+        </div>
+
+        <ol #lista class="fluxo grid gap-0 sm:grid-cols-4 sm:gap-6" [attr.data-animar]="animar()">
+          @for (passo of fluxo; track passo.titulo; let i = $index; let ultimo = $last) {
+            <li
+              class="fluxo-item relative flex gap-4 pb-8 last:pb-0 sm:flex-col sm:gap-5 sm:pb-0"
+              [attr.data-indice]="i"
+              [attr.data-visivel]="visiveis().has(i)"
+              [attr.data-proximo]="visiveis().has(i + 1)"
+              [style.transition-delay.ms]="animar() ? i * 90 : 0"
+            >
+              @if (!ultimo) {
+                <span class="fluxo-liga" aria-hidden="true"></span>
+              }
+              <span class="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-navy text-white" aria-hidden="true">
+                <mat-icon [svgIcon]="passo.icone" />
+              </span>
+              <div class="min-w-0">
+                <h3 class="font-display text-xl font-semibold text-text-heading">
+                  <span class="sr-only">Passo {{ i + 1 }}: </span>{{ passo.titulo }}
+                </h3>
+                <p class="mt-1 text-text-muted">{{ passo.texto }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+
+        <p>
+          <a routerLink="/como-usar" class="inline-flex items-center gap-1.5 font-medium text-primary-hover hover:underline">
+            Ver o passo a passo completo
+            <mat-icon class="icon-sm" svgIcon="arrow_forward" aria-hidden="true" />
+          </a>
+        </p>
+      </div>
     </section>
 
     <!-- Pacotes -->

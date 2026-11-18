@@ -591,3 +591,53 @@
 :root[data-vlibras='off'] #vlibras-app-root {
   display: none !important;
 }
+
+/* ---- Landing: o fluxo de um pedido aparece conforme a pessoa rola a página ----
+   Os passos só ficam escondidos quando o observador está ativo (data-animar); sem ele, ou com
+   "menos animação", tudo aparece de uma vez. */
+.fluxo-item {
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+.fluxo[data-animar='true'] .fluxo-item[data-visivel='false'] {
+  opacity: 0;
+  transform: translateY(1rem);
+}
+/* Traço que liga um passo ao seguinte e se preenche quando o seguinte aparece */
+.fluxo-liga {
+  position: absolute;
+  left: 1.5rem;
+  top: 3rem;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--color-border);
+}
+.fluxo-liga::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary);
+  transform-origin: top;
+  transition: transform 0.6s ease 0.2s;
+}
+.fluxo[data-animar='true'] .fluxo-item[data-proximo='false'] .fluxo-liga::after {
+  transform: scaleY(0);
+}
+@media (min-width: 40rem) {
+  .fluxo-liga {
+    left: 3rem;
+    top: 1.5rem;
+    bottom: auto;
+    width: calc(100% - 1.5rem);
+    height: 2px;
+    margin: -1px 0 0;
+  }
+  .fluxo-liga::after {
+    transform-origin: left;
+  }
+  .fluxo[data-animar='true'] .fluxo-item[data-proximo='false'] .fluxo-liga::after {
+    transform: scaleX(0);
+  }
+}
