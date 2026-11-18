@@ -123,7 +123,7 @@ Na tela de login, o bloco **"Acesso rápido de demonstração"** entra com um cl
 
 ### Acessibilidade
 
-O botão com o boneco, no topo de toda tela, abre o painel: tamanho do texto, modo escuro, alto contraste, mais espaço no texto, menos animação e som e vibração no leitor de QR. As escolhas ficam salvas no navegador, por usuário. A página `/acessibilidade` explica o que o Protem faz e o que ainda falta.
+O botão com o boneco, no topo de toda tela, abre o painel: tamanho do texto, modo escuro, alto contraste, mais espaço no texto, menos animação e som e vibração no leitor de QR, e a **tradução em Libras (VLibras)**. O VLibras vem **desligado**: só quando alguém liga é que o app carrega o serviço do governo (`vlibras.gov.br`), então ele precisa de internet e, em redes com firewall, pode ser bloqueado (o app mostra uma mensagem amigável e segue normal). Nada externo é carregado enquanto estiver desligado. As escolhas ficam salvas no navegador, por usuário. A página `/acessibilidade` explica o que o Protem faz e o que ainda falta.
 
 ### Painel de demonstração (relógio)
 

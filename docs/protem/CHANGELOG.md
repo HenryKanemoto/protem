@@ -304,3 +304,21 @@ Os endereços antigos (`/painel/itens...` e `/painel/solicitacoes`) continuam fu
 - **Diálogo "Encaminhar item" cortava o campo de motivo.** O botão fixo do rodapé cobria o campo quando o diálogo passava da altura da tela. Agora só o corpo rola; o título, a mensagem de erro e os botões ficam fora da rolagem. O diálogo ficou mais largo (as descrições dos destinos cabem em menos linhas), então em 1366×768 o campo de motivo aparece inteiro sem rolar. Se faltar destino ou motivo, a mensagem aparece junto aos botões e o foco vai ao campo com problema, já à vista.
 - **Botão "Demonstração" não cobre mais os diálogos.** Ele ficava por cima do rodapé de qualquer diálogo no celular (impedia tocar em "Cancelar"); agora fica atrás.
 - **Pendência registrada:** foto do item-01 no seed do banco aponta para um endereço externo (só no modo api); fica para depois.
+
+## Rodada 7: VLibras opcional e página "Como usar"
+
+- **VLibras (tradução em Libras), só para quem quiser.** Novo interruptor no painel de acessibilidade, **desligado por padrão**. Desligado, o app não carrega nem pede nada externo (o requisito de "nada externo no modo local" continua valendo). Ligado, carrega o widget oficial do governo (`vlibras.gov.br`; os arquivos vêm de uma CDN) e aparece o botão do VLibras na lateral direita. A escolha fica salva por usuário e vale após recarregar.
+  - **Rede bloqueada ou sem internet:** o app testa o serviço e, se não responder em até 12 s (ou for bloqueado por firewall), desliga o interruptor, mostra "Não foi possível carregar o VLibras" dizendo que a rede pode estar bloqueando o `vlibras.gov.br` e que o resto do Protem funciona normalmente. A preferência não fica ligada, para não tentar de novo a cada abertura. O aviso (carregando, ligado ou bloqueado) é lido por leitor de tela (`role="status"`) e o painel rola até ele em telas baixas.
+  - **Desligar:** o widget do governo não pode ser criado duas vezes, então desligar o esconde (`html[data-vlibras='off']`) e ligar de novo mostra, sem recarregar.
+  - **Limites que a equipe deve saber:** é um serviço externo; o texto da tela é enviado ao serviço para ser traduzido; não funciona offline. A página `/acessibilidade` foi atualizada com isso (a lista do que ainda falta agora diz que Libras sem internet não é possível, porque o VLibras roda nos servidores do governo).
+- **Página "Como usar" (`/como-usar`), pública.** Passo a passo em duas abas: *Aluno ou professor* (5 passos e "O que vale saber") e *Responsável pelo acervo* (7 passos e "O que o Protem faz sozinho"). Acesso: cartão "Primeira vez por aqui?" na tela de entrada; item "Como usar" no menu da conta (aluno/professor); link no rodapé do menu lateral (responsável, já abre na aba dele). O perfil fica na URL (`?perfil=responsavel`).
+  - **Acessibilidade da página:** abas com `role=tablist`, teclado (setas, Home e End; só a aba ativa entra no Tab), passos em lista ordenada com "Passo N" para leitor de tela, ícones decorativos escondidos, contraste dos quatro temas, sem rolagem horizontal em 390 px nem com texto a 150% e mais espaçamento.
+- **Ajuste de código:** a tela de entrada tinha dois títulos de nível 1 no celular; agora o título "Entrar" é o único `h1` (o do painel lateral virou parágrafo, com o mesmo visual).
+
+**Verificação:** 219 testes (210 antes), lint limpo, build local e `build:api`; contraste AA nos quatro temas. No Edge: VLibras desligado sem nenhuma requisição externa; ligado com a rede liberada (widget real, persiste ao recarregar, desliga e religa); com requisições abortadas (firewall) e com rede que não responde (mensagem após 12 s); "Como usar" em 1366 e 390 px, teclado, links dentro do app. Regressão dos fluxos (subcategorias, pedido até devolução, códigos, avaria, acessibilidade, painel, diálogo Encaminhar) sem alteração.
+
+**Não alterado:** RN01 a RN10, estados, política de atraso, Docker, modo demonstração e a chave `protem:v4` (a preferência do VLibras entra no `protem:a11y:v1`, que ignora campo ausente).
+
+**Decisões que tomei sem consultar (revisem):**
+- O interruptor volta sozinho para desligado quando a rede bloqueia, em vez de ficar ligado sem funcionar.
+- Os textos do "Como usar" são meus; vale conferir o tom com a equipe.
