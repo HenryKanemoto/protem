@@ -367,3 +367,11 @@ Pedido da equipe: todo item que volta com avaria passa por um técnico antes de 
 - O selo do menu não conta item que está com o técnico.
 - Toda categoria de avaria passa pelo técnico, inclusive estética (decidido com a equipe).
 
+### Rodada 8b: mensagem da devolução e Manutenção com zoom
+
+- **Mensagem da devolução repetida.** O painel mostrava "Devolução registrada com sucesso para "X". Devolução registrada com sucesso!": a tela escrevia uma frase e colava a da regra, que dizia o mesmo. Agora a regra monta uma frase só: `Devolução de "X" registrada.`, com o atraso e a consequência na conta quando houver (ex.: "...registrada com 2 dias de atraso. Pela política rígida, a conta foi suspensa por 2 dia(s) (até dd/mm)."). A regra de atraso (RN06) não mudou, só o texto.
+- **Avaria na mensagem.** Antes a devolução com avaria não dizia nada. Agora o aviso do painel ganha uma nota em destaque: "Voltou com avaria (tipo) e está em manutenção, aguardando envio ao técnico.", com o link **Abrir Manutenção**. Sem avaria, não há nota.
+- **Manutenção espremida com zoom de 150%.** Item, descrição e os três botões dividiam a mesma linha, e a descrição da avaria ficava com uma palavra por linha. Os botões passaram para uma linha própria, abaixo da etapa e alinhados à direita; a descrição usa a largura toda em qualquer zoom.
+
+**Verificação:** 243 testes (3 novos da mensagem), lint limpo, build local e `build:api`. No Edge, a 100% e com zoom de 150% (911×512): devolução sem e com avaria pela tela, mensagem sem repetição, nota e link, painel, Registrar devolução e Manutenção sem rolagem horizontal; regressão de fluxo, códigos, avaria, encaminhar, painel e acessibilidade sem alteração.
+
