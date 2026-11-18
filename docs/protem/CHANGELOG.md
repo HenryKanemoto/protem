@@ -336,3 +336,34 @@ Os endereços antigos (`/painel/itens...` e `/painel/solicitacoes`) continuam fu
 
 **Não alterado:** regras de negócio, estados, Docker, modo demonstração e `protem:v4`.
 
+## Rodada 8: Manutenção em etapas (enviar ao técnico e laudo)
+
+Pedido da equipe: todo item que volta com avaria passa por um técnico antes de o responsável decidir. Antes, a Manutenção mostrava direto "Encaminhar" e "Marcar como consertado".
+
+- **Etapas da manutenção.** O item continua **"em manutenção"** (RN07 e os estados de item não mudam). Quem muda de etapa é a ocorrência: *aguardando envio* → *com o técnico* → *laudo* (arrumado ou sem conserto).
+
+| Etapa | O que a tela mostra | Botões |
+|---|---|---|
+| Aguardando envio | "Aguardando envio ao técnico" | **Enviar para o técnico** ativo; Encaminhar e Consertado esmaecidos |
+| Com o técnico | "Com o técnico desde dd/mm" e o prazo do laudo | Os dois esmaecidos |
+| Laudo: sem conserto | Parecer do técnico | **Encaminhar** vira a ação principal; Consertado esmaecido |
+| Laudo: arrumado | Parecer do técnico | **Marcar como consertado** é a ação principal; **Encaminhar continua disponível** (ação discreta) |
+
+- **Os botões esmaecidos têm texto visível** dizendo o que fazer ("Envie ao técnico para liberar Consertado e Encaminhar.", "Sem conserto: só dá para encaminhar."), sem depender de tooltip. As regras também bloqueiam, não só a tela: `encaminharItem` e `consertarItem` recusam fora da etapa certa, com a mensagem da etapa.
+- **O técnico não tem conta no sistema, então o laudo é simulado pelo relógio da demonstração.** Depois de "Enviar para o técnico", o laudo chega 24 h depois (um "+1 dia" resolve), mesmo que o relógio pule dias: a rotina automática recupera o laudo com a data em que ele chegaria. Item da categoria *Quebrado / Inoperante* volta **sem conserto**; as outras (estética, funcional leve, incompleto) voltam **arrumadas**. O parecer depende do estado do item (por exemplo, "o conserto custaria mais do que comprar um item novo"), e é sempre o mesmo para a mesma ocorrência.
+- **Aviso e registro.** Quando o laudo chega, os responsáveis recebem uma notificação (leva à Manutenção) e a auditoria grava o evento com o parecer. Novos eventos: *Enviado ao técnico* e *Laudo do técnico* (grupo "Conserto e encaminhamento"). O conserto e o encaminhamento guardam o parecer. No detalhe do item, a ocorrência mostra o envio e o laudo.
+- **Motivo do encaminhamento** já vem preenchido com o parecer do técnico (dá para editar; continua obrigatório).
+- **Número no menu.** O selo da Manutenção passa a contar o que espera o responsável (item a enviar e laudo a decidir); item com o técnico não conta.
+- **Ocorrências antigas** (sem envio registrado) contam como "aguardando envio". Item em manutenção sem ocorrência aberta continua podendo ser encaminhado ou consertado direto.
+
+**Back-end:** nada muda. O NestJS só guarda itens e usuários, e o item segue com a situação `manutencao`; as ocorrências ficam no estado do navegador nos dois modos. **Chave do navegador:** continua `protem:v4` (campos novos e opcionais; os dados salvos seguem válidos).
+
+**Verificação:** 240 testes (21 novos, das etapas, do laudo, da rotina e dos bloqueios), lint limpo, build local e `build:api`; contraste AA nos quatro temas. No Edge: fluxo completo pela tela (enviar, laudo com +1 hora e +1 dia, sem conserto e encaminhar com o parecer, arrumado e consertar), botões esmaecidos com texto e `aria-describedby`, recarregar mantém a etapa, celular a 390 px e texto a 150% sem rolagem horizontal, auditoria com os eventos novos, sem requisição externa nem erro de console. Regressão dos outros fluxos sem alteração (os testes de encaminhar passaram a dar o laudo antes).
+
+**Não alterado:** RN01 a RN10, estados, política de atraso, Docker e modo demonstração.
+
+**Decisões que tomei sem consultar (revisem):**
+- Prazo do laudo de 24 h e o critério do laudo simulado (só *quebrado* volta sem conserto).
+- O selo do menu não conta item que está com o técnico.
+- Toda categoria de avaria passa pelo técnico, inclusive estética (decidido com a equipe).
+

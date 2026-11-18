@@ -120,6 +120,7 @@ Na tela de login, o bloco **"Acesso rápido de demonstração"** entra com um cl
 2. **Responsável** → *Pedidos* → *Aprovar*. O item fica **reservado** e precisa ser retirado no mesmo dia. Quem pediu recebe um **código de retirada** (em *Meus empréstimos* e *Meus códigos*); o responsável não vê esse código.
 3. **Responsável** → *Leitor de QR code*. Escanear o QR do item leva à confirmação da retirada, que só é registrada com o código que a pessoa mostrar no app. O código vale uma vez, até o fim do dia. No pedido aprovado do seed (persona Igor), o código é `K7PM4X`.
 4. Na devolução, o mesmo leitor leva à tela *Registrar devolução*. Ali dá para marcar **"Voltou com avaria"**, e o item vai para *Manutenção*.
+5. Em *Manutenção*, o item passa pelo técnico: **Enviar para o técnico** → o laudo chega em até 24 h (na demonstração, avance o relógio) → com o laudo **"arrumado"** o responsável marca como consertado (ou encaminha); com **"sem conserto"** só resta encaminhar. Antes do laudo, Consertado e Encaminhar ficam esmaecidos. O técnico não tem conta: o laudo é simulado (item *quebrado* volta sem conserto; os outros voltam arrumados). Tudo vai para o histórico do item e a auditoria.
 
 ### Acessibilidade
 
