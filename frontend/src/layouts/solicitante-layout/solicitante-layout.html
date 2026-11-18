@@ -69,6 +69,15 @@
                 <mat-icon class="icon-sm text-text-muted" svgIcon="tag" />
                 Meus Códigos
               </a>
+              <a
+                routerLink="/como-usar"
+                (click)="menuAberto.set(false)"
+                role="menuitem"
+                class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-brand-soft"
+              >
+                <mat-icon class="icon-sm text-text-muted" svgIcon="menu_book" />
+                Como usar
+              </a>
               <button
                 type="button"
                 (click)="sair()"

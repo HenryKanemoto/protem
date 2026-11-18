@@ -1,0 +1,132 @@
+<div class="flex min-h-screen flex-col bg-bg">
+  <header class="bg-brand-navy text-white">
+    <div class="mx-auto flex h-16 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
+      <a routerLink="/" aria-label="Protem, ir para o início">
+        <app-brand-logo [tamanho]="30" [escuro]="true" />
+      </a>
+      <div class="flex items-center gap-1 sm:gap-2">
+        <app-botao-acessibilidade [escuro]="true" />
+        <button type="button" (click)="voltar()" class="btn btn-sm border border-white/30 text-white hover:bg-sidebar-hover">
+          <mat-icon class="icon-sm" svgIcon="arrow_back" aria-hidden="true" />
+          Voltar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
+    <div class="page">
+      <header>
+        <h1 class="page-title">Como usar o Protem</h1>
+        <p class="page-subtitle">Escolha o seu perfil e veja o passo a passo. Leva poucos minutos.</p>
+      </header>
+
+      <!-- Escolha do perfil: duas abas grandes -->
+      <div role="tablist" aria-label="Perfil de uso" class="grid gap-3 sm:grid-cols-2">
+        @for (p of perfis; track p.id) {
+          <button
+            type="button"
+            role="tab"
+            [id]="'aba-' + p.id"
+            aria-controls="passos"
+            [attr.aria-selected]="escolhido() === p.id"
+            [attr.tabindex]="escolhido() === p.id ? 0 : -1"
+            (click)="escolher(p.id)"
+            (keydown)="teclas($event)"
+            class="flex items-center gap-3 rounded-card border p-4 text-left transition-colors"
+            [class]="escolhido() === p.id ? 'border-primary bg-brand-soft' : 'border-border-input bg-surface hover:border-primary'"
+          >
+            <span
+              class="flex size-11 shrink-0 items-center justify-center rounded-full"
+              [class]="escolhido() === p.id ? 'bg-brand-navy text-white' : 'bg-brand-soft text-primary-strong'"
+              aria-hidden="true"
+            >
+              <mat-icon [svgIcon]="p.icone" />
+            </span>
+            <span class="min-w-0">
+              <span class="block font-display text-lg font-semibold leading-tight text-text-heading">{{ p.nome }}</span>
+              <span class="block text-sm text-text-muted">{{ p.quem }}</span>
+            </span>
+          </button>
+        }
+      </div>
+
+      <div id="passos" role="tabpanel" [attr.aria-labelledby]="'aba-' + escolhido()" class="flex flex-col gap-10">
+        <section aria-labelledby="titulo-passos">
+          <h2 id="titulo-passos" class="section-title">
+            Passo a passo
+            <span class="font-sans text-sm font-normal text-text-muted">· {{ perfil().nome }}</span>
+          </h2>
+          <ol class="mt-5 flex flex-col">
+            @for (passo of perfil().passos; track passo.titulo; let i = $index; let ultimo = $last) {
+              <li class="relative flex gap-4" [class.pb-6]="!ultimo">
+                @if (!ultimo) {
+                  <span class="absolute bottom-0 left-[1.0625rem] top-10 w-px bg-border" aria-hidden="true"></span>
+                }
+                <span
+                  class="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-semibold text-white"
+                  aria-hidden="true"
+                >
+                  {{ i + 1 }}
+                </span>
+                <div class="card card-pad min-w-0 flex-1">
+                  <h3 class="flex items-center gap-2 font-display text-lg font-semibold text-text-heading">
+                    <mat-icon class="shrink-0 text-primary-hover" [svgIcon]="passo.icone" aria-hidden="true" />
+                    <span><span class="sr-only">Passo {{ i + 1 }}: </span>{{ passo.titulo }}</span>
+                  </h3>
+                  <p class="mt-2">{{ passo.texto }}</p>
+                  @if (passo.dica) {
+                    <p class="mt-3 flex gap-2 rounded-control bg-brand-soft p-3 text-sm">
+                      <mat-icon class="icon-sm mt-0.5 shrink-0 text-primary-hover" svgIcon="lightbulb" aria-hidden="true" />
+                      <span><strong class="font-semibold">Dica:</strong> {{ passo.dica }}</span>
+                    </p>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+
+        <section aria-labelledby="titulo-regras">
+          <h2 id="titulo-regras" class="section-title">{{ perfil().regrasTitulo }}</h2>
+          <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+            @for (regra of perfil().regras; track regra.titulo) {
+              <li class="flex gap-3 rounded-control border border-border bg-surface p-4">
+                <mat-icon class="mt-0.5 shrink-0 text-primary-hover" [svgIcon]="regra.icone" aria-hidden="true" />
+                <div>
+                  <p class="font-medium">{{ regra.titulo }}</p>
+                  <p class="text-sm text-text-muted">{{ regra.texto }}</p>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      </div>
+
+      <!-- Fim: o próximo passo e a acessibilidade -->
+      <section class="card card-pad flex flex-col gap-4 bg-brand-soft" aria-labelledby="titulo-comecar">
+        <div>
+          <h2 id="titulo-comecar" class="card-title">Pronto para começar?</h2>
+          <p class="mt-1 text-sm">
+            Na tela de entrada há também o acesso rápido de demonstração, para ver o Protem funcionando sem criar conta.
+          </p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <a routerLink="/login" class="btn btn-primary">Entrar</a>
+          @if (escolhido() === 'solicitante') {
+            <a routerLink="/cadastro" class="btn btn-secondary">Criar conta</a>
+          }
+        </div>
+      </section>
+
+      <p class="text-sm text-text-muted">
+        Precisa de texto maior, mais contraste ou tradução em Libras? Use o botão de acessibilidade (o boneco, no topo) ou veja
+        <a routerLink="/acessibilidade" class="font-medium text-primary-hover underline underline-offset-2">Sobre a acessibilidade</a>.
+      </p>
+    </div>
+  </main>
+
+  <footer class="border-t border-border bg-surface">
+    <p class="mx-auto max-w-4xl px-4 py-6 text-sm text-text-muted sm:px-6">Protem · Plataforma Web de Empréstimos</p>
+  </footer>
+</div>

@@ -5,9 +5,9 @@
 
     <div class="relative z-10 max-w-md pb-40">
       <p class="font-mono text-xs uppercase tracking-[0.16em] text-brand-gold">Acervo escolar</p>
-      <h1 class="mt-4 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-white">
+      <p class="mt-4 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-white">
         Cada equipamento no lugar certo, com quem precisa.
-      </h1>
+      </p>
       <p class="mt-5 text-base text-white/65">
         Peça projetores, notebooks e kits de laboratório pelo catálogo. A retirada e a devolução são registradas pelo QR
         code de cada item.
@@ -38,7 +38,7 @@
     <div class="mx-auto w-full max-w-sm">
       <app-brand-logo class="mb-10" variante="horizontal" [tamanho]="56" [comSubtitulo]="true" />
 
-      <h2 class="font-display text-3xl font-semibold tracking-tight">Entrar</h2>
+      <h1 class="font-display text-3xl font-semibold tracking-tight">Entrar</h1>
       <p class="mt-1.5 text-sm text-text-muted">Use seu e-mail institucional ou sua matrícula.</p>
 
       @if (mensagemErro()) {
@@ -98,6 +98,21 @@
           Cadastre-se
         </a>
       </p>
+
+      <!-- Primeira vez: leva ao passo a passo completo, por perfil -->
+      <a
+        routerLink="/como-usar"
+        class="group mt-6 flex items-center gap-3 rounded-card border border-border bg-brand-soft p-3.5 transition-colors hover:border-primary"
+      >
+        <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-navy text-white" aria-hidden="true">
+          <mat-icon class="icon-sm" svgIcon="menu_book" />
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block font-semibold text-text-heading">Primeira vez por aqui?</span>
+          <span class="block text-sm text-text-muted">Veja como usar, para quem pede ou para quem gerencia.</span>
+        </span>
+        <mat-icon class="icon-sm shrink-0 text-primary-hover transition-transform group-hover:translate-x-0.5" svgIcon="arrow_forward" aria-hidden="true" />
+      </a>
 
       <!-- Primeiro acesso: o caminho de um pedido em três passos -->
       <section id="como-funciona" class="mt-10" aria-labelledby="como-titulo">
