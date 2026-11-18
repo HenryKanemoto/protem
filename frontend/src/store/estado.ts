@@ -37,6 +37,8 @@ export interface Transicao<R> {
 export interface ResultadoAcao {
   sucesso: boolean;
   mensagem: string;
+  /** Complemento que a tela mostra em destaque, separado da mensagem (ex.: o item voltou com avaria). */
+  nota?: string;
 }
 
 export function novaNotificacao(

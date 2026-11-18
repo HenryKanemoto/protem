@@ -130,6 +130,33 @@ describe('regras de retirada e devolução', () => {
       });
     });
 
+    describe('mensagem da devolução', () => {
+      const comEmprestimoAtivo = () => {
+        const s = estadoDeTeste({emprestimos: [emprestimo('e', 'a1')]});
+        s.itens[0] = {...s.itens[0], status: 'emprestado'};
+        return s;
+      };
+
+      it('sem avaria: uma frase só, sem repetir e sem nota', () => {
+        const {resultado} = registrarDevolucao(comEmprestimoAtivo(), 'e', false);
+        expect(resultado.mensagem).toBe('Devolução de "Item a1" registrada.');
+        expect(resultado.nota).toBeUndefined();
+      });
+
+      it('com avaria: a mesma frase e uma nota dizendo que o item está em manutenção', () => {
+        const {resultado} = registrarDevolucao(comEmprestimoAtivo(), 'e', true, 'Faltou o cabo', 'resp', {categoriaAvaria: 'incompleto'});
+        expect(resultado.mensagem).toBe('Devolução de "Item a1" registrada.');
+        expect(resultado.nota).toBe('Voltou com avaria (Incompleto) e está em manutenção, aguardando envio ao técnico.');
+      });
+
+      it('com atraso, a frase diz os dias e a consequência na conta, uma vez só', () => {
+        const s = estadoDeTeste({emprestimos: [emprestimo('e', 'a1', {devolucaoPrevista: '2026-10-13', diasAtraso: 2})]});
+        const {resultado} = registrarDevolucao(s, 'e', false);
+        expect(resultado.mensagem).toMatch(/^Devolução de "Item a1" registrada com 2 dias de atraso\. Pela política rígida, a conta foi suspensa/);
+        expect(resultado.mensagem.match(/Devolução/g)).toHaveLength(1);
+      });
+    });
+
     it('não devolve duas vezes', () => {
       const s = estadoDeTeste({emprestimos: [emprestimo('e', 'a1', {devolvidoEm: AGORA.toISOString()})]});
       expect(registrarDevolucao(s, 'e', false).resultado.sucesso).toBe(false);
@@ -140,7 +167,7 @@ describe('regras de retirada e devolução', () => {
         const {estado, resultado} = registrarDevolucao(comEmprestimoAtrasado('simples', 'ativa'), 'e', false);
         expect(buscar.emprestimo(estado, 'e').diasAtraso).toBe(2);
         expect(buscar.usuario(estado, 'aluna').status).toBe('ativa');
-        expect(resultado.mensagem).toContain('2 dia(s) de atraso');
+        expect(resultado.mensagem).toContain('registrada com 2 dias de atraso.');
       });
 
       it('intermediária: desbloqueia a conta depois da devolução', () => {

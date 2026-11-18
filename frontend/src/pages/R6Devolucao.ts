@@ -73,7 +73,6 @@ export class R6Devolucao {
   executarConfirmacaoDevolucao() {
     const emp = this.emprestimo();
     const resp = this.store.usuarioLogado();
-    const it = this.item();
     if (!emp) return;
 
     this.erroValidacao.set(null);
@@ -124,7 +123,7 @@ export class R6Devolucao {
     }
     // Volta ao painel com mensagem de sucesso
     this.router.navigate(['/painel'], {
-      state: { sucesso: `Devolução registrada com sucesso para "${it?.nome}". ${res.mensagem}` },
+      state: {sucesso: res.mensagem, nota: res.nota},
     });
   }
 

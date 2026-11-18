@@ -189,7 +189,14 @@ export function registrarDevolucao(
   const novoStatusItem: StatusItem = comDefeito ? 'manutencao' : 'disponivel';
   const itens = s.itens.map((i) => (i.id === emp.itemId ? {...i, status: novoStatusItem} : i));
 
-  const {usuarios, mensagem, eventoConta} = aplicarPoliticaAtraso(s, usuario, emprestimos, diasAtraso, clockNow, item?.nome);
+  const {usuarios, aviso, eventoConta} = aplicarPoliticaAtraso(s, usuario, emprestimos, diasAtraso, clockNow, item?.nome);
+  // Uma frase só: o que aconteceu com o item e, se houver, o que aconteceu com a conta
+  const atraso = diasAtraso > 0 ? ` com ${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso` : '';
+  const mensagem = `Devolução de "${item?.nome || 'item'}" registrada${atraso}.` + (aviso ? ` ${aviso}` : '');
+  // A avaria vem à parte, para a tela destacar: o item não volta ao catálogo
+  const nota = comDefeito
+    ? `Voltou com avaria (${rotuloCategoriaAvaria(opcoes.categoriaAvaria)}) e está em manutenção, aguardando envio ao técnico.`
+    : undefined;
 
   const notif = novaNotificacao(
     emp.usuarioId,
@@ -213,7 +220,7 @@ export function registrarDevolucao(
 
   return {
     estado: {...s, emprestimos, itens, ocorrencias, usuarios, notificacoes: [notif, ...s.notificacoes], auditoria},
-    resultado: {sucesso: true, mensagem},
+    resultado: {sucesso: true, mensagem, ...(nota ? {nota} : {})},
   };
 }
 
@@ -225,17 +232,13 @@ function aplicarPoliticaAtraso(
   diasAtraso: number,
   clockNow: Date,
   nomeItem = 'o item',
-): {usuarios: Usuario[]; mensagem: string; eventoConta?: EventoAuditoria} {
-  const padrao = 'Devolução registrada com sucesso!';
-  if (!usuario) return {usuarios: s.usuarios, mensagem: padrao};
+): {usuarios: Usuario[]; aviso?: string; eventoConta?: EventoAuditoria} {
+  // O aviso é só a consequência na conta; a frase da devolução é montada por quem chama
+  if (!usuario) return {usuarios: s.usuarios};
 
   // Bloqueio ou suspensão aplicados pelo responsável: a devolução não mexe na conta
   if (usuario.restricaoManual) {
-    const atraso = diasAtraso > 0 ? ` com ${diasAtraso} dia(s) de atraso` : '';
-    return {
-      usuarios: s.usuarios,
-      mensagem: `Devolução registrada${atraso}. A conta continua ${usuario.status} pelo responsável.`,
-    };
+    return {usuarios: s.usuarios, aviso: `A conta continua ${usuario.status} pelo responsável.`};
   }
 
   const mudar = (mudanca: Partial<Usuario>) =>
@@ -251,11 +254,10 @@ function aplicarPoliticaAtraso(
     if (!temOutroAtraso && usuario.status === 'bloqueada') {
       return {
         usuarios: mudar(desbloqueio),
-        mensagem: padrao,
         eventoConta: evento('conta_reativada', 'Nenhum item em atraso depois da devolução'),
       };
     }
-    return {usuarios: s.usuarios, mensagem: padrao};
+    return {usuarios: s.usuarios};
   }
 
   const politica = s.configuracao.politicaAtraso;
@@ -265,36 +267,31 @@ function aplicarPoliticaAtraso(
     const prazo = `${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'}, até ${formatDateShort(suspensoAte)}`;
     return {
       usuarios: mudar({status: 'suspensa' as StatusUsuario, suspensoAte: suspensoAte.toISOString()}),
-      mensagem: `Devolução registrada com atraso de ${diasAtraso} dia(s). Pela política rígida, a conta foi suspensa por ${diasAtraso} dia(s) (até ${formatDateShort(suspensoAte)}).`,
+      aviso: `Pela política rígida, a conta foi suspensa por ${diasAtraso} dia(s) (até ${formatDateShort(suspensoAte)}).`,
       eventoConta: evento('conta_suspensa', `Devolveu "${nomeItem}" com ${diasAtraso} dia(s) de atraso (política rígida)`, prazo),
     };
   }
   if (politica === 'intermediaria') {
     // Desbloqueia após a devolução, desde que não tenha outros atrasos
     if (temOutroAtraso) {
-      return {
-        usuarios: s.usuarios,
-        mensagem: 'Devolução registrada. A conta continua bloqueada porque há outro item em atraso.',
-      };
+      return {usuarios: s.usuarios, aviso: 'A conta continua bloqueada porque há outro item em atraso.'};
     }
     const desbloqueia = usuario.status !== 'ativa';
     return {
       usuarios: desbloqueia ? mudar(desbloqueio) : s.usuarios,
-      mensagem: desbloqueia
-        ? 'Devolução registrada. Como o item atrasado foi devolvido, a conta foi desbloqueada.'
-        : `Devolução registrada com ${diasAtraso} dia(s) de atraso.`,
+      aviso: desbloqueia ? 'Como o item atrasado foi devolvido, a conta foi desbloqueada.' : undefined,
       eventoConta: desbloqueia ? evento('conta_reativada', `Devolveu "${nomeItem}", que estava em atraso`) : undefined,
     };
   }
   // Simples: só registra o atraso. Se a conta ficou bloqueada por uma política anterior
   // (o responsável trocou de política com o item já atrasado), a devolução a libera.
-  const mensagemSimples = `Devolução registrada com ${diasAtraso} dia(s) de atraso (política simples).`;
+  const avisoSimples = 'Pela política simples, só o atraso fica registrado.';
   if (usuario.status === 'bloqueada' && !temOutroAtraso) {
     return {
       usuarios: mudar(desbloqueio),
-      mensagem: `${mensagemSimples} A conta foi desbloqueada.`,
+      aviso: `${avisoSimples} A conta foi desbloqueada.`,
       eventoConta: evento('conta_reativada', `Devolveu "${nomeItem}", que estava em atraso`),
     };
   }
-  return {usuarios: s.usuarios, mensagem: mensagemSimples};
+  return {usuarios: s.usuarios, aviso: avisoSimples};
 }

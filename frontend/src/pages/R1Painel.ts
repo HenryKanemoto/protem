@@ -40,6 +40,10 @@ export class R1Painel {
   private readonly router = inject(Router);
 
   readonly mensagemSucesso = signal<string | null>(null);
+
+  /** Complemento em destaque (ex.: o item devolvido voltou com avaria). */
+
+  readonly notaSucesso = signal<string | null>(null);
   /** "Ver todos" de cada lista: o botão já diz quantos itens existem, nada fica escondido sem aviso. */
   readonly verTodos = signal<Record<string, boolean>>({});
 
@@ -57,10 +61,12 @@ export class R1Painel {
 
   constructor() {
     const nav = this.router.getCurrentNavigation();
-    if (nav?.extras?.state && (nav.extras.state as { sucesso?: string }).sucesso) {
-      this.mensagemSucesso.set((nav.extras.state as { sucesso: string }).sucesso);
-    } else if (typeof history !== 'undefined' && history.state && history.state.sucesso) {
-      this.mensagemSucesso.set(history.state.sucesso);
+    const estado = (nav?.extras?.state ?? (typeof history !== 'undefined' ? history.state : null)) as
+      | {sucesso?: string; nota?: string}
+      | null;
+    if (estado?.sucesso) {
+      this.mensagemSucesso.set(estado.sucesso);
+      this.notaSucesso.set(estado.nota ?? null);
     }
   }
 

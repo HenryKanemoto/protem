@@ -14,8 +14,17 @@
   @if (mensagemSucesso()) {
     <div role="status" class="alert alert-ok items-center">
       <mat-icon class="icon-sm" svgIcon="check_circle" />
-      <p class="flex-1">{{ mensagemSucesso() }}</p>
-      <button type="button" (click)="mensagemSucesso.set(null)" class="btn-icon size-8" aria-label="Fechar aviso">
+      <div class="min-w-0 flex-1">
+        <p>{{ mensagemSucesso() }}</p>
+        @if (notaSucesso()) {
+          <p class="mt-1 flex flex-wrap items-center gap-x-2 font-semibold">
+            <mat-icon class="icon-sm shrink-0" svgIcon="build" aria-hidden="true" />
+            <span>{{ notaSucesso() }}</span>
+            <a routerLink="/painel/manutencao" class="underline underline-offset-2">Abrir Manutenção</a>
+          </p>
+        }
+      </div>
+      <button type="button" (click)="mensagemSucesso.set(null); notaSucesso.set(null)" class="btn-icon size-8" aria-label="Fechar aviso">
         <mat-icon class="icon-sm" svgIcon="close" />
       </button>
     </div>
