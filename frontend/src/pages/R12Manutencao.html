@@ -29,7 +29,7 @@
       @for (linha of itensEmManutencao(); track linha.item.id) {
         <li class="card flex flex-col gap-4 p-5">
          <div class="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
-          <a [routerLink]="['/painel/inventario', linha.item.id]" class="group flex min-w-0 items-center gap-3 md:w-72">
+          <a [routerLink]="['/painel/inventario', linha.item.id]" class="group flex min-w-0 items-center gap-3 md:w-72 md:shrink-0">
             <app-item-thumb [item]="linha.item" [tamanhoIcone]="22" class="size-12 shrink-0 rounded-control bg-maint-soft text-maint" />
             <span class="min-w-0">
               <span class="block truncate font-medium group-hover:underline">{{ linha.item.nome }}</span>
@@ -43,7 +43,32 @@
             <p class="text-sm">{{ linha.ocorrencia?.descricao || 'Avaria informada na devolução.' }}</p>
             <p class="mt-1 text-xs text-text-muted">Devolvido por {{ linha.devolvidoPorNome }} · {{ formatarData(linha.dataRegistro) }}</p>
           </div>
-          <div class="flex shrink-0 flex-col gap-2 sm:flex-row md:items-center">
+         </div>
+
+         @if (linha.etapa) {
+          <!-- Em que etapa o item está e o que fazer agora; fica sempre visível, sem tooltip -->
+          <div id="etapa-{{ linha.item.id }}" class="rounded-control bg-bg p-4 text-sm">
+            <p class="flex items-center gap-2 font-medium text-text-heading">
+              <mat-icon
+                class="icon-sm text-text-muted"
+                [svgIcon]="linha.etapa === 'aguardando_envio' ? 'outbox' : linha.etapa === 'com_tecnico' ? 'hourglass_top' : 'assignment_turned_in'"
+                aria-hidden="true"
+              />
+              @switch (linha.etapa) {
+                @case ('aguardando_envio') { Aguardando envio ao técnico }
+                @case ('com_tecnico') { Com o técnico desde {{ formatarData(linha.ocorrencia?.envioAoTecnico?.em ?? '') }} }
+                @default { Laudo do técnico: {{ rotuloLaudo[linha.ocorrencia?.laudo?.resultado ?? 'arrumado'] }} }
+              }
+            </p>
+            @if (linha.ocorrencia?.laudo; as laudo) {
+              <p class="mt-1">{{ laudo.parecer }}</p>
+              <p class="mt-1 text-xs text-text-muted">Laudo de {{ formatarData(laudo.em) }}</p>
+            }
+            <p class="mt-1 text-text-muted">{{ dicaDaEtapa(linha) }}</p>
+          </div>
+         }
+          <!-- Botões numa linha própria: com zoom ou tela estreita, a descrição da avaria não fica espremida -->
+          <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             @if (linha.etapa === 'aguardando_envio') {
               <button type="button" (click)="enviarAoTecnico(linha)" class="btn btn-primary btn-sm">
                 <mat-icon class="icon-sm" svgIcon="engineering" aria-hidden="true" />
@@ -73,30 +98,6 @@
               Marcar como consertado
             </button>
           </div>
-         </div>
-
-         @if (linha.etapa) {
-          <!-- Em que etapa o item está e o que fazer agora; fica sempre visível, sem tooltip -->
-          <div id="etapa-{{ linha.item.id }}" class="rounded-control bg-bg p-4 text-sm">
-            <p class="flex items-center gap-2 font-medium text-text-heading">
-              <mat-icon
-                class="icon-sm text-text-muted"
-                [svgIcon]="linha.etapa === 'aguardando_envio' ? 'outbox' : linha.etapa === 'com_tecnico' ? 'hourglass_top' : 'assignment_turned_in'"
-                aria-hidden="true"
-              />
-              @switch (linha.etapa) {
-                @case ('aguardando_envio') { Aguardando envio ao técnico }
-                @case ('com_tecnico') { Com o técnico desde {{ formatarData(linha.ocorrencia?.envioAoTecnico?.em ?? '') }} }
-                @default { Laudo do técnico: {{ rotuloLaudo[linha.ocorrencia?.laudo?.resultado ?? 'arrumado'] }} }
-              }
-            </p>
-            @if (linha.ocorrencia?.laudo; as laudo) {
-              <p class="mt-1">{{ laudo.parecer }}</p>
-              <p class="mt-1 text-xs text-text-muted">Laudo de {{ formatarData(laudo.em) }}</p>
-            }
-            <p class="mt-1 text-text-muted">{{ dicaDaEtapa(linha) }}</p>
-          </div>
-         }
         </li>
       }
     </ul>
