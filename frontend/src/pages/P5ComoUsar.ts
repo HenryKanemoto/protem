@@ -108,12 +108,12 @@ const PERFIS: Perfil[] = [
         icone: 'assignment_return',
         titulo: 'Receba a devolução',
         texto: 'Em "Pedidos", aba "Devoluções" (atrasadas primeiro), ou pelo leitor. Confira o código de devolução e diga se o item voltou com avaria.',
-        dica: 'Com avaria, o item vai para "Manutenção" e a ocorrência fica no histórico do item e da pessoa.',
+        dica: 'Com avaria, o item vai para "Manutenção" e a ocorrência fica no histórico do item e da pessoa. Lá, ele passa pelo técnico antes de qualquer decisão.',
       },
       {
         icone: 'inventory_2',
         titulo: 'Cuide do acervo',
-        texto: 'No "Inventário" ficam os itens, as fotos e a etiqueta com QR code para imprimir. Em "Categorias" você define prazo, limite e subcategorias. Em "Manutenção", conserte ou encaminhe o item.',
+        texto: 'No "Inventário" ficam os itens, as fotos e a etiqueta com QR code para imprimir. Em "Categorias" você define prazo, limite e subcategorias. Em "Manutenção", envie o item ao técnico; com o laudo, conserte ou encaminhe.',
       },
       {
         icone: 'checklist',

@@ -126,6 +126,14 @@
                   <p class="mt-1.5 text-xs font-medium text-text-muted">{{ rotuloCategoria(oc.categoria) }}</p>
                 }
                 <p class="mt-1 text-sm">{{ oc.descricao }}</p>
+                @if (oc.envioAoTecnico; as envio) {
+                  <p class="mt-1 text-xs text-text-muted">Enviado ao técnico em {{ formatarData(envio.em) }}</p>
+                }
+                @if (oc.laudo; as laudo) {
+                  <p class="mt-1 text-xs text-text-muted">
+                    Laudo do técnico ({{ formatarData(laudo.em) }}): <strong class="font-semibold">{{ laudo.resultado === 'arrumado' ? 'arrumado' : 'sem conserto' }}</strong>. {{ laudo.parecer }}
+                  </p>
+                }
                 @if (oc.desfecho) {
                   <p class="mt-1 text-xs text-text-muted">{{ oc.desfecho === 'encaminhado' ? 'Item encaminhado' : 'Item consertado' }}</p>
                 }

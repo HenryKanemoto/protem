@@ -1,7 +1,7 @@
 <div class="page">
   <header>
     <h1 class="page-title">Manutenção</h1>
-    <p class="page-subtitle">Equipamentos que voltaram com avaria. Ficam fora do catálogo até serem consertados ou encaminhados a um destino.</p>
+    <p class="page-subtitle">Equipamentos que voltaram com avaria. O técnico avalia cada um; depois, o item é consertado ou encaminhado a um destino.</p>
   </header>
 
   @if (mensagemSucesso()) {
@@ -14,10 +14,21 @@
     </div>
   }
 
+  @if (mensagemErro()) {
+    <div role="alert" class="alert alert-warn items-center">
+      <mat-icon class="icon-sm" svgIcon="info" />
+      <p class="flex-1">{{ mensagemErro() }}</p>
+      <button type="button" (click)="mensagemErro.set(null)" class="btn-icon size-8" aria-label="Fechar aviso">
+        <mat-icon class="icon-sm" svgIcon="close" />
+      </button>
+    </div>
+  }
+
   @if (itensEmManutencao().length > 0) {
     <ul class="flex flex-col gap-3">
       @for (linha of itensEmManutencao(); track linha.item.id) {
-        <li class="card flex flex-col gap-4 p-5 md:flex-row md:items-center md:gap-6">
+        <li class="card flex flex-col gap-4 p-5">
+         <div class="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
           <a [routerLink]="['/painel/inventario', linha.item.id]" class="group flex min-w-0 items-center gap-3 md:w-72">
             <app-item-thumb [item]="linha.item" [tamanhoIcone]="22" class="size-12 shrink-0 rounded-control bg-maint-soft text-maint" />
             <span class="min-w-0">
@@ -33,26 +44,70 @@
             <p class="mt-1 text-xs text-text-muted">Devolvido por {{ linha.devolvidoPorNome }} · {{ formatarData(linha.dataRegistro) }}</p>
           </div>
           <div class="flex shrink-0 flex-col gap-2 sm:flex-row md:items-center">
-            <button type="button" (click)="abrirEncaminhamento(linha)" class="btn btn-ghost btn-sm">
+            @if (linha.etapa === 'aguardando_envio') {
+              <button type="button" (click)="enviarAoTecnico(linha)" class="btn btn-primary btn-sm">
+                <mat-icon class="icon-sm" svgIcon="engineering" aria-hidden="true" />
+                Enviar para o técnico
+              </button>
+            }
+            <button
+              type="button"
+              (click)="abrirEncaminhamento(linha)"
+              [disabled]="!podeEncaminhar(linha)"
+              [attr.aria-describedby]="'etapa-' + linha.item.id"
+              class="btn btn-sm"
+              [class]="linha.etapa === 'laudo_sem_conserto' ? 'btn-primary' : 'btn-ghost'"
+            >
               <mat-icon class="icon-sm" svgIcon="local_shipping" aria-hidden="true" />
               Encaminhar
             </button>
-            <button type="button" (click)="marcarConsertado(linha)" class="btn btn-secondary btn-sm">
+            <button
+              type="button"
+              (click)="marcarConsertado(linha)"
+              [disabled]="!podeConsertar(linha)"
+              [attr.aria-describedby]="'etapa-' + linha.item.id"
+              class="btn btn-sm"
+              [class]="linha.etapa === 'laudo_arrumado' ? 'btn-primary' : 'btn-secondary'"
+            >
               <mat-icon class="icon-sm" svgIcon="handyman" aria-hidden="true" />
               Marcar como consertado
             </button>
           </div>
+         </div>
+
+         @if (linha.etapa) {
+          <!-- Em que etapa o item está e o que fazer agora; fica sempre visível, sem tooltip -->
+          <div id="etapa-{{ linha.item.id }}" class="rounded-control bg-bg p-4 text-sm">
+            <p class="flex items-center gap-2 font-medium text-text-heading">
+              <mat-icon
+                class="icon-sm text-text-muted"
+                [svgIcon]="linha.etapa === 'aguardando_envio' ? 'outbox' : linha.etapa === 'com_tecnico' ? 'hourglass_top' : 'assignment_turned_in'"
+                aria-hidden="true"
+              />
+              @switch (linha.etapa) {
+                @case ('aguardando_envio') { Aguardando envio ao técnico }
+                @case ('com_tecnico') { Com o técnico desde {{ formatarData(linha.ocorrencia?.envioAoTecnico?.em ?? '') }} }
+                @default { Laudo do técnico: {{ rotuloLaudo[linha.ocorrencia?.laudo?.resultado ?? 'arrumado'] }} }
+              }
+            </p>
+            @if (linha.ocorrencia?.laudo; as laudo) {
+              <p class="mt-1">{{ laudo.parecer }}</p>
+              <p class="mt-1 text-xs text-text-muted">Laudo de {{ formatarData(laudo.em) }}</p>
+            }
+            <p class="mt-1 text-text-muted">{{ dicaDaEtapa(linha) }}</p>
+          </div>
+         }
         </li>
       }
     </ul>
     <p class="text-sm text-text-muted">
-      Consertado: o item volta ao catálogo como disponível. Encaminhado: o item sai do acervo e vai para um destino, como o CRC da Unifap ou um SENAI Lab.
+      Caminho: envie ao técnico, espere o laudo (até 24 h) e então decida. Consertado: o item volta ao catálogo como disponível. Encaminhado: o item sai do acervo e vai para um destino, como o CRC da Unifap ou um SENAI Lab.
     </p>
   } @else {
     <div class="card empty">
       <mat-icon class="icon-xl" svgIcon="task_alt" />
       <p class="empty-title">Nada em manutenção</p>
-      <p class="empty-text">Quando um item voltar com avaria, ele aparece aqui com a ocorrência.</p>
+      <p class="empty-text">Quando um item voltar com avaria, ele aparece aqui para ser enviado ao técnico.</p>
     </div>
   }
   @if (encaminhando(); as linha) {
