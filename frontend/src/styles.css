@@ -583,3 +583,11 @@
     display: none;
   }
 }
+
+/* ---- VLibras (opcional) ----
+   O widget do governo cria elementos no <body> que não dá para desmontar. Quando a pessoa desliga
+   (ou ele não carregou), o serviço Vlibras põe data-vlibras="off" no <html> e eles somem. */
+:root[data-vlibras='off'] #vlibras-access-wrapper,
+:root[data-vlibras='off'] #vlibras-app-root {
+  display: none !important;
+}

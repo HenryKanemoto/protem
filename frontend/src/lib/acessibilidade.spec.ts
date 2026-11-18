@@ -23,7 +23,7 @@ describe('acessibilidade: preferências', () => {
     });
 
     it('lê preferências válidas', () => {
-      const salvo = {tamanhoTexto: 2, escuro: true, altoContraste: true, menosAnimacao: true, maisEspaco: true, retornoDoLeitor: false};
+      const salvo = {tamanhoTexto: 2, escuro: true, altoContraste: true, menosAnimacao: true, maisEspaco: true, retornoDoLeitor: false, vlibras: true};
       expect(lerPreferencias(JSON.stringify(salvo))).toEqual(salvo);
     });
 
@@ -64,12 +64,34 @@ describe('acessibilidade: preferências', () => {
     });
 
     it('cada opção ligada vira um atributo', () => {
-      const a = atributosDe({tamanhoTexto: 2, escuro: true, altoContraste: true, menosAnimacao: true, maisEspaco: true, retornoDoLeitor: true});
+      const a = atributosDe({tamanhoTexto: 2, escuro: true, altoContraste: true, menosAnimacao: true, maisEspaco: true, retornoDoLeitor: true, vlibras: false});
       expect(a).toEqual({tema: 'escuro', contraste: 'alto', movimento: 'reduzido', espaco: 'amplo', tamanhoFonte: '125%'});
     });
 
     it('texto menor que o padrão também muda a fonte', () => {
       expect(atributosDe({...PREFERENCIAS_PADRAO, tamanhoTexto: -1}).tamanhoFonte).toBe('87.5%');
+    });
+  });
+
+  describe('VLibras (serviço externo, só se a pessoa ligar)', () => {
+    it('vem desligado por padrão: nada de fora é carregado sem pedido', () => {
+      expect(PREFERENCIAS_PADRAO.vlibras).toBe(false);
+      expect(lerPreferencias(null).vlibras).toBe(false);
+      expect(lerPreferencias('{quebrado').vlibras).toBe(false);
+    });
+
+    it('preferências antigas, sem o campo, continuam válidas e desligadas', () => {
+      const antiga = JSON.stringify({tamanhoTexto: 1, escuro: true, altoContraste: false, menosAnimacao: false, maisEspaco: false, retornoDoLeitor: true});
+      expect(lerPreferencias(antiga)).toMatchObject({tamanhoTexto: 1, escuro: true, vlibras: false});
+    });
+
+    it('lê o valor salvo e ignora tipo errado', () => {
+      expect(lerPreferencias(JSON.stringify({vlibras: true})).vlibras).toBe(true);
+      expect(lerPreferencias(JSON.stringify({vlibras: 'sim'})).vlibras).toBe(false);
+    });
+
+    it('conta como personalizado quando ligado', () => {
+      expect(estaPersonalizado({...PREFERENCIAS_PADRAO, vlibras: true})).toBe(true);
     });
   });
 

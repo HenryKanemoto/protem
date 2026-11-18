@@ -33,6 +33,11 @@ export class P4Acessibilidade {
     {icone: 'format_line_spacing', titulo: 'Mais espaço no texto', texto: 'Aumenta o espaço entre linhas e palavras.'},
     {icone: 'motion_photos_off', titulo: 'Menos animação', texto: 'Tira movimentos e transições. Também segue o "reduzir movimento" do sistema.'},
     {icone: 'volume_up', titulo: 'Retorno no leitor de QR', texto: 'Som curto, vibração e aviso falado ao ler um código.'},
+    {
+      icone: 'sign_language',
+      titulo: 'Tradução em Libras (VLibras)',
+      texto: 'Opcional, vem desligado. Ao ligar, usa o serviço do governo (vlibras.gov.br): precisa de internet e envia o texto da tela para ser traduzido.',
+    },
   ];
 
   /** O que já vem pronto, sem a pessoa precisar ligar nada. */
@@ -48,7 +53,8 @@ export class P4Acessibilidade {
 
   /** Honestidade: o que ainda não existe. */
   readonly aindaNao = [
-    'Tradução em Libras (como o VLibras) e leitura em voz alta das telas.',
+    'Libras sem internet: o VLibras roda nos servidores do governo e não dá para embuti-lo no Protem. Se a rede bloquear, o painel avisa e o resto continua funcionando.',
+    'Leitura em voz alta das telas.',
     'Teste com leitores de tela (NVDA, VoiceOver) e avaliação por especialistas em acessibilidade. A conformidade é uma referência de projeto, não uma certificação.',
   ];
 

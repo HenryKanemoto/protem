@@ -29,6 +29,11 @@ export interface PreferenciasAcessibilidade {
   maisEspaco: boolean;
   /** Som curto, vibração e aviso falado ao ler um QR code. */
   retornoDoLeitor: boolean;
+  /**
+   * Tradutor de Libras do governo (VLibras). Desligado por padrão: ligar carrega um serviço
+   * externo (vlibras.gov.br), então só acontece quando a pessoa pede.
+   */
+  vlibras: boolean;
 }
 
 export const PREFERENCIAS_PADRAO: PreferenciasAcessibilidade = {
@@ -38,6 +43,7 @@ export const PREFERENCIAS_PADRAO: PreferenciasAcessibilidade = {
   menosAnimacao: false,
   maisEspaco: false,
   retornoDoLeitor: true,
+  vlibras: false,
 };
 
 /** Chave do navegador. Fica fora do estado principal: "Reiniciar dados" não apaga preferências. */
@@ -67,6 +73,7 @@ export function sanearPreferencias(bruto: unknown, base: PreferenciasAcessibilid
     menosAnimacao: booleano('menosAnimacao'),
     maisEspaco: booleano('maisEspaco'),
     retornoDoLeitor: booleano('retornoDoLeitor'),
+    vlibras: booleano('vlibras'),
   };
 }
 

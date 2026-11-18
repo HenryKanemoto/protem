@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, computed, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, effect, inject} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {MatIconModule} from '@angular/material/icon';
 import {
@@ -9,6 +9,7 @@ import {
   rotuloDoTexto,
 } from '../../lib/acessibilidade';
 import {Acessibilidade} from '../../services/acessibilidade.service';
+import {Vlibras} from '../../services/vlibras.service';
 import {Modal} from '../modal/modal';
 
 type CampoLigaDesliga = Exclude<keyof PreferenciasAcessibilidade, 'tamanhoTexto'>;
@@ -26,6 +27,12 @@ const OPCOES: Opcao[] = [
   {campo: 'maisEspaco', rotulo: 'Mais espaço no texto', ajuda: 'Aumenta o espaço entre linhas e palavras.', icone: 'format_line_spacing'},
   {campo: 'menosAnimacao', rotulo: 'Menos animação', ajuda: 'Tira movimentos e transições da tela.', icone: 'motion_photos_off'},
   {campo: 'retornoDoLeitor', rotulo: 'Som e vibração no leitor', ajuda: 'Um sinal curto ao ler um QR code.', icone: 'volume_up'},
+  {
+    campo: 'vlibras',
+    rotulo: 'Tradução em Libras (VLibras)',
+    ajuda: 'Um avatar traduz o texto da tela. Precisa de internet e usa o serviço do governo (vlibras.gov.br).',
+    icone: 'sign_language',
+  },
 ];
 
 /**
@@ -100,6 +107,32 @@ const OPCOES: Opcao[] = [
           }
         </ul>
 
+        @switch (vlibras.estado()) {
+          @case ('carregando') {
+            <p id="estado-vlibras" role="status" class="alert alert-info items-center text-sm">
+              <mat-icon class="icon-sm" svgIcon="schedule" aria-hidden="true" />
+              Carregando o VLibras… Isso pode levar alguns segundos.
+            </p>
+          }
+          @case ('ligado') {
+            <p id="estado-vlibras" role="status" class="text-sm text-text-muted">
+              VLibras ligado: use o botão do VLibras, na lateral direita da tela, para abrir o avatar.
+            </p>
+          }
+          @case ('bloqueado') {
+            <div id="estado-vlibras" role="status" class="alert alert-warn text-sm">
+              <mat-icon class="icon-sm" svgIcon="info" aria-hidden="true" />
+              <div>
+                <p class="font-medium">Não foi possível carregar o VLibras.</p>
+                <p class="mt-0.5">
+                  A rede ou o firewall deste lugar pode estar bloqueando o serviço do governo (vlibras.gov.br). O resto do Protem funciona
+                  normalmente. Quando a rede permitir, é só ligar de novo.
+                </p>
+              </div>
+            </div>
+          }
+        }
+
         <a routerLink="/acessibilidade" (click)="fechar()" class="text-sm font-medium text-primary-hover hover:underline">
           Sobre a acessibilidade no Protem
         </a>
@@ -117,6 +150,8 @@ const OPCOES: Opcao[] = [
 })
 export class PainelAcessibilidade {
   private readonly acessibilidade = inject(Acessibilidade);
+  readonly vlibras = inject(Vlibras);
+  private readonly injector = inject(Injector);
 
   readonly aberto = this.acessibilidade.painelAberto;
   readonly opcoes = OPCOES;
@@ -128,6 +163,15 @@ export class PainelAcessibilidade {
   });
   readonly noMinimo = computed(() => this.preferencias().tamanhoTexto === PASSOS_TEXTO[0]);
   readonly noMaximo = computed(() => this.preferencias().tamanhoTexto === PASSOS_TEXTO[PASSOS_TEXTO.length - 1]);
+
+  constructor() {
+    // O painel rola em tela baixa e o interruptor do VLibras é o último da lista: leva o aviso
+    // (carregando, ligado ou bloqueado) para a vista quando ele aparece
+    effect(() => {
+      if (this.vlibras.estado() === 'desligado' || !this.aberto()) return;
+      afterNextRender(() => document.getElementById('estado-vlibras')?.scrollIntoView({block: 'nearest'}), {injector: this.injector});
+    });
+  }
 
   mudarTexto(direcao: 1 | -1) {
     this.acessibilidade.atualizar({tamanhoTexto: mudarTexto(this.preferencias().tamanhoTexto, direcao)});
@@ -142,6 +186,7 @@ export class PainelAcessibilidade {
   }
 
   fechar() {
+    this.vlibras.limparAviso();
     this.aberto.set(false);
   }
 }
