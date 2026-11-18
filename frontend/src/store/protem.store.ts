@@ -11,6 +11,8 @@ import { destinosDe } from './regras/avaria';
 import { garantirCodigos } from './regras/codigos';
 import * as contas from './regras/contas';
 import * as emprestimos from './regras/emprestimos';
+import * as manutencao from './regras/manutencao';
+import { pendenciasDeManutencao } from './regras/manutencao';
 import { executarRotinaAutomatica } from './regras/rotina';
 import * as solicitacoes from './regras/solicitacoes';
 
@@ -82,9 +84,8 @@ export class ProtemStore {
     () => this.state().emprestimos.filter((e) => !e.devolvidoEm && e.diasAtraso > 0).length,
   );
 
-  readonly ocorrenciasAbertasCount = computed(
-    () => this.state().ocorrencias.filter((o) => o.status === 'aberta').length,
-  );
+  /** O que espera o responsável na Manutenção: item a enviar ao técnico e laudo a decidir. */
+  readonly pendenciasManutencaoCount = computed(() => pendenciasDeManutencao(this.state().ocorrencias));
 
   constructor() {
     // Garante consistência com o relógio virtual antes de qualquer tela ler o estado
@@ -327,6 +328,16 @@ export class ProtemStore {
 
   resolverOcorrencia(ocorrenciaId: string, itemRetornarDisponivel = true, responsavelId?: string) {
     this.atualizar((s) => acervo.resolverOcorrencia(s, ocorrenciaId, itemRetornarDisponivel, responsavelId));
+  }
+
+  /** Manutenção: o item em avaria vai ao técnico; o laudo chega depois, com o relógio. */
+  enviarParaTecnico(ocorrenciaId: string, responsavelId: string) {
+    return this.executar((s) => manutencao.enviarParaTecnico(s, ocorrenciaId, responsavelId));
+  }
+
+  /** Só vale depois do laudo "arrumado" do técnico. */
+  consertarItem(ocorrenciaId: string, responsavelId: string) {
+    return this.executar((s) => acervo.consertarItem(s, ocorrenciaId, responsavelId));
   }
 
   /** Item sem conserto vai para um destino (CRC, SENAI Lab...); sai do acervo. */

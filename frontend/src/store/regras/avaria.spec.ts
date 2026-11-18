@@ -16,6 +16,19 @@ function comItemEmManutencao(categoria: CategoriaAvaria = 'quebrado'): ProtemSta
   return registrarDevolucao(comEmprestimo(), 'e', true, 'Placa-mãe queimada', 'resp', {categoriaAvaria: categoria}).estado;
 }
 
+/** O técnico já avaliou: sem conserto, então só resta encaminhar (a regra exige o laudo antes). */
+function comLaudoSemConserto(): ProtemState {
+  const s = comItemEmManutencao();
+  return {
+    ...s,
+    ocorrencias: s.ocorrencias.map((o) => ({
+      ...o,
+      envioAoTecnico: {em: s.agora, porId: 'resp', laudoPrevistoEm: s.agora},
+      laudo: {resultado: 'sem_conserto' as const, parecer: 'Sem conserto', em: s.agora},
+    })),
+  };
+}
+
 describe('avaria na devolução', () => {
   it('tem as quatro categorias pedidas', () => {
     expect(CATEGORIAS_AVARIA.map((c) => c.rotulo)).toEqual([
@@ -84,7 +97,7 @@ describe('encaminhar item sem conserto', () => {
   const DESTINO = 'dest-unifap-crc';
 
   it('o item sai do acervo, a ocorrência fecha e o destino fica no item e na auditoria', () => {
-    const s = comItemEmManutencao();
+    const s = comLaudoSemConserto();
     const {estado, resultado} = encaminharItem(s, 'a1', 'resp', DESTINO, '  Placa-mãe queimada, sem conserto  ');
     expect(resultado).toEqual({sucesso: true, mensagem: '"Item a1" foi encaminhado para Unifap CRC.'});
 
@@ -111,7 +124,7 @@ describe('encaminhar item sem conserto', () => {
   });
 
   it('o item encaminhado não volta ao catálogo', () => {
-    const s = comItemEmManutencao();
+    const s = comLaudoSemConserto();
     const {estado} = encaminharItem(s, 'a1', 'resp', DESTINO, 'Sem conserto');
     expect(estado.itens.filter((i) => i.status === 'disponivel').map((i) => i.id)).not.toContain('a1');
   });
@@ -121,7 +134,7 @@ describe('encaminhar item sem conserto', () => {
     ['sem destino', '', 'Sem conserto', 'Escolha o destino do item.'],
     ['destino que não existe', 'dest-xyz', 'Sem conserto', 'Escolha o destino do item.'],
   ])('não encaminha %s', (_nome, destino, motivo, mensagem) => {
-    const s = comItemEmManutencao();
+    const s = comLaudoSemConserto();
     const {estado, resultado} = encaminharItem(s, 'a1', 'resp', destino, motivo);
     expect(resultado).toEqual({sucesso: false, mensagem});
     expect(estado).toBe(s);
@@ -136,7 +149,7 @@ describe('encaminhar item sem conserto', () => {
   });
 
   it('não encaminha duas vezes o mesmo item', () => {
-    const {estado} = encaminharItem(comItemEmManutencao(), 'a1', 'resp', DESTINO, 'Sem conserto');
+    const {estado} = encaminharItem(comLaudoSemConserto(), 'a1', 'resp', DESTINO, 'Sem conserto');
     expect(encaminharItem(estado, 'a1', 'resp', DESTINO, 'Sem conserto').resultado.sucesso).toBe(false);
   });
 
@@ -193,7 +206,7 @@ describe('destinos de encaminhamento', () => {
   });
 
   it('item já encaminhado guarda o nome do destino, mesmo que ele seja removido depois', () => {
-    let s = encaminharItem(comItemEmManutencao(), 'a1', 'resp', 'dest-senai-aprendizado', 'Sem conserto').estado;
+    let s = encaminharItem(comLaudoSemConserto(), 'a1', 'resp', 'dest-senai-aprendizado', 'Sem conserto').estado;
     s = removerDestino(s, 'dest-senai-aprendizado').estado;
     expect(buscar.item(s, 'a1').encaminhamento?.destinoNome).toBe('SENAI Lab de aprendizado');
   });

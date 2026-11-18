@@ -12,6 +12,7 @@ const ICONES: Record<TipoNotificacao, {icone: string; classe: string}> = {
   lembrete: {icone: 'notifications_active', classe: 'bg-warn-soft text-warn'},
   novo_pedido: {icone: 'add', classe: 'bg-info-soft text-info'},
   nova_conta: {icone: 'person_add', classe: 'bg-maint-soft text-maint'},
+  laudo: {icone: 'engineering', classe: 'bg-maint-soft text-maint'},
 };
 
 /** Lista de notificações usada pelo solicitante (S5) e pelo responsável (R17). */

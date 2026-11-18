@@ -25,6 +25,8 @@ export const TIPOS_EVENTO: Record<TipoEventoAuditoria, {rotulo: string; icone: s
   retirada: {rotulo: 'Retirada', icone: 'outbox', grupo: 'movimentacao'},
   devolucao: {rotulo: 'Devolução', icone: 'move_to_inbox', grupo: 'movimentacao'},
   devolucao_avaria: {rotulo: 'Devolução com avaria', icone: 'build', grupo: 'movimentacao'},
+  item_enviado_tecnico: {rotulo: 'Enviado ao técnico', icone: 'engineering', grupo: 'acervo'},
+  laudo_tecnico: {rotulo: 'Laudo do técnico', icone: 'assignment_turned_in', grupo: 'acervo'},
   item_consertado: {rotulo: 'Item consertado', icone: 'handyman', grupo: 'acervo'},
   item_encaminhado: {rotulo: 'Item encaminhado', icone: 'local_shipping', grupo: 'acervo'},
 };

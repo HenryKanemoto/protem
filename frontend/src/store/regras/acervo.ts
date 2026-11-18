@@ -1,6 +1,7 @@
 import { Categoria, DestinoEncaminhamento, Item, PoliticaAtraso, StatusItem, Subcategoria, TipoDestino } from '../../types/models';
 import { ProtemState, ResultadoAcao, Transicao, novoEvento } from '../estado';
 import { destinosDe } from './avaria';
+import { etapaDaOcorrencia } from './manutencao';
 
 function upsert<T extends {id: string}>(lista: T[], registro: T): T[] {
   return lista.some((r) => r.id === registro.id)
@@ -95,6 +96,7 @@ export function resolverOcorrencia(
   const evento = novoEvento('item_consertado', s.agora, ocorr.usuarioId, {
     autorId: responsavelId,
     itemId: ocorr.itemId,
+    motivo: ocorr.laudo?.parecer,
     detalhe: 'Voltou ao catálogo como disponível',
   });
   return {
@@ -106,6 +108,29 @@ export function resolverOcorrencia(
       ? s.itens.map((i) => (i.id === ocorr.itemId ? {...i, status: 'disponivel' as StatusItem} : i))
       : s.itens,
     auditoria: [evento, ...s.auditoria],
+  };
+}
+
+/**
+ * Marcar como consertado, pelo responsável. Só depois do laudo "arrumado" do técnico:
+ * antes disso o item ainda não foi avaliado, e com o laudo "sem conserto" só resta encaminhar.
+ */
+export function consertarItem(s: ProtemState, ocorrenciaId: string, responsavelId: string): Transicao<ResultadoAcao> {
+  const falha = (mensagem: string) => ({estado: s, resultado: {sucesso: false, mensagem}});
+  const ocorr = s.ocorrencias.find((o) => o.id === ocorrenciaId);
+  if (!ocorr || ocorr.status !== 'aberta') return falha('Ocorrência não encontrada ou já encerrada.');
+  const etapa = etapaDaOcorrencia(ocorr);
+  if (etapa === 'aguardando_envio') return falha('Envie o item ao técnico antes de marcar como consertado.');
+  if (etapa === 'com_tecnico') return falha('Espere o laudo do técnico para marcar como consertado.');
+  if (etapa === 'laudo_sem_conserto') return falha('O técnico avaliou que não há conserto. Encaminhe o item.');
+
+  const item = s.itens.find((i) => i.id === ocorr.itemId);
+  return {
+    estado: resolverOcorrencia(s, ocorrenciaId, true, responsavelId),
+    resultado: {
+      sucesso: true,
+      mensagem: `"${item?.nome ?? 'Item'}" (${item?.patrimonio ?? ''}) foi consertado e voltou ao catálogo como disponível.`,
+    },
   };
 }
 
@@ -131,6 +156,15 @@ export function encaminharItem(
   if (!motivoTexto) return falha('Informe o motivo do encaminhamento.');
 
   const ocorrenciasAbertas = s.ocorrencias.filter((o) => o.itemId === itemId && o.status === 'aberta');
+  // Com ocorrência aberta, o encaminhamento só vale depois do laudo do técnico (arrumado ou sem conserto)
+  const emAvaliacao = ocorrenciasAbertas.find((o) => !o.laudo);
+  if (emAvaliacao) {
+    return falha(
+      etapaDaOcorrencia(emAvaliacao) === 'com_tecnico'
+        ? 'Espere o laudo do técnico antes de encaminhar.'
+        : 'Envie o item ao técnico antes de encaminhar.',
+    );
+  }
   // A pessoa que devolveu o item com a avaria; sem ocorrência, fica o próprio responsável
   const afetadoId = ocorrenciasAbertas[0]?.usuarioId ?? responsavelId;
   return {

@@ -1,6 +1,7 @@
 import {calculateDiasAtraso, formatDateShort, isDayEnded, parseDate} from '../../lib/date-utils';
 import {EventoAuditoria} from '../../types/models';
 import {ProtemState, novaNotificacao, novoEvento, responsaveis} from '../estado';
+import {receberLaudos} from './manutencao';
 
 /**
  * Rotina automática executada ao avançar o relógio:
@@ -10,6 +11,7 @@ import {ProtemState, novaNotificacao, novoEvento, responsaveis} from '../estado'
  *    - conta "bloqueada" nas políticas intermediária e rígida
  * 3. Gerar notificações de prazo próximo (1 dia antes) e de atraso.
  * 4. Encerrar suspensões vencidas (se usuario.suspensoAte <= agora, volta a ativa).
+ * 5. Receber os laudos do técnico cujo prazo passou (manutenção em etapas).
  * Dias de atraso = dias inteiros depois do prazo (mínimo 1).
  */
 export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): ProtemState {
@@ -175,6 +177,10 @@ export function executarRotinaAutomatica(s: ProtemState, clockNow: Date): Protem
     };
   });
 
-  if (eventos.length === 0) return {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes};
-  return {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes, auditoria: [...eventos.reverse(), ...s.auditoria]};
+  // 5. Laudos do técnico que chegaram
+  const base =
+    eventos.length === 0
+      ? {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes}
+      : {...s, itens, solicitacoes, emprestimos, usuarios, notificacoes, auditoria: [...eventos.reverse(), ...s.auditoria]};
+  return receberLaudos(base, clockNow);
 }

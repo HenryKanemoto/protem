@@ -134,6 +134,25 @@ export type CategoriaAvaria = 'estetica' | 'funcional_leve' | 'incompleto' | 'qu
 /** Como a ocorrência terminou: o item foi consertado ou encaminhado a um destino. */
 export type DesfechoOcorrencia = 'consertado' | 'encaminhado';
 
+/** O técnico avaliou o item: arrumado (pode voltar ao catálogo) ou sem conserto (só encaminhar). */
+export type ResultadoLaudo = 'arrumado' | 'sem_conserto';
+
+/** Em que etapa da manutenção a ocorrência está. Deriva dos campos da ocorrência (veja `etapaDaOcorrencia`). */
+export type EtapaManutencao = 'aguardando_envio' | 'com_tecnico' | 'laudo_arrumado' | 'laudo_sem_conserto';
+
+/** Quando e por quem o item foi ao técnico, e quando o laudo é esperado. */
+export interface EnvioAoTecnico {
+  em: string; // ISO date string
+  porId: string;
+  laudoPrevistoEm: string; // ISO date string
+}
+
+export interface LaudoTecnico {
+  resultado: ResultadoLaudo;
+  parecer: string;
+  em: string; // ISO date string
+}
+
 export interface Ocorrencia {
   id: string;
   emprestimoId?: string;
@@ -146,6 +165,10 @@ export interface Ocorrencia {
   criadoEm: string;          // ISO date string
   resolvidoEm?: string;      // ISO date string
   desfecho?: DesfechoOcorrencia;
+  /** Presente depois de "Enviar para o técnico". */
+  envioAoTecnico?: EnvioAoTecnico;
+  /** Presente depois que o técnico avaliou o item. */
+  laudo?: LaudoTecnico;
 }
 
 export type TipoNotificacao =
@@ -156,7 +179,8 @@ export type TipoNotificacao =
   | 'atraso'
   | 'lembrete'
   | 'novo_pedido'
-  | 'nova_conta';
+  | 'nova_conta'
+  | 'laudo';
 
 export interface Notificacao {
   id: string;
@@ -182,6 +206,8 @@ export type TipoEventoAuditoria =
   | 'retirada'
   | 'devolucao'
   | 'devolucao_avaria'
+  | 'item_enviado_tecnico'
+  | 'laudo_tecnico'
   | 'item_consertado'
   | 'item_encaminhado';
 

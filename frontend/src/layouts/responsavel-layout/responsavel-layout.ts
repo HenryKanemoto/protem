@@ -70,7 +70,7 @@ export class ResponsavelLayout {
           rotulo: 'Manutenção',
           rota: '/painel/manutencao',
           icone: 'build',
-          badge: () => this.store.ocorrenciasAbertasCount(),
+          badge: () => this.store.pendenciasManutencaoCount(),
         },
       ],
     },
